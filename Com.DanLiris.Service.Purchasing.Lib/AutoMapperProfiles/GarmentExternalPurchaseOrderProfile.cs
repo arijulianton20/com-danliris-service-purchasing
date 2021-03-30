@@ -42,6 +42,38 @@ namespace Com.DanLiris.Service.Purchasing.Lib.AutoMapperProfiles
                 .ForPath(d => d.Currency.Rate, opt => opt.MapFrom(s => s.CurrencyRate))
                 .ForPath(d => d.Currency.Code, opt => opt.MapFrom(s => s.CurrencyCode))
                 .ReverseMap();
+            #region GarmentDisposition
+            CreateMap<GarmentExternalPurchaseOrderItem, ViewModels.GarmentDispositionPurchase.GarmentExternalPurchaseOrderItemViewModel>()
+                .ForPath(d => d.Product.Id, opt => opt.MapFrom(s => s.ProductId))
+                .ForPath(d => d.Product.Code, opt => opt.MapFrom(s => s.ProductCode))
+                .ForPath(d => d.Product.Name, opt => opt.MapFrom(s => s.ProductName))
+
+                .ForPath(d => d.DealUom.Id, opt => opt.MapFrom(s => s.DealUomId))
+                .ForPath(d => d.DealUom.Unit, opt => opt.MapFrom(s => s.DealUomUnit))
+
+                .ForPath(d => d.DefaultUom.Id, opt => opt.MapFrom(s => s.DefaultUomId))
+                .ForPath(d => d.DefaultUom.Unit, opt => opt.MapFrom(s => s.DefaultUomUnit))
+
+                .ForPath(d => d.SmallUom.Id, opt => opt.MapFrom(s => s.SmallUomId))
+                .ForPath(d => d.SmallUom.Unit, opt => opt.MapFrom(s => s.SmallUomUnit))
+
+                .ReverseMap();
+
+            CreateMap<GarmentExternalPurchaseOrder,ViewModels.GarmentDispositionPurchase.GarmentExternalPurchaseOrderViewModel>()
+                .ForPath(d => d.Supplier.Id, opt => opt.MapFrom(s => s.SupplierId))
+                .ForPath(d => d.Supplier.Code, opt => opt.MapFrom(s => s.SupplierCode))
+                .ForPath(d => d.Supplier.Name, opt => opt.MapFrom(s => s.SupplierName))
+                .ForPath(d => d.Supplier.Import, opt => opt.MapFrom(s => s.SupplierImport))
+
+                .ForPath(d => d.IncomeTax.Id, opt => opt.MapFrom(s => s.IncomeTaxId))
+                .ForPath(d => d.IncomeTax.Rate, opt => opt.MapFrom(s => s.IncomeTaxRate))
+                .ForPath(d => d.IncomeTax.Name, opt => opt.MapFrom(s => s.IncomeTaxName))
+
+                .ForPath(d => d.Currency.Id, opt => opt.MapFrom(s => s.CurrencyId))
+                .ForPath(d => d.Currency.Rate, opt => opt.MapFrom(s => s.CurrencyRate))
+                .ForPath(d => d.Currency.Code, opt => opt.MapFrom(s => s.CurrencyCode))
+                .ReverseMap();
+            #endregion
         }
     }
 }

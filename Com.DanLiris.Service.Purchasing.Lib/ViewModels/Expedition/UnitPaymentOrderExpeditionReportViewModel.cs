@@ -33,6 +33,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.Expedition
         public string VerifiedBy { get; set; }
         public string CreatedBy { get; set; }
         public string PaymentDueDays { get; set; }
+        public string PaymentMethod { get; set; }
     }
 
     public class UnitPaymentOrderExpeditionReportWrapper

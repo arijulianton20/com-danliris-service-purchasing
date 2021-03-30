@@ -22,6 +22,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Models.GarmentBeacukaiModel
 		public long CurrencyId { get; set; }
 		public string CurrencyCode { get; set; }
 		public string CustomsType { get; set; }
+        public string ImportValue { get; set; }
+        public int ImportValueId { get; set; }
         public DateTimeOffset? ArrivalDate { get; set; }
         public virtual ICollection<GarmentBeacukaiItem> Items { get; set; }
 	}

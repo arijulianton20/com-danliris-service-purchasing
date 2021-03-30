@@ -30,6 +30,9 @@ using Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentPOMasterDistribution
 using Com.DanLiris.Service.Purchasing.Lib.Models.GarmentSupplierBalanceDebtModel;
 using Com.DanLiris.Service.Purchasing.Lib.Models.BalanceStockModel;
 using Com.DanLiris.Service.Purchasing.Lib.Models.GarmentStockOpnameModel;
+using Com.DanLiris.Service.Purchasing.Lib.Models.BudgetCashflowWorstCaseModel;
+using Com.DanLiris.Service.Purchasing.Lib.Models.GarmentDispositionPurchaseModel;
+//using Com.DanLiris.Service.Purchasing.Lib.Models.ImportValueModel;
 
 namespace Com.DanLiris.Service.Purchasing.Lib
 {
@@ -134,6 +137,15 @@ namespace Com.DanLiris.Service.Purchasing.Lib
 
         public DbSet<BalanceStock> BalanceStocks { get; set; }
 
+        public DbSet<BudgetCashflowWorstCase> BudgetCashflowWorstCases { get; set; }
+        public DbSet<BudgetCashflowWorstCaseItem> BudgetCashflowWorstCaseItems { get; set; }
+
+        public DbSet<GarmentDispositionPurchase> GarmentDispositionPurchases { get; set; }
+        public DbSet<GarmentDispositionPurchaseItem> GarmentDispositionPurchaseItems { get; set; }
+        public DbSet<GarmentDispositionPurchaseDetail> GarmentDispositionPurchaseDetailss { get; set; }
+
+        //public DbSet<ImportValue> ImportValues { get; set; }
+
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -218,6 +230,10 @@ namespace Com.DanLiris.Service.Purchasing.Lib
                 .IsUnique()
                 .HasFilter("[IsDeleted]=(0) AND [CreatedUtc]>CONVERT([datetime2],'2020-02-01 00:00:00.0000000')");
 
+            modelBuilder.Entity<GarmentDispositionPurchase>()
+                .HasIndex(i => i.DispositionNo)
+                .IsUnique()
+                .HasFilter("[IsDeleted]=(0) AND [CreatedUtc]>CONVERT([datetime2],'2020-02-01 00:00:00.0000000')");
             #endregion
             #region BalanceStock
             //modelBuilder.Entity<BalanceStock>()

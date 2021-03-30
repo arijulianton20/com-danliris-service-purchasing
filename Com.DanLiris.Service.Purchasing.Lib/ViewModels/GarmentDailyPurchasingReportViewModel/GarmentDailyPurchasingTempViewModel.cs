@@ -9,6 +9,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentDailyPurchasingR
         public string SuplName { get; set; }
         public string UnitName { get; set; }
         public string BCNo { get; set; }
+        public string BCType { get; set; }
+        public string NoteNo { get; set; }
         public string BonKecil { get; set; }
         public string DONo { get; set; }
         public string INNo { get; set; }

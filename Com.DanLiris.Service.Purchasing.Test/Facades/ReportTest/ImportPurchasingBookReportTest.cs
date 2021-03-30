@@ -17,6 +17,7 @@ using Com.DanLiris.Service.Purchasing.Test.DataUtils.UnitReceiptNoteDataUtils;
 using Com.DanLiris.Service.Purchasing.Test.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
@@ -95,6 +96,9 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.ReportTest
                 .Setup(x => x.GetService(typeof(ICurrencyProvider)))
                 .Returns(mockCurrencyProvider.Object);
 
+            
+            
+
             PurchaseRequestFacade purchaseRequestFacade = new PurchaseRequestFacade(serviceProvider.Object, dbContext);
             PurchaseRequestItemDataUtil purchaseRequestItemDataUtil = new PurchaseRequestItemDataUtil();
             PurchaseRequestDataUtil purchaseRequestDataUtil = new PurchaseRequestDataUtil(purchaseRequestItemDataUtil, purchaseRequestFacade);
@@ -135,6 +139,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.ReportTest
             serviceProvider
                 .Setup(x => x.GetService(typeof(ICurrencyProvider)))
                 .Returns(mockCurrencyProvider.Object);
+
 
             serviceProvider
                 .Setup(x => x.GetService(typeof(InternalPurchaseOrderFacade)))

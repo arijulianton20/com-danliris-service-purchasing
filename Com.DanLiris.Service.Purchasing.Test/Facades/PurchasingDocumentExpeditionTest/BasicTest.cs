@@ -11,55 +11,55 @@ using Xunit;
 
 namespace Com.DanLiris.Service.Purchasing.Test.Facades.PurchasingDocumentExpeditionTest
 {
-    [Collection("ServiceProviderFixture Collection")]
+ //   [Collection("ServiceProviderFixture Collection")]
     public class BasicTest
     {
-        private IServiceProvider ServiceProvider { get; set; }
+        //private IServiceProvider ServiceProvider { get; set; }
 
-        public BasicTest(ServiceProviderFixture fixture)
-        {
-            ServiceProvider = fixture.ServiceProvider;
+        //public BasicTest(ServiceProviderFixture fixture)
+        //{
+        //    ServiceProvider = fixture.ServiceProvider;
 
-            IdentityService identityService = (IdentityService)ServiceProvider.GetService(typeof(IdentityService));
-            identityService.Username = "Unit Test";
-        }
+        //    IdentityService identityService = (IdentityService)ServiceProvider.GetService(typeof(IdentityService));
+        //    identityService.Username = "Unit Test";
+        //}
 
-        private SendToVerificationDataUtil DataUtil
-        {
-            get { return (SendToVerificationDataUtil)ServiceProvider.GetService(typeof(SendToVerificationDataUtil)); }
-        }
+        //private SendToVerificationDataUtil DataUtil
+        //{
+        //    get { return (SendToVerificationDataUtil)ServiceProvider.GetService(typeof(SendToVerificationDataUtil)); }
+        //}
 
-        private PurchasingDocumentExpeditionFacade Facade
-        {
-            get { return (PurchasingDocumentExpeditionFacade)ServiceProvider.GetService(typeof(PurchasingDocumentExpeditionFacade)); }
-        }
+        //private PurchasingDocumentExpeditionFacade Facade
+        //{
+        //    get { return (PurchasingDocumentExpeditionFacade)ServiceProvider.GetService(typeof(PurchasingDocumentExpeditionFacade)); }
+        //}
 
-        [Fact]
-        public async Task Should_Success_Get_Data()
-        {
-            await DataUtil.GetTestData();
-            var Response = this.Facade.Read();
-            Assert.NotEmpty(Response.Item1);
-        }
+        //[Fact]
+        //public async Task Should_Success_Get_Data()
+        //{
+        //    await DataUtil.GetTestData();
+        //    var Response = this.Facade.Read();
+        //    Assert.NotEmpty(Response.Item1);
+        //}
 
-        [Fact]
-        public async Task Should_Success_Get_Data_With_Arguments()
-        {
-            string order = "{\"UnitPaymentOrderNo\":\"desc\"}";
-            string filter = "{\"Position\":2, \"IsPaidPPH\":\"false\"}";
-            string keyword = "Supplier";
+        //[Fact]
+        //public async Task Should_Success_Get_Data_With_Arguments()
+        //{
+        //    string order = "{\"UnitPaymentOrderNo\":\"desc\"}";
+        //    string filter = "{\"Position\":2, \"IsPaidPPH\":\"false\"}";
+        //    string keyword = "Supplier";
 
-            await DataUtil.GetTestData();
-            var Response = this.Facade.Read(1, 25, order, keyword, filter);
-            Assert.NotEmpty(Response.Item1);
-        }
+        //    await DataUtil.GetTestData();
+        //    var Response = this.Facade.Read(1, 25, order, keyword, filter);
+        //    Assert.NotEmpty(Response.Item1);
+        //}
 
-        [Fact]
-        public async Task Should_Success_Delete_Data()
-        {
-            PurchasingDocumentExpedition Data = await DataUtil.GetTestData();
-            int AffectedRows = await this.Facade.Delete(Data.Id);
-            Assert.True(AffectedRows > 0);
-        }        
+        //[Fact]
+        //public async Task Should_Success_Delete_Data()
+        //{
+        //    PurchasingDocumentExpedition Data = await DataUtil.GetTestData();
+        //    int AffectedRows = await this.Facade.Delete(Data.Id);
+        //    Assert.True(AffectedRows > 0);
+        //}        
     }
 }

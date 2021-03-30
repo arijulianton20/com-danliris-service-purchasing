@@ -132,7 +132,12 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.VBRequestPOExternal
                     var internNoteItemIds = internNoteItems.Select(element => element.Id).ToList();
                     var internNoteDetails = _dbContext.GarmentInternNoteDetails.AsNoTracking().Where(entity => internNoteItemIds.Contains(entity.GarmentItemINId)).ToList();
 
-                    result = garmentQueryResult.Select(element => new SPBDto(element, invoices, internNoteItems, internNoteDetails)).ToList();
+                    var doIds = internNoteDetails.Select(element => element.DOId).ToList();
+                    var corrections = _dbContext.GarmentCorrectionNotes.Where(entity => doIds.Contains(entity.DOId)).ToList();
+                    var correctionIds = corrections.Select(element => element.Id).ToList();
+                    var correctionItems = _dbContext.GarmentCorrectionNoteItems.Where(entity => correctionIds.Contains(entity.GCorrectionId)).ToList();
+
+                    result = garmentQueryResult.Select(element => new SPBDto(element, invoices, internNoteItems, internNoteDetails, corrections, correctionItems)).ToList();
 
                     epoIds = _dbContext.ExternalPurchaseOrders.AsNoTracking().Where(entity => entity.PaymentMethod == "CASH" && entity.POCashType == "VB" && entity.IsPosted).Select(entity => entity.Id).ToList();
 
@@ -220,7 +225,12 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.VBRequestPOExternal
                         var internNoteItemIds = internNoteItems.Select(element => element.Id).ToList();
                         var internNoteDetails = _dbContext.GarmentInternNoteDetails.AsNoTracking().Where(entity => internNoteItemIds.Contains(entity.GarmentItemINId)).ToList();
 
-                        result = garmentQueryResult.Select(element => new SPBDto(element, invoices, internNoteItems, internNoteDetails)).ToList();
+                        var doIds = internNoteDetails.Select(element => element.DOId).ToList();
+                        var corrections = _dbContext.GarmentCorrectionNotes.Where(entity => doIds.Contains(entity.DOId)).ToList();
+                        var correctionIds = corrections.Select(element => element.Id).ToList();
+                        var correctionItems = _dbContext.GarmentCorrectionNoteItems.Where(entity => correctionIds.Contains(entity.GCorrectionId)).ToList();
+
+                        result = garmentQueryResult.Select(element => new SPBDto(element, invoices, internNoteItems, internNoteDetails, corrections, correctionItems)).ToList();
                     }
                 }
             }

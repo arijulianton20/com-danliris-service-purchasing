@@ -367,7 +367,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentInternNoteTests
         {
             GarmentInternNoteFacades facade = new GarmentInternNoteFacades(_dbContext(GetCurrentMethod()), GetServiceProvider().Object);
             var model = await dataUtil(facade, GetCurrentMethod()).GetTestData();
-            var Response = facade.GetReport(model.INNo,null,null,null,null,null,null,null,null, 1, 25, "{}", 7);
+            var Response = facade.GetReport(model.INNo,null,null,null,null, null, null,null,null,null, 1, 25, "{}", 7);
             Assert.NotEqual(-1, Response.Item2);
         }
         [Fact]
@@ -375,7 +375,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentInternNoteTests
         {
             GarmentInternNoteFacades facade = new GarmentInternNoteFacades(_dbContext(GetCurrentMethod()), GetServiceProvider().Object);
             var model = await dataUtil(facade, GetCurrentMethod()).GetTestData();
-            var response = facade.GenerateExcelIn(model.INNo, null, null, null, null, null, null, null, null, 7);
+            var response = facade.GenerateExcelIn(model.INNo, null, null, null, null, null, null, null, null, null, 7);
             Assert.IsType<System.IO.MemoryStream>(response);
         }
         [Fact]
@@ -383,7 +383,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentInternNoteTests
         {
             GarmentInternNoteFacades facade = new GarmentInternNoteFacades(_dbContext(GetCurrentMethod()), GetServiceProvider().Object);
             var model = await dataUtil(facade, GetCurrentMethod()).GetTestData();
-            var response = facade.GetReport("", null, null, null, null, null, null, null, null, 1, 25, "{}", 7);
+            var response = facade.GetReport("", null, null, null, null, null, null, null, null, null, 1, 25, "{}", 7);
             Assert.NotEqual(-1, response.Item2);
         }
         [Fact]
@@ -391,7 +391,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentInternNoteTests
         {
             GarmentInternNoteFacades facade = new GarmentInternNoteFacades(_dbContext(GetCurrentMethod()), GetServiceProvider().Object);
             var model = await dataUtil(facade, GetCurrentMethod()).GetTestData();
-            var response = facade.GenerateExcelIn("", "codeTest", null, null, null, null, null, null, null, 8);
+            var response = facade.GenerateExcelIn(null, null, null, null, null, null, null, null, null, null, 8);
             Assert.IsType<System.IO.MemoryStream>(response);
         }
         #endregion

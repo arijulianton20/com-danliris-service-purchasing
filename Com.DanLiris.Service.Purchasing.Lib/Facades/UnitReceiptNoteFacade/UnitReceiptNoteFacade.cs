@@ -288,7 +288,13 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnitReceiptNoteFacade
                 Currency = currencyCode,
                 CurrencyRate = currencyRate,
                 PaymentDuration = paymentDuration,
-                Products = productList
+                Products = productList,
+                model.DivisionId,
+                model.DivisionCode,
+                model.DivisionName,
+                model.UnitId,
+                model.UnitCode,
+                model.UnitName
             };
 
             string creditorAccountUri = "creditor-account/unit-receipt-note";

@@ -4,10 +4,14 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
+using Com.DanLiris.Service.Purchasing.Lib.Enums;
+using Com.DanLiris.Service.Purchasing.Lib.Facades.DebtAndDispositionSummary;
 using Com.DanLiris.Service.Purchasing.Lib.Services;
 using Com.DanLiris.Service.Purchasing.Lib.Utilities.Currencies;
 using Com.DanLiris.Service.Purchasing.Lib.ViewModels.UnpaidDispositionReport;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using OfficeOpenXml;
 
 namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFacades
@@ -18,18 +22,27 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFac
         private readonly ICurrencyProvider _currencyProvider;
         private readonly IdentityService _identityService;
         private const string IDRCurrencyCode = "IDR";
+        private readonly List<CategoryDto> _categories;
 
         public UnpaidDispositionReportDetailFacade(IServiceProvider serviceProvider)
         {
+            var cache = serviceProvider.GetService<IDistributedCache>();
+            var jsonCategories = cache.GetString(MemoryCacheConstant.Categories);
+
             _dbContext = serviceProvider.GetService<PurchasingDbContext>();
             _currencyProvider = serviceProvider.GetService<ICurrencyProvider>();
             _identityService = serviceProvider.GetService<IdentityService>();
+
+            _categories = JsonConvert.DeserializeObject<List<CategoryDto>>(jsonCategories, new JsonSerializerSettings
+            {
+                MissingMemberHandling = MissingMemberHandling.Ignore
+            });
         }
 
-        private async Task<UnpaidDispositionReportDetailViewModel> GetReportData(int accountingUnitId, int categoryId, int divisionId, DateTimeOffset? dateTo, bool isImport, bool isForeignCurrency)
+        private async Task<UnpaidDispositionReportDetailViewModel> GetReportData(int categoryId, int accountingUnitId, int divisionId, DateTimeOffset? dateTo, bool isImport, bool isForeignCurrency)
         {
             //var dateStart = dateFrom.GetValueOrDefault().ToUniversalTime();
-            var dateEnd = (dateTo.HasValue ? dateTo.Value : DateTime.Now).ToUniversalTime();
+            var dateEnd = (dateTo.HasValue ? dateTo.Value : DateTime.MaxValue).ToUniversalTime();
 
             var query = from pdItems in _dbContext.PurchasingDispositionItems
 
@@ -94,9 +107,12 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFac
             else if (isForeignCurrency)
                 query = query.Where(x => x.CurrencyCode != "IDR");
 
-            var unitFilterIds = await _currencyProvider.GetUnitsIdsByAccountingUnitId(accountingUnitId);
-            if (unitFilterIds.Count() > 0)
-                query = query.Where(x => unitFilterIds.Contains(x.UnitId));
+            if (accountingUnitId > 0)
+            {
+                var unitFilterIds = await _currencyProvider.GetUnitsIdsByAccountingUnitId(accountingUnitId);
+                if (unitFilterIds.Count() > 0)
+                    query = query.Where(x => unitFilterIds.Contains(x.UnitId));
+            }
 
             //var categoryFilterIds = await _currencyProvider.GetCategoryIdsByAccountingCategoryId(accountingCategoryId);
             //if (categoryFilterIds.Count() > 0)
@@ -108,7 +124,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFac
             if (divisionId > 0)
                 query = query.Where(x => x.DivisionId == divisionId.ToString());
 
-            var queryResult = query.OrderByDescending(x => x.CreatedUtc).ToList();
+            var queryResult = query.OrderByDescending(x => x.PaymentDueDate).ToList();
 
             var unitIds = queryResult.Select(item =>
             {
@@ -137,13 +153,18 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFac
                     accountingUnit = accountingUnits.FirstOrDefault(element => element.Id == unit.AccountingUnitId);
                 }
 
-                int.TryParse(item.CategoryId, out var itemCategoryId);
-                var category = categories.FirstOrDefault(element => element.Id == itemCategoryId);
-                var accountingCategory = new AccountingCategory();
+                //int.TryParse(item.CategoryId, out var itemCategoryId);
+                //var category = categories.FirstOrDefault(element => element.Id == itemCategoryId);
+                //var accountingCategory = new AccountingCategory();
+                //if (category != null)
+                //{
+                //    accountingCategory = accountingCategories.FirstOrDefault(element => element.Id == category.AccountingCategoryId);
+                //}
+
+                var category = _categories.FirstOrDefault(_category => _category.Id.ToString() == item.CategoryId);
+                var categoryLayoutIndex = 0;
                 if (category != null)
-                {
-                    accountingCategory = accountingCategories.FirstOrDefault(element => element.Id == category.AccountingCategoryId);
-                }
+                    categoryLayoutIndex = category.ReportLayoutIndex;
 
                 double total = 0;
                 double totalCurrency = 0;
@@ -169,9 +190,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFac
                     CurrencyId = item.CurrencyId,
                     CurrencyCode = item.CurrencyCode,
                     CurrencyRate = (decimal)item.CurrencyRate,
-                    AccountingCategoryName = accountingCategory.Name,
-                    AccountingCategoryCode = accountingCategory.Code,
-                    AccountingLayoutIndex = accountingCategory.AccountingLayoutIndex,
+                    //AccountingCategoryName = accountingCategory.Name,
+                    //AccountingCategoryCode = accountingCategory.Code,
+                    //AccountingLayoutIndex = accountingCategory.AccountingLayoutIndex,
                     DPP = (decimal)item.DPP,
                     DPPCurrency = (decimal)(item.DPP * item.CurrencyRate),
                     InvoiceNo = item.InvoiceNo,
@@ -188,7 +209,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFac
                     URNNo = item.URNNo,
                     IncomeTax = (decimal)item.IncomeTaxValue,
                     IncomeTaxBy = item.IncomeTaxBy,
-                    PaymentDueDate = item.PaymentDueDate.Date
+                    PaymentDueDate = item.PaymentDueDate.Date,
+                    DivisionName = item.DivisionName,
+                    CategoryLayoutIndex = categoryLayoutIndex,
                 };
 
                 reportResult.Reports.Add(reportItem);
@@ -215,16 +238,73 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFac
                     SubTotalCurrency = report.Sum(sum => sum.TotalCurrency)
                 }).OrderBy(order => order.CurrencyCode).ToList();
 
-            reportResult.Reports = reportResult.Reports.OrderBy(order => order.CategoryId).ToList();
+            reportResult.Reports = reportResult.Reports.OrderBy(order => order.CategoryLayoutIndex).ToList();
             reportResult.GrandTotal = reportResult.Reports.Sum(sum => sum.TotalCurrency);
             reportResult.UnitSummaryTotal = reportResult.UnitSummaries.Sum(categorySummary => categorySummary.SubTotalCurrency);
 
             return reportResult;
         }
 
-        public async Task<MemoryStream> GenerateExcel(int accountingUnitId, int categoryId, int divisionId, DateTimeOffset? dateTo, bool isImport, bool isForeignCurrency)
+        public async Task<MemoryStream> GenerateExcel(int categoryId, int accountingUnitId, int divisionId, DateTimeOffset? dateTo, bool isImport, bool isForeignCurrency)
         {
-            var result = await GetReport(accountingUnitId, categoryId, divisionId, dateTo, isImport, isForeignCurrency);
+            var dueDateString = $"{dateTo:dd/MM/yyyy}";
+            if (dateTo == DateTimeOffset.MaxValue)
+                dueDateString = "-";
+
+            var result = await GetReport(categoryId, accountingUnitId, divisionId, dateTo, isImport, isForeignCurrency);
+
+            var unitName = "SEMUA UNIT";
+            var divisionName = "SEMUA DIVISI";
+            var separator = " - ";
+
+            if (accountingUnitId > 0 && divisionId == 0)
+            {
+                var summary = result.Reports.FirstOrDefault();
+                if (summary != null)
+                {
+                    unitName = $"UNIT {summary.AccountingUnitName}";
+                    separator = "";
+                    divisionName = "";
+                }
+                else
+                {
+                    unitName = "";
+                    separator = "";
+                    divisionName = "";
+                }
+            }
+            else if (divisionId > 0 && accountingUnitId == 0)
+            {
+                var summary = result.Reports.FirstOrDefault();
+                if (summary != null)
+                {
+                    divisionName = $"DIVISI {summary.DivisionName}";
+                    separator = "";
+                    unitName = "";
+                }
+                else
+                {
+                    divisionName = "";
+                    separator = "";
+                    unitName = "";
+                }
+            }
+            else if (accountingUnitId > 0 && divisionId > 0)
+            {
+                var summary = result.Reports.FirstOrDefault();
+                if (summary != null)
+                {
+                    unitName = $"UNIT {summary.AccountingUnitName}";
+                    separator = " - ";
+                    divisionName = $"DIVISI {summary.DivisionName}";
+                }
+                else
+                {
+                    divisionName = "";
+                    separator = "";
+                    unitName = "";
+                }
+            }
 
             var reportDataTable = GetFormatReportExcel();
 
@@ -309,20 +389,21 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFac
             using (var package = new ExcelPackage())
             {
                 var company = "PT DAN LIRIS";
-                var title = "LAPORAN DISPOSISI BELUM DIBAYAR LOKAL - DETAIL";
+                var title = "LAPORAN DISPOSISI BELUM DIBAYAR (DETAIL) LOKAL";
                 if (isForeignCurrency)
-                    title = "LAPORAN DISPOSISI BELUM DIBAYAR LOKAL VALAS - DETAIL";
+                    title = "LAPORAN DISPOSISI BELUM DIBAYAR (DETAIL) LOKAL VALAS";
                 else if (isImport)
-                    title = "LAPORAN DISPOSISI BELUM DIBAYAR IMPORT - DETAIL";
-                var period = $"Periode sampai {dateTo.GetValueOrDefault().AddHours(_identityService.TimezoneOffset):dd/MM/yyyy}";
+                    title = "LAPORAN DISPOSISI BELUM DIBAYAR (DETAIL) IMPOR";
+                var period = $"PERIODE S.D. {dueDateString}";
 
                 var worksheet = package.Workbook.Worksheets.Add("Sheet 1");
                 worksheet.Cells["A1"].Value = company;
                 worksheet.Cells["A2"].Value = title;
-                worksheet.Cells["A3"].Value = period;
-                worksheet.Cells["A4"].LoadFromDataTable(reportDataTable, true);
-                worksheet.Cells[$"A{4 + 3 + result.Reports.Count + space}"].LoadFromDataTable(unitDataTable, true);
-                worksheet.Cells[$"A{4 + result.Reports.Count + space + 3 + result.UnitSummaries.Count + 3}"].LoadFromDataTable(currencyDataTable, true);
+                worksheet.Cells["A3"].Value = unitName + separator + divisionName;
+                worksheet.Cells["A4"].Value = period;
+                worksheet.Cells["A5"].LoadFromDataTable(reportDataTable, true);
+                worksheet.Cells[$"A{5 + 3 + result.Reports.Count + space}"].LoadFromDataTable(unitDataTable, true);
+                worksheet.Cells[$"A{5 + result.Reports.Count + space + 3 + result.UnitSummaries.Count + 3}"].LoadFromDataTable(currencyDataTable, true);
 
                 var stream = new MemoryStream();
                 package.SaveAs(stream);
@@ -350,9 +431,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFac
             return dt;
         }
 
-        public Task<UnpaidDispositionReportDetailViewModel> GetReport(int accountingUnitId, int categoryId, int divisionId, DateTimeOffset? dateTo, bool isImport, bool isForeignCurrency)
+        public Task<UnpaidDispositionReportDetailViewModel> GetReport(int categoryId, int accountingUnitId, int divisionId, DateTimeOffset? dateTo, bool isImport, bool isForeignCurrency)
         {
-            return GetReportData(accountingUnitId, categoryId, divisionId, dateTo, isImport, isForeignCurrency);
+            return GetReportData(categoryId, accountingUnitId, divisionId, dateTo, isImport, isForeignCurrency);
         }
     }
 }

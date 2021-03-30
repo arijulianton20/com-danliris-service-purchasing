@@ -30,6 +30,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.AutoMapperProfiles
 			
 				.ForPath(d => d.currency.Id, opt => opt.MapFrom(s => s.CurrencyId))
 			  	.ForPath(d => d.currency.Code, opt => opt.MapFrom(s => s.CurrencyCode))
+				//.ForPath(d=> d.importValue.Id, opt=> opt.MapFrom(s=> s.ImportValueId))
+				.ForPath(d=> d.importValue, opt => opt.MapFrom(s=> s.ImportValue))
 			  	.ReverseMap();
 
 			CreateMap<GarmentBeacukaiItem, GarmentBeacukaiItemViewModel>()

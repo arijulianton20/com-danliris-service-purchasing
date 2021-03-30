@@ -47,6 +47,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentExternalPurchase
 
         public double BudgetRate { get; set; }
 
+        public bool IsPayVAT { get; set; }
+        public bool IsPayIncomeTax { get; set; }
+
         public List<GarmentExternalPurchaseOrderItemViewModel> Items { get; set; }
 
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)

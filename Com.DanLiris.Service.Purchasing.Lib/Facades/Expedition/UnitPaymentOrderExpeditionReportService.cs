@@ -120,7 +120,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Expedition
 
                         VerifiedBy = expeditionDocument.VerificationDivisionBy != null ? expeditionDocument.VerificationDivisionBy : "-",
                         CreatedBy = expeditionDocument.CreatedBy != null ? expeditionDocument.CreatedBy : "-",
-
+                        PaymentMethod = expeditionDocument.PaymentMethod != null ? expeditionDocument.PaymentMethod : "-"
                     }
                 );//.Where(document => status == 0 ? document.Position.Equals(FormatPosition(status)): document.Position.Equals(FormatPosition(status)));
 
@@ -194,12 +194,13 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Expedition
                 data = listData;
             }
 
-            var headers = new string[] { "No. SPB", "Tgl SPB", "Tgl Jatuh Tempo", "Nomor Invoice", "Supplier", "Kurs", "Jumlah", "Jumlah1", "Jumlah2", "Jumlah3", "Tempo", "Kategori", "Unit", "Divisi", "Posisi", "Tgl Pembelian Kirim", "Admin", "Verifikasi", "Verifikasi1", "Verifikasi2", "Kasir", "Kasir1" };
+            var headers = new string[] { "No. SPB", "Tgl SPB", "Tgl Jatuh Tempo", "Nomor Invoice", "Supplier", "Term Pembayaran", "Kurs", "Jumlah", "Jumlah1", "Jumlah2", "Jumlah3", "Tempo", "Kategori", "Unit", "Divisi", "Posisi", "Tgl Pembelian Kirim", "Admin", "Verifikasi", "Verifikasi1", "Verifikasi2", "Kasir", "Kasir1" };
             var subHeaders = new string[] { "DPP", "PPn", "PPh", "Total", "Tgl Terima", "Tgl Cek", "Tgl Kirim", "Tgl Terima", "No Kuitansi" };
 
             DataTable dataTable = new DataTable();
 
-            var headersDateType = new int[] { 1, 2, 15, 17, 18, 19, 20 };
+            //var headersDateType = new int[] { 1, 2, 15, 17, 18, 19, 20 };
+            var headersDateType = new int[] { 1, 2, 16, 18, 19, 20, 21 };
             for (int i = 0; i < headers.Length; i++)
             {
                 var header = headers[i];
@@ -218,7 +219,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Expedition
             {
                 decimal selisih = d.DueDate != null && d.Date != null ? ((d.DueDate.Value) - (d.Date.Value)).Days : 0;
 
-                dataTable.Rows.Add(d.No ?? "-", GetFormattedDate(d.Date), GetFormattedDate(d.DueDate), d.InvoiceNo ?? "-", d.Supplier.name ?? "-",
+                dataTable.Rows.Add(d.No ?? "-", GetFormattedDate(d.Date), GetFormattedDate(d.DueDate), d.InvoiceNo ?? "-", d.Supplier.name ?? "-", d.PaymentMethod ?? "-",
                     d.Currency ?? "-", d.DPP.ToString("#,##0.#0"), d.PPn.ToString("#,##0.#0"), d.PPh.ToString("#,##0.#0"), d.TotalTax.ToString("#,##0.#0"), Math.Abs(Math.Ceiling(selisih)), d.Category.Name ?? "-", d.Unit.Name ?? "-", d.Division.Name ?? "-", GetFormattedPosition(d.Position),
                     GetFormattedDate(d.SendToVerificationDivisionDate),
                     d.CreatedBy ?? "-",
@@ -246,12 +247,19 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Expedition
 
             sheet.Cells["A7"].LoadFromDataTable(dataTable, false, OfficeOpenXml.Table.TableStyles.None);
 
-            sheet.Cells["G5"].Value = headers[6];
+            /*sheet.Cells["G5"].Value = headers[6];
             sheet.Cells["G5:J5"].Merge = true;
             sheet.Cells["R5"].Value = headers[17];
             sheet.Cells["R5:T5"].Merge = true;
             sheet.Cells["U5"].Value = headers[20];
-            sheet.Cells["U5:V5"].Merge = true;
+            sheet.Cells["U5:V5"].Merge = true; */
+
+            sheet.Cells["H5"].Value = headers[7];
+            sheet.Cells["H5:K5"].Merge = true;
+            sheet.Cells["S5"].Value = headers[18];
+            sheet.Cells["S5:U5"].Merge = true;
+            sheet.Cells["V5"].Value = headers[21];
+            sheet.Cells["V5:W5"].Merge = true;
 
             foreach (var i in Enumerable.Range(0, 6))
             {
@@ -260,7 +268,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Expedition
                 sheet.Cells[$"{col}5:{col}6"].Merge = true;
             }
 
-            foreach (var i in Enumerable.Range(0, 4))
+            /*foreach (var i in Enumerable.Range(0, 4))
             {
                 var col = (char)('G' + i);
                 sheet.Cells[$"{col}5"].Value = subHeaders[i];
@@ -281,14 +289,45 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Expedition
             sheet.Cells["A5:V6"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
             sheet.Cells["A5:V6"].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
             sheet.Cells["A5:V6"].Style.Font.Bold = true;
-            sheet.Cells[$"G7:J{cells}"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
+            sheet.Cells[$"G7:J{cells}"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;*/
+
+            foreach (var i in Enumerable.Range(0, 4))
+            {
+                var col = (char)('H' + i);
+                sheet.Cells[$"{col}5"].Value = headers[i + 7];
+                sheet.Cells[$"{col}6"].Value = subHeaders[i + 0];
+            }
+
+            foreach (var i in Enumerable.Range(0, 1))
+            {
+                var col = (char)('G' + i);
+                sheet.Cells[$"{col}5"].Value = headers[i + 6];
+                sheet.Cells[$"{col}5:{col}6"].Merge = true;
+            }
+
+            foreach (var i in Enumerable.Range(0, 7))
+            {
+                var col = (char)('L' + i);
+                sheet.Cells[$"{col}5"].Value = headers[i + 11];
+                sheet.Cells[$"{col}5:{col}6"].Merge = true;
+            }
+
+            foreach (var i in Enumerable.Range(0, 5))
+            {
+                var col = (char)('S' + i);
+                sheet.Cells[$"{col}6"].Value = subHeaders[i + 4];
+            }
+            sheet.Cells["A5:W6"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            sheet.Cells["A5:W6"].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+            sheet.Cells["A5:W6"].Style.Font.Bold = true;
+            sheet.Cells[$"H7:K{cells}"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Right;
 
             foreach (var headerDateType in headersDateType)
             {
                 sheet.Column(headerDateType + 1).Style.Numberformat.Format = "dd MMMM yyyy";
             }
 
-            var widths = new int[] { 20, 20, 20, 50, 30, 10, 20, 20, 20, 20, 20, 30, 30, 20, 40, 20, 20, 20, 20, 20, 20, 20 };
+            var widths = new int[] { 20, 20, 20, 50, 30, 20, 10, 20, 20, 20, 20, 20, 30, 30, 20, 40, 20, 20, 20, 20, 20, 20, 20 };
             foreach (var i in Enumerable.Range(0, widths.Length))
             {
                 sheet.Column(i + 1).Width = widths[i];

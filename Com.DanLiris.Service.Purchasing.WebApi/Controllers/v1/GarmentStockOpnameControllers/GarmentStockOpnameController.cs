@@ -1,7 +1,9 @@
 ﻿using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentStockOpnameFacades;
+using Com.DanLiris.Service.Purchasing.Lib.Interfaces;
 using Com.DanLiris.Service.Purchasing.Lib.Models.GarmentStockOpnameModel;
 using Com.DanLiris.Service.Purchasing.Lib.Services;
 using Com.DanLiris.Service.Purchasing.WebApi.Helpers;
+using Com.Moonlay.NetCore.Lib.Service;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
@@ -21,12 +23,14 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentStockOpna
     {
         private readonly IGarmentStockOpnameFacade _facade;
         private readonly IdentityService _identityService;
+        private readonly IValidateService _validateService;
         private const string ApiVersion = "1.0";
 
         public GarmentStockOpnameController(IGarmentStockOpnameFacade service, IServiceProvider serviceProvider)
         {
             _facade = service;
             _identityService = serviceProvider.GetService<IdentityService>();
+            _validateService = serviceProvider.GetService<IValidateService>();
         }
 
         private void VerifyUser()
@@ -98,18 +102,23 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentStockOpna
             {
                 VerifyUser();
 
-                if (date == null || unit == null || storage == null)
-                {
-                    throw new Exception("Semua filter harus diisi");
-                }
+                var downloadFile = new GarmentStockOpnameDownload(date, unit, storage, storageName);
+                _validateService.Validate(downloadFile);
 
                 var stream = _facade.Download(date.Value, unit, storage, storageName);
                 stream.Position = 0;
 
                 FileStreamResult fileStreamResult = new FileStreamResult(stream, "application/excel");
-                fileStreamResult.FileDownloadName = $"Garment Stock Opname {unit} {storageName} {date.Value.ToString("dd MMMM yyyy")}.xlsx";
+                fileStreamResult.FileDownloadName = $"Garment Stock Opname {unit} {storageName} {date.Value.ToOffset(new TimeSpan(_identityService.TimezoneOffset, 0, 0)).ToString("dd MMMM yyyy")}.xlsx";
 
                 return fileStreamResult;
+            }
+            catch (ServiceValidationExeption e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.BAD_REQUEST_STATUS_CODE, General.BAD_REQUEST_MESSAGE)
+                    .Fail(e);
+                return BadRequest(Result);
             }
             catch (Exception e)
             {
@@ -140,6 +149,13 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentStockOpna
                 {
                     throw new Exception("No Uploaded Files");
                 }
+            }
+            catch (ServiceValidationExeption e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.BAD_REQUEST_STATUS_CODE, General.BAD_REQUEST_MESSAGE)
+                    .Fail(e);
+                return BadRequest(Result);
             }
             catch (Exception e)
             {

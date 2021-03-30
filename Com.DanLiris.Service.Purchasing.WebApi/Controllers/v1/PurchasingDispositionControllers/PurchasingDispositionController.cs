@@ -403,19 +403,14 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.PurchasingDispos
             
         }
 
-        [HttpPut("update/is-paid-true/{id}")]
-        public async Task<IActionResult> SetIsPaidTrue([FromRoute] int id)
+        [HttpPut("update/is-paid-true/{dispositionNo}")]
+        public async Task<IActionResult> SetIsPaidTrue([FromRoute] string dispositionNo)
         {
             try
             {
                 identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
 
-                var model = facade.ReadModelById(id);
-
-                if (model == null)
-                    return NotFound();
-
-                await facade.SetIsPaidTrue(id, identityService.Username);
+                await facade.SetIsPaidTrue(dispositionNo, identityService.Username);
                 return NoContent();
             }
             catch (Exception e)

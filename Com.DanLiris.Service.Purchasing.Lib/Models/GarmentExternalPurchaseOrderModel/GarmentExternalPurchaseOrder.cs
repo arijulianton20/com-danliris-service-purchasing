@@ -72,7 +72,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Models.GarmentExternalPurchaseOrde
         public long? UENId { get; set; }
 
         public double BudgetRate { get; set; }
-
+        public bool IsPayVAT { get; set; }
+        public bool IsPayIncomeTax { get; set; }
+        public bool IsDispositionPaidCreatedAll { get; set; }
         public virtual ICollection<GarmentExternalPurchaseOrderItem> Items { get; set; }
     }
 }

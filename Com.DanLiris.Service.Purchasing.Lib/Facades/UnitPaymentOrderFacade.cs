@@ -1186,7 +1186,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades
 
             int.TryParse(model.DivisionId, out var divisionId);
             var division = divisions.FirstOrDefault(entity => entity.Id == divisionId);
-            if (division == null)
+            if (division == null || string.IsNullOrWhiteSpace(division.COACode))
             {
                 division = new IdCOAResult()
                 {
@@ -1209,7 +1209,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades
 
                 int.TryParse(unitReceiptNote.UnitId, out var unitId);
                 var unit = units.FirstOrDefault(entity => entity.Id == unitId);
-                if (unit == null)
+                if (unit == null || string.IsNullOrWhiteSpace(unit.COACode))
                 {
                     unit = new IdCOAResult()
                     {

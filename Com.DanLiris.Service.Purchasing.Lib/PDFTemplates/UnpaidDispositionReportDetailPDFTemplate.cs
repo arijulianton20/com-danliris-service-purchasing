@@ -11,8 +11,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
 {
     public static class UnpaidDispositionReportDetailPDFTemplate
     {
-        private static readonly Font _headerFont = FontFactory.GetFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1250, BaseFont.NOT_EMBEDDED, 18);
-        private static readonly Font _subHeaderFont = FontFactory.GetFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1250, BaseFont.NOT_EMBEDDED, 16);
+        private static readonly Font _headerFont = FontFactory.GetFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1250, BaseFont.NOT_EMBEDDED, 11);
+        private static readonly Font _subHeaderFont = FontFactory.GetFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1250, BaseFont.NOT_EMBEDDED, 10);
         private static readonly Font _normalFont = FontFactory.GetFont(BaseFont.HELVETICA, BaseFont.CP1250, BaseFont.NOT_EMBEDDED, 9);
         private static readonly Font _smallFont = FontFactory.GetFont(BaseFont.HELVETICA, BaseFont.CP1250, BaseFont.NOT_EMBEDDED, 8);
         private static readonly Font _smallerFont = FontFactory.GetFont(BaseFont.HELVETICA, BaseFont.CP1250, BaseFont.NOT_EMBEDDED, 7);
@@ -21,18 +21,70 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
         private static readonly Font _smallerBoldFont = FontFactory.GetFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1250, BaseFont.NOT_EMBEDDED, 7);
         private static readonly Font _smallerBoldWhiteFont = FontFactory.GetFont(BaseFont.HELVETICA_BOLD, BaseFont.CP1250, BaseFont.NOT_EMBEDDED, 7, 0, BaseColor.White);
 
-        public static MemoryStream Generate(UnpaidDispositionReportDetailViewModel viewModel, int timezoneOffset, DateTimeOffset? dateTo, bool isValas, bool isImport)
+        public static MemoryStream Generate(UnpaidDispositionReportDetailViewModel viewModel, int timezoneOffset, DateTimeOffset? dateTo, bool isImport, bool isForeignCurrency, int accountingUnitId, int divisionId)
         {
-            var date = (dateTo.HasValue ? dateTo.Value : DateTime.Now).ToUniversalTime();
+            var date = (dateTo.HasValue ? dateTo.Value : DateTimeOffset.MaxValue).ToUniversalTime();
+            var unitName = "SEMUA UNIT";
+            var divisionName = "SEMUA DIVISI";
+            var separator = " - ";
+
+            if (accountingUnitId > 0 && divisionId == 0)
+            {
+                var summary = viewModel.Reports.FirstOrDefault();
+                if (summary != null)
+                {
+                    unitName = $"UNIT {summary.AccountingUnitName}";
+                    separator = "";
+                    divisionName = "";
+                }
+                else
+                {
+                    unitName = "";
+                    separator = "";
+                    divisionName = "";
+                }
+            }
+            else if (divisionId > 0 && accountingUnitId == 0)
+            {
+                var summary = viewModel.Reports.FirstOrDefault();
+                if (summary != null)
+                {
+                    divisionName = $"DIVISI {summary.DivisionName}";
+                    separator = "";
+                    unitName = "";
+                }
+                else
+                {
+                    divisionName = "";
+                    separator = "";
+                    unitName = "";
+                }
+            }
+            else if (accountingUnitId > 0 && divisionId > 0)
+            {
+                var summary = viewModel.Reports.FirstOrDefault();
+                if (summary != null)
+                {
+                    unitName = $"UNIT {summary.AccountingUnitName}";
+                    separator = " - ";
+                    divisionName = $"DIVISI {summary.DivisionName}";
+                }
+                else
+                {
+                    divisionName = "";
+                    separator = "";
+                    unitName = "";
+                }
+            }
 
             var document = new Document(PageSize.A4.Rotate(), 5, 5, 25, 25);
             var stream = new MemoryStream();
             PdfWriter.GetInstance(document, stream);
             document.Open();
 
-            SetHeader(document, dateTo.GetValueOrDefault(), timezoneOffset, isValas, isImport);
+            SetHeader(document, date, timezoneOffset, isImport, isForeignCurrency, unitName, separator, divisionName);
 
-            SetReportTable(document, viewModel, timezoneOffset, isValas, isImport);
+            SetReportTable(document, viewModel, timezoneOffset, isImport, isForeignCurrency);
 
             document.Close();
             byte[] byteInfo = stream.ToArray();
@@ -305,7 +357,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
             return new PdfPCell(table) { Border = Rectangle.NO_BORDER };
         }
 
-        private static void SetReportTable(Document document, UnpaidDispositionReportDetailViewModel viewModel, int timezoneOffset, bool isValas, bool isImport)
+        private static void SetReportTable(Document document, UnpaidDispositionReportDetailViewModel viewModel, int timezoneOffset, bool isImport, bool isForeignCurrency)
         {
             var table = new PdfPTable(12)
             {
@@ -327,7 +379,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
 
             SetReportTableHeader(table);
 
-            var grouppedByCategoryNames = viewModel.Reports.GroupBy(x => x.CategoryName).ToList();
+            var grouppedByCategoryNames = viewModel.Reports.Where(item => item.CategoryName != null).OrderBy(order => order.CategoryLayoutIndex).GroupBy(x => x.CategoryName).ToList();
 
             var cell = new PdfPCell()
             {
@@ -433,7 +485,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
             var widthSummaryTable = new List<float>() { 3f, 1f, 3f, 3f };
             summaryTable.SetWidths(widthSummaryTable.ToArray());
 
-            if (isValas || isImport)
+            if (isForeignCurrency || isImport)
                 summaryTable.AddCell(GetUnitSummaryValasTable(viewModel.UnitSummaries));
             else
                 summaryTable.AddCell(GetUnitSummaryTable(viewModel.UnitSummaries));
@@ -492,8 +544,12 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
             table.AddCell(cell);
         }
 
-        private static void SetHeader(Document document, DateTimeOffset dateTo, int timezoneOffset, bool isValas, bool isImport)
+        private static void SetHeader(Document document, DateTimeOffset dateTo, int timezoneOffset, bool isImport, bool isForeignCurrency, string unitName, string separator, string divisionName)
         {
+            var dueDateString = $"{dateTo:dd/MM/yyyy}";
+            if (dateTo == DateTimeOffset.MaxValue)
+                dueDateString = "-";
+
             var table = new PdfPTable(1)
             {
                 WidthPercentage = 95
@@ -506,17 +562,20 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
             };
             table.AddCell(cell);
 
-            var title = "LAPORAN DISPOSISI BELUM DIBAYAR LOKAL - DETAIL";
+            var title = "LAPORAN DISPOSISI BELUM DIBAYAR (DETAIL) LOKAL";
 
-            if (isValas)
-                title = "LAPORAN DISPOSISI BELUM DIBAYAR LOKAL VALAS - DETAIL";
+            if (isForeignCurrency)
+                title = "LAPORAN DISPOSISI BELUM DIBAYAR (DETAIL) LOKAL VALAS";
             else if (isImport)
-                title = "LAPORAN DISPOSISI BELUM DIBAYAR IMPORT - DETAIL";
+                title = "LAPORAN DISPOSISI BELUM DIBAYAR (DETAIL) IMPOR";
 
             cell.Phrase = new Phrase(title, _headerFont);
             table.AddCell(cell);
 
-            cell.Phrase = new Phrase($"Periode sampai {dateTo.AddHours(timezoneOffset):yyyy-dd-MM}", _subHeaderFont);
+            cell.Phrase = new Phrase(unitName + separator + divisionName, _headerFont);
+            table.AddCell(cell);
+
+            cell.Phrase = new Phrase($"PERIODE S.D. {dueDateString}", _headerFont);
             table.AddCell(cell);
 
             cell.Phrase = new Phrase("", _headerFont);

@@ -13,5 +13,6 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentStockOpnameFacades
         GarmentStockOpname ReadById(int id);
         Stream Download(DateTimeOffset date, string unit, string storage, string storageName);
         Task<GarmentStockOpname> Upload(Stream stream);
+        GarmentStockOpname GetLastDataByUnitStorage(string unit, string storage);
     }
 }

@@ -105,5 +105,42 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentReports
 
         }
 
+        [HttpGet("download-for-unit")]
+        public IActionResult GetXlsForUnit(string category, string productcode, string categoryname, string unit, string unitname, DateTimeOffset? dateFrom, DateTimeOffset? dateTo, int size = 25, int page = 1, string Order = "{}")
+        {
+
+            if (dateTo == null)
+                dateTo = DateTimeOffset.UtcNow;
+
+            if (dateFrom == null)
+                dateFrom = DateTimeOffset.MinValue;
+
+            try
+            {
+                byte[] xlsInBytes;
+
+                int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
+                var xls = facade.GenerateExcelForUnit(category, productcode, categoryname, unit, unitname, dateFrom.GetValueOrDefault(), dateTo.GetValueOrDefault(), offset);
+
+                string filename = "Laporan Rekap BUK";
+                if (dateFrom != null) filename += " " + ((DateTime)dateFrom.Value.DateTime).ToString("dd-MM-yyyy");
+                if (dateTo != null) filename += "_" + ((DateTime)dateTo.Value.DateTime).ToString("dd-MM-yyyy");
+                filename += ".xlsx";
+
+
+                xlsInBytes = xls.ToArray();
+                var file = File(xlsInBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+                return file;
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+
+        }
+
     }
 }

@@ -67,5 +67,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Models.GarmentExternalPurchaseOrde
         public long GarmentEPOId { get; set; }
         [ForeignKey("GarmentEPOId")]
         public virtual GarmentExternalPurchaseOrder GarmentExternalPurchaseOrder { get; set; }
+        public bool IsDispositionCreatedAll { get; set; }
+
+
     }
 }

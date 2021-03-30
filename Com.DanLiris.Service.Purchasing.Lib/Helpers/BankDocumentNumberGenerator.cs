@@ -69,5 +69,53 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Helpers
 
             return result;
         }
+
+        public async Task<string> GenerateDocumentNumber(string Type, string BankCode, string Username,DateTime Date)
+        {
+            string result = "";
+            BankDocumentNumber lastData = await dbSet.Where(w => w.BankCode.Equals(BankCode) && w.Type.Equals(Type)).OrderByDescending(o => o.LastModifiedUtc).FirstOrDefaultAsync();
+
+            DateTime Now = Date;
+
+            if (lastData == null)
+            {
+
+                result = $"{Now.ToString("yy")}{Now.ToString("MM")}{BankCode}{Type}0001";
+                BankDocumentNumber bankDocumentNumber = new BankDocumentNumber()
+                {
+                    BankCode = BankCode,
+                    Type = Type,
+                    LastDocumentNumber = 1
+                };
+                EntityExtension.FlagForCreate(bankDocumentNumber, Username, USER_AGENT);
+
+                dbContext.BankDocumentNumbers.Add(bankDocumentNumber);
+                await dbContext.SaveChangesAsync();
+            }
+            else
+            {
+                if (lastData.LastModifiedUtc.Month != Now.Month)
+                {
+                    result = $"{Now.ToString("yy")}{Now.ToString("MM")}{BankCode}{Type}0001";
+
+                    lastData.LastDocumentNumber = 1;
+                }
+                else
+                {
+                    lastData.LastDocumentNumber += 1;
+                    result = $"{Now.ToString("yy")}{Now.ToString("MM")}{BankCode}{Type}{lastData.LastDocumentNumber.ToString().PadLeft(4, '0')}";
+                }
+                EntityExtension.FlagForUpdate(lastData, Username, USER_AGENT);
+                dbContext.BankDocumentNumbers.Update(lastData);
+                //dbContext.Entry(lastData).Property(x => x.LastDocumentNumber).IsModified = true;
+                //dbContext.Entry(lastData).Property(x => x.LastModifiedAgent).IsModified = true;
+                //dbContext.Entry(lastData).Property(x => x.LastModifiedBy).IsModified = true;
+                //dbContext.Entry(lastData).Property(x => x.LastModifiedUtc).IsModified = true;
+
+                await dbContext.SaveChangesAsync();
+            }
+
+            return result;
+        }
     }
 }

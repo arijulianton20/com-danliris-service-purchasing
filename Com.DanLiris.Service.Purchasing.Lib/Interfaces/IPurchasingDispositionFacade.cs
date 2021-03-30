@@ -15,7 +15,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Interfaces
         Task<int> Create(PurchasingDisposition m, string user, int clientTimeZoneOffset = 7);
         int Delete(int id, string user);
         Task<int> Update(int id, PurchasingDisposition purchasingDisposition, string user);
-        Task<int> SetIsPaidTrue(int id, string user);
+        Task<int> SetIsPaidTrue(string dispositionNo, string user);
         List<PurchasingDisposition> ReadDisposition(string Keyword = null, string Filter = "{}", string epoId = "");
         IQueryable<PurchasingDisposition> ReadByDisposition(string Keyword = null, string Filter = "{}");
         Task<int> UpdatePosition(PurchasingDispositionUpdatePositionPostedViewModel data, string user);

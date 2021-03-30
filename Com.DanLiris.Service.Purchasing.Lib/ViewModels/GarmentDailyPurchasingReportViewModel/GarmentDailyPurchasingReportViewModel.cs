@@ -7,6 +7,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentDailyPurchasingR
 	public class GarmentDailyPurchasingReportViewModel
     {
         public string SupplierName { get; set; }
+        public string BCNo { get; set; }
+        public string BCType { get; set; }
         public string BillNo { get; set; }
         public string PaymentBill { get; set; }
         public string DONo { get; set; }

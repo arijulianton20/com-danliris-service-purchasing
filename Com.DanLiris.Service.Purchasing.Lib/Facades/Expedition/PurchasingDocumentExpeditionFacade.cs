@@ -380,6 +380,35 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Expedition
                         UpdateUnitPaymentOrderPosition(unitPaymentOrders, ExpeditionPosition.CASHIER_DIVISION, username);
                     }
                     #endregion Cashier
+                    #region Accounting
+                    else if (data.Role.Equals("ACCOUNTING"))
+                    {
+                        foreach (PurchasingDocumentAcceptanceItem item in data.PurchasingDocumentExpedition)
+                        {
+                            unitPaymentOrders.Add(item.UnitPaymentOrderNo);
+
+                            PurchasingDocumentExpedition model = new PurchasingDocumentExpedition
+                            {
+                                Id = item.Id,
+                                AccountingDivisionBy = username,
+                                AccountingDivisionDate = DateTimeOffset.UtcNow,
+                                Position = ExpeditionPosition.FINANCE_DIVISION,
+                            };
+
+                            EntityExtension.FlagForUpdate(model, username, "Facade");
+                            //dbContext.Attach(model);
+                            dbContext.Entry(model).Property(x => x.AccountingDivisionBy).IsModified = true;
+                            dbContext.Entry(model).Property(x => x.AccountingDivisionDate).IsModified = true;
+                            dbContext.Entry(model).Property(x => x.Position).IsModified = true;
+                            dbContext.Entry(model).Property(x => x.LastModifiedAgent).IsModified = true;
+                            dbContext.Entry(model).Property(x => x.LastModifiedBy).IsModified = true;
+                            dbContext.Entry(model).Property(x => x.LastModifiedUtc).IsModified = true;
+                        }
+
+                        Updated = await dbContext.SaveChangesAsync();
+                        UpdateUnitPaymentOrderPosition(unitPaymentOrders, ExpeditionPosition.FINANCE_DIVISION, username);
+                    }
+                    #endregion Accounting
                     /*
                     #region Finance
                     else if (data.Role.Equals("FINANCE"))

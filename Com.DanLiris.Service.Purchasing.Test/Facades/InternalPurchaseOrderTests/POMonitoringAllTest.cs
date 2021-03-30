@@ -31,47 +31,9 @@ using Xunit;
 
 namespace Com.DanLiris.Service.Purchasing.Test.Facades.InternalPurchaseOrderTests
 {
-    //[Collection("ServiceProviderFixture Collection")]
+   
     public class POMonitoringAllTest
     {
-        //private IServiceProvider ServiceProvider { get; set; }
-
-        //public POMonitoringAllTest(ServiceProviderFixture fixture)
-        //{
-        //    ServiceProvider = fixture.ServiceProvider;
-
-        //    IdentityService identityService = (IdentityService)ServiceProvider.GetService(typeof(IdentityService));
-        //    identityService.Username = "Unit Test";
-        //}
-
-        //private InternalPurchaseOrderDataUtil DataUtil
-        //{
-        //    get { return (InternalPurchaseOrderDataUtil)ServiceProvider.GetService(typeof(InternalPurchaseOrderDataUtil)); }
-        //}
-        //private PurchaseRequestDataUtil DataUtilPR
-        //{
-        //    get { return (PurchaseRequestDataUtil)ServiceProvider.GetService(typeof(PurchaseRequestDataUtil)); }
-        //}
-        //private ExternalPurchaseOrderDataUtil DataUtilEPO
-        //{
-        //    get { return (ExternalPurchaseOrderDataUtil)ServiceProvider.GetService(typeof(ExternalPurchaseOrderDataUtil)); }
-        //}
-        //private DeliveryOrderDataUtil DataUtilDO
-        //{
-        //    get { return (DeliveryOrderDataUtil)ServiceProvider.GetService(typeof(DeliveryOrderDataUtil)); }
-        //}
-        //private UnitReceiptNoteDataUtil DataUtilURN
-        //{
-        //    get { return (UnitReceiptNoteDataUtil)ServiceProvider.GetService(typeof(UnitReceiptNoteDataUtil)); }
-        //}
-        //private UnitPaymentOrderDataUtil DataUtilUPO
-        //{
-        //    get { return (UnitPaymentOrderDataUtil)ServiceProvider.GetService(typeof(UnitPaymentOrderDataUtil)); }
-        //}
-        //private UnitPaymentCorrectionNoteDataUtil DataUtilCorr
-        //{
-        //    get { return (UnitPaymentCorrectionNoteDataUtil)ServiceProvider.GetService(typeof(UnitPaymentCorrectionNoteDataUtil)); }
-        //}
 
         private const string ENTITY = "UnitPaymentPriceCorrectionNote";
 
@@ -329,37 +291,37 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.InternalPurchaseOrderTest
             Assert.IsType<System.IO.MemoryStream>(Response);
         }
 
-        [Fact]
-        public async Task Should_Success_Get_Report_Data_Excel_Null_Parameter()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            PurchaseOrderMonitoringAllFacade facade = new PurchaseOrderMonitoringAllFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            //PurchaseOrderMonitoringAllFacade facade = new PurchaseOrderMonitoringAllFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            //PurchaseRequestFacade purchaseRequestFacade = new PurchaseRequestFacade(GetServiceProvider("Unit test").Object, _dbContext("Unit test"));
-            //PurchaseRequestItemDataUtil purchaseRequestItemDataUtil = new PurchaseRequestItemDataUtil();
-            //PurchaseRequestDataUtil purchaseRequestDataUtil = new PurchaseRequestDataUtil(purchaseRequestItemDataUtil, purchaseRequestFacade);
+        //[Fact]
+        //public async Task Should_Success_Get_Report_Data_Excel_Null_Parameter()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    PurchaseOrderMonitoringAllFacade facade = new PurchaseOrderMonitoringAllFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    //PurchaseOrderMonitoringAllFacade facade = new PurchaseOrderMonitoringAllFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    //PurchaseRequestFacade purchaseRequestFacade = new PurchaseRequestFacade(GetServiceProvider("Unit test").Object, _dbContext("Unit test"));
+        //    //PurchaseRequestItemDataUtil purchaseRequestItemDataUtil = new PurchaseRequestItemDataUtil();
+        //    //PurchaseRequestDataUtil purchaseRequestDataUtil = new PurchaseRequestDataUtil(purchaseRequestItemDataUtil, purchaseRequestFacade);
 
-            //InternalPurchaseOrderFacade internalPurchaseOrderFacade = new InternalPurchaseOrderFacade(GetServiceProvider("Unit test").Object, _dbContext("Unit test"));
-            //InternalPurchaseOrderItemDataUtil internalPurchaseOrderItemDataUtil = new InternalPurchaseOrderItemDataUtil();
-            //InternalPurchaseOrderDataUtil internalPurchaseOrderDataUtil = new InternalPurchaseOrderDataUtil(internalPurchaseOrderItemDataUtil, internalPurchaseOrderFacade, purchaseRequestDataUtil);
+        //    //InternalPurchaseOrderFacade internalPurchaseOrderFacade = new InternalPurchaseOrderFacade(GetServiceProvider("Unit test").Object, _dbContext("Unit test"));
+        //    //InternalPurchaseOrderItemDataUtil internalPurchaseOrderItemDataUtil = new InternalPurchaseOrderItemDataUtil();
+        //    //InternalPurchaseOrderDataUtil internalPurchaseOrderDataUtil = new InternalPurchaseOrderDataUtil(internalPurchaseOrderItemDataUtil, internalPurchaseOrderFacade, purchaseRequestDataUtil);
 
-            //ExternalPurchaseOrderFacade externalPurchaseOrderFacade = new ExternalPurchaseOrderFacade(GetServiceProvider("Unit test").Object, _dbContext("Unit test"));
-            //ExternalPurchaseOrderDetailDataUtil externalPurchaseOrderDetailDataUtil = new ExternalPurchaseOrderDetailDataUtil();
-            //ExternalPurchaseOrderItemDataUtil externalPurchaseOrderItemDataUtil = new ExternalPurchaseOrderItemDataUtil(externalPurchaseOrderDetailDataUtil);
-            //ExternalPurchaseOrderDataUtil externalPurchaseOrderDataUtil = new ExternalPurchaseOrderDataUtil(externalPurchaseOrderFacade, internalPurchaseOrderDataUtil, externalPurchaseOrderItemDataUtil);
+        //    //ExternalPurchaseOrderFacade externalPurchaseOrderFacade = new ExternalPurchaseOrderFacade(GetServiceProvider("Unit test").Object, _dbContext("Unit test"));
+        //    //ExternalPurchaseOrderDetailDataUtil externalPurchaseOrderDetailDataUtil = new ExternalPurchaseOrderDetailDataUtil();
+        //    //ExternalPurchaseOrderItemDataUtil externalPurchaseOrderItemDataUtil = new ExternalPurchaseOrderItemDataUtil(externalPurchaseOrderDetailDataUtil);
+        //    //ExternalPurchaseOrderDataUtil externalPurchaseOrderDataUtil = new ExternalPurchaseOrderDataUtil(externalPurchaseOrderFacade, internalPurchaseOrderDataUtil, externalPurchaseOrderItemDataUtil);
 
-            //InternalPurchaseOrder d = await internalPurchaseOrderDataUtil.GetNewData("Unit test");
-            //await internalPurchaseOrderFacade.Create(d, "Unit test");
-            //var model = await externalPurchaseOrderDataUtil.GetNewData("Unit test", d);
-            //await externalPurchaseOrderFacade.Create(model, "Unit test", 7);
-            UnitPaymentPriceCorrectionNoteFacade facadeUPO = new UnitPaymentPriceCorrectionNoteFacade(GetServiceProvider(GetCurrentMethod()).Object, _dbContext(GetCurrentMethod()));
-            var modelLocalSupplier = await _dataUtil(facadeUPO, GetCurrentMethod()).GetNewData();
-            var ResponseLocalSupplier = await facadeUPO.Create(modelLocalSupplier, false, USERNAME, 7);
-            //InternalPurchaseOrderFacade ipoFacade = new InternalPurchaseOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            //InternalPurchaseOrder model = await _dataUtilIPO(ipoFacade, GetCurrentMethod()).GetTestData("Unit test");
-            var Response = facade.GenerateExcel("", "0", null, null, null, null, null, null, null, null, null, null, null, 7, "");
-            Assert.IsType<System.IO.MemoryStream>(Response);
-        }
+        //    //InternalPurchaseOrder d = await internalPurchaseOrderDataUtil.GetNewData("Unit test");
+        //    //await internalPurchaseOrderFacade.Create(d, "Unit test");
+        //    //var model = await externalPurchaseOrderDataUtil.GetNewData("Unit test", d);
+        //    //await externalPurchaseOrderFacade.Create(model, "Unit test", 7);
+        //    UnitPaymentPriceCorrectionNoteFacade facadeUPO = new UnitPaymentPriceCorrectionNoteFacade(GetServiceProvider(GetCurrentMethod()).Object, _dbContext(GetCurrentMethod()));
+        //    var modelLocalSupplier = await _dataUtil(facadeUPO, GetCurrentMethod()).GetNewData();
+        //    var ResponseLocalSupplier = await facadeUPO.Create(modelLocalSupplier, false, USERNAME, 7);
+        //    //InternalPurchaseOrderFacade ipoFacade = new InternalPurchaseOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    //InternalPurchaseOrder model = await _dataUtilIPO(ipoFacade, GetCurrentMethod()).GetTestData("Unit test");
+        //    var Response = facade.GenerateExcel("", "0", null, null, null, null, null, null, null, null, null, null, null, 7, "");
+        //    Assert.IsType<System.IO.MemoryStream>(Response);
+        //}
 
 
         #region Staff Sarmut 

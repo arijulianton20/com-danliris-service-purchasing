@@ -11,5 +11,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Enums
         public const string Categories = "Category";
         public const string IncomeTaxes = "IncomeTax";
         public const string BankAccounts = "AccountBank";
+        public const string AccountingUnits = "AccountingUnit";
+        public const string BudgetingCategories = "BudgetingCategory";
+        public const string Currencies = "Currency";
     }
 }

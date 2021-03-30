@@ -33,6 +33,10 @@ namespace Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentUnitReceiptNoteD
                 UnitCode = string.Concat("UnitCode", nowTicks),
                 UnitName = string.Concat("UnitName", nowTicks),
 
+                StorageId = nowTicks,
+                StorageCode = string.Concat("StorageCode", nowTicks),
+                StorageName = string.Concat("StorageName", nowTicks),
+
                 SupplierId = garmentDeliveryOrder.SupplierId,
                 SupplierCode = garmentDeliveryOrder.SupplierCode,
                 SupplierName = garmentDeliveryOrder.SupplierName,

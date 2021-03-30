@@ -150,7 +150,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.BankExpenditureNoteFacades
                             PurchasingDocumentExpedition pde = new PurchasingDocumentExpedition
                             {
                                 Id = (int)detail.UnitPaymentOrderId,
-                                IsPaid = true,
+                                //IsPaid = true,
                                 BankExpenditureNoteNo = model.DocumentNo,
                                 BankExpenditureNoteDate = model.Date
                             };
@@ -190,7 +190,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.BankExpenditureNoteFacades
                             PurchasingDocumentExpedition pde = new PurchasingDocumentExpedition
                             {
                                 Id = (int)detail.UnitPaymentOrderId,
-                                IsPaid = false,
+                                //IsPaid = false,
                                 BankExpenditureNoteNo = null,
                                 BankExpenditureNoteDate = null
                             };
@@ -249,7 +249,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.BankExpenditureNoteFacades
                         PurchasingDocumentExpedition pde = new PurchasingDocumentExpedition
                         {
                             Id = (int)detail.UnitPaymentOrderId,
-                            IsPaid = true,
+                            //IsPaid = true,
                             BankExpenditureNoteNo = model.DocumentNo,
                             BankExpenditureNoteDate = model.Date
                         };
@@ -757,6 +757,19 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.BankExpenditureNoteFacades
         {
             var models = dbContext.BankExpenditureNotes.Include(entity => entity.Details).ThenInclude(detail => detail.Items).Where(entity => ids.Contains(entity.Id)).ToList();
             var identityService = serviceProvider.GetService<IdentityService>();
+            var upoNos = models.SelectMany(model => model.Details).Select(detail => detail.UnitPaymentOrderNo).ToList();
+            var unitPaymentOrders = dbContext
+                .UnitPaymentOrders
+                .Where(upo => upoNos.Contains(upo.UPONo))
+                .ToList()
+                .Select(upo =>
+                {
+                    upo.IsPaid = true;
+                    EntityExtension.FlagForUpdate(upo, identityService.Username, USER_AGENT);
+                    return upo;
+                })
+                .ToList();
+            dbContext.UnitPaymentOrders.UpdateRange(unitPaymentOrders);
 
             foreach (var model in models)
             {

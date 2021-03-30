@@ -147,5 +147,17 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentStockOpnameTests
             var Response = await facade.Upload(excel);
             Assert.NotEqual(0, Response.Id);
         }
+
+        [Fact]
+        public async Task GetLastDataByUnitStorage_Success()
+        {
+            var serviceProvider = GetServiceProviderMock().Object;
+            var dbContext = _dbContext(GetCurrentMethod());
+            var facade = new GarmentStockOpnameFacade(serviceProvider, dbContext);
+            var data = await dataUtil(facade, serviceProvider, dbContext).GetTestData();
+
+            var Response = facade.GetLastDataByUnitStorage(data.UnitCode, data.StorageCode);
+            Assert.NotEqual(0, Response.Id);
+        }
     }
 }

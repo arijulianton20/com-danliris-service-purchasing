@@ -37,16 +37,16 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.UnpaidDispositio
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get([FromQuery] int accountingUnitId, [FromQuery] int categoryId, [FromQuery] int divisionId, [FromQuery] DateTimeOffset? dateTo, [FromQuery] bool isImport, [FromQuery] bool isForeignCurrency)
+        public async Task<IActionResult> Get([FromQuery] int categoryId, [FromQuery] int accountingUnitId, [FromQuery] int divisionId, [FromQuery] DateTimeOffset? dateTo, [FromQuery] bool isImport, [FromQuery] bool isForeignCurrency)
         {
             try
             {
                 VerifyUser();
 
                 if (!dateTo.HasValue)
-                    dateTo = DateTimeOffset.Now;
+                    dateTo = DateTimeOffset.MaxValue;
 
-                var data = await _service.GetReport(accountingUnitId, categoryId, divisionId, dateTo.GetValueOrDefault(), isImport, isForeignCurrency);
+                var data = await _service.GetReport(categoryId, accountingUnitId, divisionId, dateTo, isImport, isForeignCurrency);
 
                 return Ok(new
                 {
@@ -67,22 +67,22 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.UnpaidDispositio
         }
 
         [HttpGet("download-excel")]
-        public async Task<IActionResult> DownloadExcelAsync([FromQuery] int categoryId, [FromQuery] int unitId, [FromQuery] int divisionId, [FromQuery] DateTimeOffset? dateTo, [FromQuery] bool isImport, [FromQuery] bool isForeignCurrency)
+        public async Task<IActionResult> DownloadExcelAsync([FromQuery] int categoryId, [FromQuery] int accountingUnitId, [FromQuery] int divisionId, [FromQuery] DateTimeOffset? dateTo, [FromQuery] bool isImport, [FromQuery] bool isForeignCurrency)
         {
 
             try
             {
                 if (!dateTo.HasValue)
-                    dateTo = DateTimeOffset.Now;
+                    dateTo = DateTimeOffset.MaxValue;
 
                 byte[] xlsInBytes;
-                var xls = await _service.GenerateExcel(categoryId, unitId, divisionId, dateTo.GetValueOrDefault(), isImport, isForeignCurrency);
+                var xls = await _service.GenerateExcel(categoryId, accountingUnitId, divisionId, dateTo, isImport, isForeignCurrency);
 
-                string filename = "Laporan Disposisi Belum Dibayar Lokal - Detail";
+                string filename = "Laporan Disposisi Belum Dibayar (Detail) Lokal";
                 if(isForeignCurrency)
-                    filename = "Laporan Disposisi Belum Dibayar Lokal Valas - Detail";
+                    filename = "Laporan Disposisi Belum Dibayar (Detail) Lokal Valas";
                 else if(isImport)
-                    filename = "Laporan Disposisi Belum Dibayar Import - Detail";
+                    filename = "Laporan Disposisi Belum Dibayar (Detail) Impor";
                 //if (dateTo != null) filename += "_" + ((DateTime)dateTo).ToString("dd-MM-yyyy");
                 filename += ".xlsx";
 
@@ -100,25 +100,25 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.UnpaidDispositio
         }
 
         [HttpGet("download-pdf")]
-        public async Task<IActionResult> DownloadPdfAsync([FromQuery] int categoryId, [FromQuery] int unitId, [FromQuery] int divisionId, [FromQuery] DateTimeOffset? dateTo, [FromQuery] bool isImport, [FromQuery] bool isForeignCurrency)
+        public async Task<IActionResult> DownloadPdfAsync([FromQuery] int categoryId, [FromQuery] int accountingUnitId, [FromQuery] int divisionId, [FromQuery] DateTimeOffset? dateTo, [FromQuery] bool isImport, [FromQuery] bool isForeignCurrency)
         {
 
             try
             {
                 if (!dateTo.HasValue)
-                    dateTo = DateTimeOffset.Now;
+                    dateTo = DateTimeOffset.MaxValue;
 
                 var clientTimeZoneOffset = int.Parse(Request.Headers["x-timezone-offset"].First());
 
-                var data = await _service.GetReport(categoryId, unitId, divisionId, dateTo, isImport, isForeignCurrency);
+                var data = await _service.GetReport(categoryId, accountingUnitId, divisionId, dateTo, isImport, isForeignCurrency);
 
-                var stream = UnpaidDispositionReportDetailPDFTemplate.Generate(data, clientTimeZoneOffset, dateTo, isForeignCurrency, isImport);
+                var stream = UnpaidDispositionReportDetailPDFTemplate.Generate(data, clientTimeZoneOffset, dateTo, isImport, isForeignCurrency, accountingUnitId, divisionId);
 
-                var filename = "Laporan Disposisi Belum Dibayar Lokal - Detail";
+                var filename = "Laporan Detail Disposisi Belum Dibayar Lokal";
                 if (isForeignCurrency)
-                    filename = "Laporan Disposisi Belum Dibayar Lokal Valas - Detail";
+                    filename = "Laporan Detail Disposisi Belum Dibayar Lokal Valas";
                 else if (isImport)
-                    filename = "Laporan Disposisi Belum Dibayar Import - Detail";
+                    filename = "Laporan Detail Disposisi Belum Dibayar Impor";
 
                 filename += ".pdf";
 

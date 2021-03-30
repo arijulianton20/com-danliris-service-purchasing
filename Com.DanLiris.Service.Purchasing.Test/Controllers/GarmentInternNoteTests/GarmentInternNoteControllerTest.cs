@@ -932,7 +932,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentInternNoteTest
         public void Should_Success_Get_Report()
         {
             var mockFacade = new Mock<IGarmentInternNoteFacade>();
-            mockFacade.Setup(x => x.GetReport(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>()))
+            mockFacade.Setup(x => x.GetReport(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>()))
                 .Returns(Tuple.Create(new List<GarmentInternNoteReportViewModel>(), 5));
             var mockMapper = new Mock<IMapper>();
             //mockMapper.Setup(x => x.Map<List<GarmentInternNoteViewModel>>(It.IsAny<List<GarmentInternNote>>()))
@@ -942,14 +942,14 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentInternNoteTest
             var INVFacade = new Mock<IGarmentInvoice>();
 
             GarmentInternNoteController controller = GetController(mockFacade, IPOmockFacade, null, mockMapper, INVFacade);
-            var response = controller.GetReportIN(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
+            var response = controller.GetReportIN(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
             Assert.Equal((int)HttpStatusCode.OK, GetStatusCode(response));
         }
         [Fact]
         public void Should_Sucess_Get_Excel()
         {
             var mockFacade = new Mock<IGarmentInternNoteFacade>();
-            mockFacade.Setup(x => x.GenerateExcelIn(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<int>()))
+            mockFacade.Setup(x => x.GenerateExcelIn(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<int>()))
                 .Returns(new MemoryStream());
             var mockMapper = new Mock<IMapper>();
             var IPOmockFacade = new Mock<IGarmentDeliveryOrderFacade>();
@@ -970,7 +970,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentInternNoteTest
             };
 
             controller.ControllerContext.HttpContext.Request.Headers["x-timezone-offset"] = "0";
-            var response = controller.GetXlsDO2(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
+            var response = controller.GetXlsDO2(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
             Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", response.GetType().GetProperty("ContentType").GetValue(response, null));
         }
         [Fact]
@@ -982,7 +982,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentInternNoteTest
             var INVFacade = new Mock<IGarmentInvoice>();
 
             GarmentInternNoteController controller = GetController(mockFacade, IPOmockFacade, null, mockMapper, INVFacade);
-            var response = controller.GetReportIN(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>());
+            var response = controller.GetReportIN(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>());
             Assert.Equal((int)HttpStatusCode.InternalServerError, GetStatusCode(response));
         }
         [Fact]
@@ -994,7 +994,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentInternNoteTest
             var INVFacade = new Mock<IGarmentInvoice>();
 
             GarmentInternNoteController controller = new GarmentInternNoteController(GetServiceProvider().Object, mockMapper.Object, mockFacade.Object, IPOmockFacade.Object, INVFacade.Object);
-            var response = controller.GetXlsDO2(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
+            var response = controller.GetXlsDO2(It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>());
             Assert.Equal((int)HttpStatusCode.InternalServerError, GetStatusCode(response));
         }
         #endregion

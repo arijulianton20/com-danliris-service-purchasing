@@ -391,6 +391,8 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentExternalP
                         s.IsCanceled,
                         s.IsClosed,
                         s.LastModifiedUtc,
+                        s.IsPayVAT,
+                        s.IsPayIncomeTax,
                         Items = s.Items.Select(i => new
                         {
                             i.Id,
@@ -471,6 +473,89 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentExternalP
                     { "count", listData.Count },
                 },
                 });
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
+
+        [HttpGet("by-epo-no")]
+        public IActionResult ByEPONO(string keyword = null, string Filter = "{}",int supplierId = 0, int currencyId=0,int page=1, int size=10)
+        {
+            //try
+            //{
+            //    identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+
+            //    var Data = facade.ReadItemByEPONoSimply(keyword, Filter,supplierId,currencyId);
+
+            //    List<GarmentExternalPurchaseOrderViewModel> viewModel = mapper.Map<List<GarmentExternalPurchaseOrderViewModel>>(Data);
+
+            //    return Ok(new
+            //    {
+            //        apiVersion = ApiVersion,
+            //        statusCode = General.OK_STATUS_CODE,
+            //        message = General.OK_MESSAGE,
+            //        data = Data,
+            //        info = new Dictionary<string, object>
+            //    {
+            //        { "count", Data. },
+            //    },
+            //    });
+            //}
+            //catch (Exception e)
+            //{
+            //    Dictionary<string, object> Result =
+            //        new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+            //        .Fail();
+            //    return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            //}
+
+            try
+            {
+              identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+
+                var Data = facade.ReadItemByEPONoSimply(keyword, Filter, supplierId, currencyId);
+
+                var viewModel = mapper.Map<List<GarmentExternalPurchaseOrderViewModel>>(Data.Item1);
+
+                List<object> listData = new List<object>();
+                listData.AddRange(
+                    viewModel.AsQueryable().Select(s => new
+                    {
+                        s.Id,
+                        s.Category,
+                        s.OrderDate,
+                        s.EPONo,
+                        s.Supplier,
+                        s.IsOverBudget,
+                        s.IsApproved,
+                        Items = s.Items.Select(i => new
+                        {
+                            i.PRNo,
+                        }),
+                        s.CreatedBy,
+                        s.IsPosted,
+                        s.LastModifiedUtc
+                    }).ToList()
+                );
+
+                var info = new Dictionary<string, object>
+                    {
+                        { "count", listData.Count },
+                        { "total", Data.Item2 },
+                        { "order", Data.Item3 },
+                        { "page", page },
+                        { "size", size }
+                    };
+
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.OK_STATUS_CODE, General.OK_MESSAGE)
+                    .Ok(listData, info);
+                return Ok(Result);
             }
             catch (Exception e)
             {

@@ -1,8 +1,10 @@
 ﻿using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentStockOpnameFacades;
 using Com.DanLiris.Service.Purchasing.Lib.Helpers.ReadResponse;
+using Com.DanLiris.Service.Purchasing.Lib.Interfaces;
 using Com.DanLiris.Service.Purchasing.Lib.Models.GarmentStockOpnameModel;
 using Com.DanLiris.Service.Purchasing.Lib.Services;
 using Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentStockOpnameControllers;
+using Com.Moonlay.NetCore.Lib.Service;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Internal;
 using Microsoft.AspNetCore.Mvc;
@@ -10,6 +12,7 @@ using Microsoft.Extensions.Primitives;
 using Moq;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations;
 using System.IO;
 using System.Net;
 using System.Security.Claims;
@@ -36,7 +39,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentStockOpnameCon
             return serviceProvider;
         }
 
-        private GarmentStockOpnameController GetController(Mock<IGarmentStockOpnameFacade> facadeMock)
+        private GarmentStockOpnameController GetController(Mock<IGarmentStockOpnameFacade> facadeMock, Mock<IServiceProvider> servicePMock = null)
         {
             var user = new Mock<ClaimsPrincipal>();
             var claims = new Claim[]
@@ -45,7 +48,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentStockOpnameCon
             };
             user.Setup(u => u.Claims).Returns(claims);
 
-            var servicePMock = GetServiceProvider();
+            servicePMock = servicePMock ?? GetServiceProvider();
 
             GarmentStockOpnameController controller = new GarmentStockOpnameController(facadeMock.Object, servicePMock.Object)
             {
@@ -62,6 +65,14 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentStockOpnameCon
             controller.ControllerContext.HttpContext.Request.Headers["x-timezone-offset"] = "7";
 
             return controller;
+        }
+
+        private ServiceValidationExeption GetServiceValidationExeption(GarmentStockOpnameDownload obj)
+        {
+            Mock<IServiceProvider> serviceProvider = new Mock<IServiceProvider>();
+            List<ValidationResult> validationResults = new List<ValidationResult>();
+            ValidationContext validationContext = new ValidationContext(obj, serviceProvider.Object, null);
+            return new ServiceValidationExeption(validationContext, validationResults);
         }
 
         [Fact]
@@ -123,35 +134,58 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentStockOpnameCon
             mockFacade.Setup(x => x.Download(It.IsAny<DateTimeOffset>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Returns(new MemoryStream());
 
-            var controller = GetController(mockFacade);
+            var validateServiceMock = new Mock<IValidateService>();
+            validateServiceMock.Setup(s => s.Validate(It.IsAny<GarmentStockOpnameDownload>()))
+                .Verifiable();
+
+            var servicePMock = GetServiceProvider();
+            servicePMock
+                .Setup(x => x.GetService(typeof(IValidateService)))
+                .Returns(validateServiceMock.Object);
+
+            var controller = GetController(mockFacade, servicePMock);
 
             var response = controller.DownloadFile(DateTimeOffset.Now, "unit", "storage", "storageName");
             Assert.NotNull(response.GetType().GetProperty("FileStream"));
         }
 
         [Fact]
-        public void Download_NoFilter()
+        public void Download_NoFilter_BadRequest()
         {
-
             var mockFacade = new Mock<IGarmentStockOpnameFacade>();
-            mockFacade.Setup(x => x.Download(It.IsAny<DateTimeOffset>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
-                .Throws(new Exception());
 
-            var controller = GetController(mockFacade);
+            var validateServiceMock = new Mock<IValidateService>();
+            validateServiceMock.Setup(s => s.Validate(It.IsAny<GarmentStockOpnameDownload>()))
+                .Throws(GetServiceValidationExeption(new GarmentStockOpnameDownload(null, null, null, null)));
+
+            var servicePMock = GetServiceProvider();
+            servicePMock
+                .Setup(x => x.GetService(typeof(IValidateService)))
+                .Returns(validateServiceMock.Object);
+
+            var controller = GetController(mockFacade, servicePMock);
 
             var response = controller.DownloadFile(null, null, null, null);
-            Assert.Equal((int)HttpStatusCode.InternalServerError, GetStatusCode(response));
+            Assert.Equal((int)HttpStatusCode.BadRequest, GetStatusCode(response));
         }
 
         [Fact]
         public void Download_Error()
         {
-
             var mockFacade = new Mock<IGarmentStockOpnameFacade>();
             mockFacade.Setup(x => x.Download(It.IsAny<DateTimeOffset>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>()))
                 .Throws(new Exception());
 
-            var controller = GetController(mockFacade);
+            var validateServiceMock = new Mock<IValidateService>();
+            validateServiceMock.Setup(s => s.Validate(It.IsAny<GarmentStockOpnameDownload>()))
+                .Verifiable();
+
+            var servicePMock = GetServiceProvider();
+            servicePMock
+                .Setup(x => x.GetService(typeof(IValidateService)))
+                .Returns(validateServiceMock.Object);
+
+            var controller = GetController(mockFacade, servicePMock);
 
             var response = controller.DownloadFile(DateTimeOffset.Now, "unit", "storage", "storageName");
             Assert.Equal((int)HttpStatusCode.InternalServerError, GetStatusCode(response));
@@ -171,6 +205,22 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentStockOpnameCon
 
             var response = await controller.UploadFile();
             Assert.Equal((int)HttpStatusCode.Created, GetStatusCode(response));
+        }
+
+        [Fact]
+        public async Task Upload_BadRequest()
+        {
+            var mockFacade = new Mock<IGarmentStockOpnameFacade>();
+            mockFacade.Setup(x => x.Upload(It.IsAny<Stream>()))
+                .ThrowsAsync(new ServiceValidationExeption(null, new List<ValidationResult>()));
+
+            var controller = GetController(mockFacade);
+            controller.ControllerContext.HttpContext.Request.Headers.Add("Content-Type", "multipart/form-data");
+            var file = new FormFile(new MemoryStream(), 0, 0, "Data", "data.xlsx");
+            controller.ControllerContext.HttpContext.Request.Form = new FormCollection(new Dictionary<string, StringValues>(), new FormFileCollection { file });
+
+            var response = await controller.UploadFile();
+            Assert.Equal((int)HttpStatusCode.BadRequest, GetStatusCode(response));
         }
 
         [Fact]

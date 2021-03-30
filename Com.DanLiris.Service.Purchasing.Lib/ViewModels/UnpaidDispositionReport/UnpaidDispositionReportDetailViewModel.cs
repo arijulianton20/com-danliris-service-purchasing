@@ -57,5 +57,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.UnpaidDispositionReport
         public string AccountingUnitCode { get; internal set; }
         public int AccountingLayoutIndex { get; set; }
         public string IncomeTaxBy { get; set; }
+        public string DivisionName { get; set; }
+        public int CategoryLayoutIndex { get; internal set; }
     }
 }

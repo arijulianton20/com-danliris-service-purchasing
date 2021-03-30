@@ -14,6 +14,7 @@ using Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentDeliveryOrderDataUti
 using Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentExternalPurchaseOrderDataUtils;
 using Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentInternalPurchaseOrderDataUtils;
 using Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentPurchaseRequestDataUtils;
+using Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentPurchaseRequestDataUtils;
 using Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentUnitReceiptNoteDataUtils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
@@ -2093,6 +2094,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentUnitReceiptNoteFac
             dataUrn1.StorageName = string.Concat("StorageName", nowTicks);
             dataUrn1.UENNo = "BUK" + dataUrn1.UnitCode;
             dataUrn1.ReceiptDate = new DateTime(2019, 12, 25);
+            dataUrn1.CreatedUtc = new DateTime(2019, 12, 25);
             var dataUrn2 = await dataUtilUrn.GetNewData2(nowTicks);
             dataUrn2.IsStorage = true;
             dataUrn2.StorageId = nowTicks;
@@ -2101,6 +2103,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentUnitReceiptNoteFac
             dataUrn2.UENNo = "BUK" + dataUrn1.UnitCode;
             dataUrn2.UnitCode = dataUrn1.UnitCode;
             dataUrn2.ReceiptDate = new DateTime(2019, 12, 26);
+
             foreach (var i in dataUrn1.Items)
             {
                 i.UENItemId = 1;
@@ -2158,6 +2161,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentUnitReceiptNoteFac
             dataUrn2.UENNo = "BUK" + dataUrn1.UnitCode;
             dataUrn2.UnitCode = dataUrn1.UnitCode;
             dataUrn2.ReceiptDate = new DateTime(2019, 12, 26);
+            dataUrn2.CreatedUtc = new DateTime(2019, 12, 25);
             foreach (var i in dataUrn1.Items)
             {
                 i.UENItemId = 1;
@@ -2181,7 +2185,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentUnitReceiptNoteFac
             var dataRC = await dataUtilRC.GetNewData(dataUrn1);
             await facadeRC.Create(dataRC.GarmentReceiptCorrection, USERNAME);
             var stockreport = new GarmentStockReportFacade(serviceProvider, dbContext);
-            var Response = stockreport.GenerateExcelStockReport(null, null, dataUrn1.UnitName, dataUrn1.UnitCode,  new DateTime(2019, 12, 26), new DateTime(2019, 12, 27), 7);
+            var Response = stockreport.GenerateExcelStockReport(null, null, dataUrn1.UnitName, dataUrn1.UnitCode, new DateTime(1970, 1, 1), DateTime.Now, 7);
             Assert.IsType<System.IO.MemoryStream>(Response);
         }
 

@@ -78,6 +78,20 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.BankExpenditureN
             });
         }
 
+        [HttpGet("bank-document-no-date")]
+        public async Task<IActionResult> GetDocumentNoDate([FromQuery] string type, [FromQuery] string bankCode, [FromQuery] string username,[FromQuery]DateTime date)
+        {
+            var result = await _bankDocumentNumberGenerator.GenerateDocumentNumber(type, bankCode, username,date);
+
+            return Ok(new
+            {
+                apiVersion = "1.0.0",
+                data = result,
+                message = General.OK_MESSAGE,
+                statusCode = General.OK_STATUS_CODE
+            });
+        }
+
         [HttpGet("{Id}")]
         public async Task<IActionResult> GetById([FromRoute] int Id)
         {

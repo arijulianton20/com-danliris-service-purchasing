@@ -17,5 +17,6 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentUnitExpenditureN
         public double Quantity { get; set; }
         public string UnitQtyName { get; set; }
         public DateTimeOffset CreatedUtc { get; set; }
+        public DateTimeOffset ExDate { get; set; }
     }
 }

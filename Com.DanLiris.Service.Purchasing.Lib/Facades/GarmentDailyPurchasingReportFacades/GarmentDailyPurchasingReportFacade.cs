@@ -53,7 +53,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDailyPurchasingRepo
                                                                  {
                                                                      SuplName = a.SupplierName,
                                                                      UnitName = f.UnitName,
-                                                                     BCNo = a.BillNo,
+                                                                     BCNo = d.BeacukaiNo,
+                                                                     BCType = d.CustomsType,
+                                                                     NoteNo = a.BillNo,
                                                                      BonKecil = a.PaymentBill,
                                                                      DONo = a.DONo,
                                                                      INNo = a.InternNo,
@@ -85,7 +87,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDailyPurchasingRepo
                                                                  {
                                                                      SuplName = gc.SupplierName,
                                                                      UnitName = ipo.UnitName,
-                                                                     BCNo = gc.CorrectionNo,
+                                                                     BCNo = "-",
+                                                                     BCType = "-",
+                                                                     NoteNo = gc.CorrectionNo,
                                                                      BonKecil = gdo.PaymentBill,
                                                                      DONo = gc.DONo,
                                                                      INNo = gdo.InternNo,
@@ -119,7 +123,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDailyPurchasingRepo
                                                                  {
                                                                      SuplName = gc.SupplierName,
                                                                      UnitName = ipo.UnitName,
-                                                                     BCNo = gc.NKPN,
+                                                                     BCNo = "-",
+                                                                     BCType = "-",
+                                                                     NoteNo = gc.NKPN,
                                                                      BonKecil = gdo.PaymentBill,
                                                                      DONo = gc.DONo,
                                                                      INNo = gdo.InternNo,
@@ -153,7 +159,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDailyPurchasingRepo
                                                                  {
                                                                      SuplName = gc.SupplierName,
                                                                      UnitName = ipo.UnitName,
-                                                                     BCNo = gc.NKPH,
+                                                                     BCNo = "-",
+                                                                     BCType = "-",
+                                                                     NoteNo = gc.NKPH,
                                                                      BonKecil = gdo.PaymentBill,
                                                                      DONo = gc.DONo,
                                                                      INNo = gdo.InternNo,
@@ -189,7 +197,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDailyPurchasingRepo
                                                                  {
                                                                      SuplName = inv.SupplierName,
                                                                      UnitName = ipo.UnitName,
-                                                                     BCNo = inv.NPN,
+                                                                     BCNo = "-",
+                                                                     BCType = "-",
+                                                                     NoteNo = inv.NPN,
                                                                      BonKecil = gdo.PaymentBill,
                                                                      DONo = gdo.DONo,
                                                                      INNo = gdo.InternNo,
@@ -223,7 +233,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDailyPurchasingRepo
                                                                  {
                                                                      SuplName = inv.SupplierName,
                                                                      UnitName = ipo.UnitName,
-                                                                     BCNo = inv.NPH,
+                                                                     BCNo = "-",
+                                                                     BCType = "-",
+                                                                     NoteNo = inv.NPH,
                                                                      BonKecil = gdo.PaymentBill,
                                                                      DONo = gdo.DONo,
                                                                      INNo = gdo.InternNo,
@@ -239,12 +251,14 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDailyPurchasingRepo
             List<GarmentDailyPurchasingTempViewModel> CombineData = d1.Union(d2).Union(d3).Union(d4).Union(d5).Union(d6).ToList();
 
             var Query = from data in CombineData
-                        group data by new { data.SuplName, data.BCNo, data.BonKecil, data.DONo, data.INNo, data.UnitName, data.ProductName, data.Satuan, data.JnsBrg, data.CurrencyCode, data.Kurs } into groupData
+                        group data by new { data.SuplName, data.BCNo, data.BCType, data.NoteNo, data.BonKecil, data.DONo, data.INNo, data.UnitName, data.ProductName, data.Satuan, data.JnsBrg, data.CurrencyCode, data.Kurs } into groupData
                         select new GarmentDailyPurchasingReportViewModel
                         {
                             SupplierName = groupData.Key.SuplName,
                             UnitName = groupData.Key.UnitName,
-                            BillNo = groupData.Key.BCNo,
+                            BCNo = groupData.Key.BCNo,
+                            BCType = groupData.Key.BCType,
+                            BillNo = groupData.Key.NoteNo,
                             PaymentBill = groupData.Key.BonKecil,
                             DONo = groupData.Key.DONo,
                             InternNo = groupData.Key.INNo,
@@ -276,6 +290,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDailyPurchasingRepo
             result.Columns.Add(new DataColumn() { ColumnName = "Nama Unit", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Nomor Nota", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Nomor Bon Kecil", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "No Bukti Bea Cukai", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Tipe Bea Cukai", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Nomor Surat Jalan", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Nota Intern", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Nama Barang", DataType = typeof(String) });
@@ -295,7 +311,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDailyPurchasingRepo
 
             if (Data.Item2 == 0)
             {
-                result.Rows.Add("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""); // to allow column name to be generated properly for empty data as template
+                result.Rows.Add("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", ""); // to allow column name to be generated properly for empty data as template
             }
             else
             {
@@ -377,9 +393,11 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDailyPurchasingRepo
                     if (!dataBySupplier.ContainsKey(SupplierName)) dataBySupplier.Add(SupplierName, new List<GarmentDailyPurchasingReportViewModel> { });
                     dataBySupplier[SupplierName].Add(new GarmentDailyPurchasingReportViewModel
                     {
-                        
+
                         SupplierName = data.SupplierName,
                         UnitName = data.UnitName,
+                        BCNo = data.BCNo,
+                        BCType = data.BCType,
                         BillNo = data.BillNo,
                         PaymentBill = data.PaymentBill,
                         DONo = data.DONo,
@@ -461,13 +479,13 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDailyPurchasingRepo
                     foreach (GarmentDailyPurchasingReportViewModel data in SupplName.Value)
                     {
                         index++;
-                        result.Rows.Add(index, data.SupplierName, data.UnitName, data.BillNo, data.PaymentBill, data.DONo, data.InternNo, data.ProductName, data.Quantity, data.UOMUnit, Math.Round(data.Amount6, 2), data.CurrencyCode, data.Rate, Math.Round(data.Amount, 2), Math.Round(data.Amount1, 2), Math.Round(data.Amount2, 2), Math.Round(data.Amount3, 2), Math.Round(data.Amount4, 2), Math.Round(data.Amount5, 2));
+                        result.Rows.Add(index, data.SupplierName, data.UnitName, data.BillNo, data.PaymentBill, data.BCNo, data.BCType, data.DONo, data.InternNo, data.ProductName, data.Quantity, data.UOMUnit, Math.Round(data.Amount6, 2), data.CurrencyCode, data.Rate, Math.Round(data.Amount, 2), Math.Round(data.Amount1, 2), Math.Round(data.Amount2, 2), Math.Round(data.Amount3, 2), Math.Round(data.Amount4, 2), Math.Round(data.Amount5, 2));
                         rowPosition += 1;
                         splCode = data.PaymentBill;
                         mtUang = data.CurrencyCode;
                     }
 
-                    result.Rows.Add("SUB TOTAL", "", "", "", "", "", "NO BON PUSAT KECIL", ":", splCode, ":", Math.Round(subTotalDPPSupplier[SupplName.Key], 2), mtUang, "", Math.Round(subTotalBESupplier[SupplName.Key], 2), Math.Round(subTotalBPSupplier[SupplName.Key], 2), Math.Round(subTotalBBSupplier[SupplName.Key], 2), Math.Round(subTotalPRCSupplier[SupplName.Key], 2), Math.Round(subTotalPPNSupplier[SupplName.Key], 2), Math.Round(subTotalPPHSupplier[SupplName.Key], 2));
+                    result.Rows.Add("SUB TOTAL", "", "", "", "", "", "NO BON PUSAT KECIL", ".", ".", ":", splCode, ":", Math.Round(subTotalDPPSupplier[SupplName.Key], 2), mtUang, "", Math.Round(subTotalBESupplier[SupplName.Key], 2), Math.Round(subTotalBPSupplier[SupplName.Key], 2), Math.Round(subTotalBBSupplier[SupplName.Key], 2), Math.Round(subTotalPRCSupplier[SupplName.Key], 2), Math.Round(subTotalPPNSupplier[SupplName.Key], 2), Math.Round(subTotalPPHSupplier[SupplName.Key], 2));
 
                     rowPosition += 1;
                     mergeCells.Add(($"A{rowPosition}:D{rowPosition}", OfficeOpenXml.Style.ExcelHorizontalAlignment.Right, OfficeOpenXml.Style.ExcelVerticalAlignment.Bottom));
@@ -481,7 +499,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDailyPurchasingRepo
                     totalDPP += subTotalDPPSupplier[SupplName.Key];
                 }
 
-                //result.Rows.Add("TOTAL", "", "", "", "", "", "", "", "", "", Math.Round(totalDPP, 2), "", "", Math.Round(totalBE, 2), Math.Round(totalBP, 2), Math.Round(totalBB, 2), Math.Round(totalPRC, 2), Math.Round(totalPPN, 2), Math.Round(totalPPH, 2));
+                result.Rows.Add("TOTAL    ", "", "", "", "", "", "", "", "", "", "", "", Math.Round(totalDPP, 2), "", "", Math.Round(totalBE, 2), Math.Round(totalBP, 2), Math.Round(totalBB, 2), Math.Round(totalPRC, 2), Math.Round(totalPPN, 2), Math.Round(totalPPH, 2));
                 result.Rows.Add("", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "");
 
                 rowPosition += 1;
@@ -502,7 +520,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDailyPurchasingRepo
             sheet.Cells[$"A1:{col}1"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
             sheet.Cells[$"A1:{col}1"].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
             sheet.Cells[$"A1:{col}1"].Style.Font.Bold = true;
-            sheet.Cells[$"A2:{col}2"].Value = "BUKU AHRIAN PEMBELIAN GARMENT";
+            sheet.Cells[$"A2:{col}2"].Value = "BUKU HARIAN PEMBELIAN GARMENT";
             sheet.Cells[$"A2:{col}2"].Merge = true;
             sheet.Cells[$"A2:{col}2"].Style.Font.Bold = true;
             sheet.Cells[$"A2:{col}2"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
@@ -539,7 +557,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDailyPurchasingRepo
                 sheet.Cells[cells].Style.VerticalAlignment = (OfficeOpenXml.Style.ExcelVerticalAlignment)vAlign;
             }
             sheet.Cells[sheet.Dimension.Address].AutoFitColumns();
-            
+
             MemoryStream stream = new MemoryStream();
             package.SaveAs(stream);
             return stream;

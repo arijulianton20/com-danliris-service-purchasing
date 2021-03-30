@@ -13,6 +13,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentInternNoteViewMo
         public string supplierName { get; set; }
         public string invoiceNo { get; set; }
         public DateTimeOffset invoiceDate { get; set; }
+        public string NPN { get; set; }
+        public string VatNo { get; set; }
+        public string ProductName { get; set; }
         public double priceTotal { get; set; }
         public string doNo { get; set; }
         public DateTimeOffset doDate { get; set; }

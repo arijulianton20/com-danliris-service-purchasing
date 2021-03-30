@@ -485,9 +485,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.PurchasingDispositionFacad
             return data;
         }
 
-        public Task<int> SetIsPaidTrue(int id, string user)
+        public Task<int> SetIsPaidTrue(string dispositionNo, string user)
         {
-            var model = dbContext.PurchasingDispositions.FirstOrDefault(entity => entity.Id == id);
+            var model = dbContext.PurchasingDispositions.FirstOrDefault(entity => entity.DispositionNo == dispositionNo);
             model.IsPaid = true;
             EntityExtension.FlagForUpdate(model, user, "Facade");
             dbContext.PurchasingDispositions.Update(model);

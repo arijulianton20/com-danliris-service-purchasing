@@ -22,16 +22,16 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentReports
         public decimal? ReceiptKon2AQty { get; set; }
         public decimal? ReceiptKon2BQty { get; set; }
         public decimal? ReceiptKon2CQty { get; set; }
-        public decimal? ReceiptKon1MNSQty { get; set; }
-        public decimal? ReceiptKon2DQty { get; set; }
+        public decimal? ReceiptKon1AQty { get; set; }
+        public decimal? ReceiptKon1BQty { get; set; }
         public decimal? ReceiptCorrectionPrice { get; set; }
         public decimal? ReceiptPurchasePrice { get; set; }
         public decimal? ReceiptProcessPrice { get; set; }
         public decimal? ReceiptKon2APrice { get; set; }
         public decimal? ReceiptKon2BPrice { get; set; }
         public decimal? ReceiptKon2CPrice { get; set; }
-        public decimal? ReceiptKon1MNSPrice { get; set; }
-        public decimal? ReceiptKon2DPrice { get; set; }
+        public decimal? ReceiptKon1APrice { get; set; }
+        public decimal? ReceiptKon1BPrice { get; set; }
         public double? ExpendReturQty { get; set; }
         public double? ExpendRestQty { get; set; }
         public double? ExpendProcessQty { get; set; }
@@ -39,8 +39,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentReports
         public double? ExpendKon2AQty { get; set; }
         public double? ExpendKon2BQty { get; set; }
         public double? ExpendKon2CQty { get; set; }
-        public double? ExpendKon1MNSQty { get; set; }
-        public double? ExpendKon2DQty { get; set; }
+        public double? ExpendKon1AQty { get; set; }
+        public double? ExpendKon1BQty { get; set; }
         public double? ExpendReturPrice { get; set; }
         public double? ExpendRestPrice { get; set; }
         public double? ExpendProcessPrice { get; set; }
@@ -48,8 +48,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentReports
         public double? ExpendKon2APrice { get; set; }
         public double? ExpendKon2BPrice { get; set; }
         public double? ExpendKon2CPrice { get; set; }
-        public double? ExpendKon1MNSPrice { get; set; }
-        public double? ExpendKon2DPrice { get; set; }
+        public double? ExpendKon1APrice { get; set; }
+        public double? ExpendKon1BPrice { get; set; }
         public decimal? EndingBalanceQty { get; set; }
         public decimal? EndingBalancePrice { get; set; }
     }
@@ -66,6 +66,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentReports
         public string PlanPo { get; set; }
         public string NoArticle { get; set; }
         public decimal QtyReceipt { get; set; }
+        public double QtyDo { get; set; }
         public double QtyCorrection { get; set; }
         public double QtyExpend { get; set; }
         public decimal PriceReceipt { get; set; }

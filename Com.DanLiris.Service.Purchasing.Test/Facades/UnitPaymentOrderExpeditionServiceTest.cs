@@ -8,6 +8,7 @@ using Com.DanLiris.Service.Purchasing.Lib.Facades.UnitReceiptNoteFacade;
 using Com.DanLiris.Service.Purchasing.Lib.Interfaces;
 using Com.DanLiris.Service.Purchasing.Lib.Services;
 using Com.DanLiris.Service.Purchasing.Lib.Utilities.CacheManager;
+using Com.DanLiris.Service.Purchasing.Lib.Utilities.CacheManager.CacheData;
 using Com.DanLiris.Service.Purchasing.Lib.Utilities.Currencies;
 using Com.DanLiris.Service.Purchasing.Lib.ViewModels.Expedition;
 using Com.DanLiris.Service.Purchasing.Lib.ViewModels.NewIntegrationViewModel;
@@ -21,9 +22,11 @@ using Com.DanLiris.Service.Purchasing.Test.DataUtils.UnitReceiptNoteDataUtils;
 using Com.DanLiris.Service.Purchasing.Test.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -85,6 +88,19 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades
             serviceProvider
                 .Setup(x => x.GetService(typeof(IMemoryCacheManager)))
                 .Returns(new MemoryCacheManager(memoryCache));
+
+            Mock<IDistributedCache> mockDistributedCache = new Mock<IDistributedCache>();
+            mockDistributedCache.Setup(s => s.Get(It.Is<string>(i => i == MemoryCacheConstant.Categories)))
+                .Returns(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(new List<IdCOAResult>())));
+            mockDistributedCache.Setup(s => s.Get(It.Is<string>(i => i == MemoryCacheConstant.Units)))
+                .Returns(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(new List<IdCOAResult>())));
+            mockDistributedCache.Setup(s => s.Get(It.Is<string>(i => i == MemoryCacheConstant.Divisions)))
+                .Returns(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(new List<CategoryCOAResult>())));
+            mockDistributedCache.Setup(s => s.Get(It.Is<string>(i => i == MemoryCacheConstant.IncomeTaxes)))
+                .Returns(Encoding.ASCII.GetBytes(JsonConvert.SerializeObject(new List<IncomeTaxCOAResult>())));
+            serviceProvider
+                .Setup(x => x.GetService(typeof(IDistributedCache)))
+                .Returns(mockDistributedCache.Object);
 
             var mockCurrencyProvider = new Mock<ICurrencyProvider>();
             mockCurrencyProvider

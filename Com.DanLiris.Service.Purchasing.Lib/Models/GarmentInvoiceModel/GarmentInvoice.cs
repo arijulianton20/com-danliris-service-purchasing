@@ -30,6 +30,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Models.GarmentInvoiceModel
 		public double TotalAmount { get; set; }
 		public string NPN { get; set; }
 		public string NPH { get; set; }
+        public bool DPPVATIsPaid { get; set; }
 
 		public virtual ICollection<GarmentInvoiceItem> Items { get; set; }
     }

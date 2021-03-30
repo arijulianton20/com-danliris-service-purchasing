@@ -51,6 +51,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentInvoiceCo
 			try
 			{
 				identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+				identityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");
 
 				string filterUser = string.Concat("'CreatedBy':'", identityService.Username, "'");
 				if (filter == null || !(filter.Trim().StartsWith("{") && filter.Trim().EndsWith("}")) || filter.Replace(" ", "").Equals("{}"))
@@ -78,6 +79,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentInvoiceCo
 			try
 			{
 				identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+				identityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");
 
 				var Data = facade.Read(page, size, order, keyword, filter);
 
@@ -115,6 +117,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentInvoiceCo
 		{
 			try
 			{
+				identityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");
 				var indexAcceptPdf = Request.Headers["Accept"].ToList().IndexOf("application/pdf");
 
 				GarmentInvoice model = facade.ReadById(id);
@@ -169,6 +172,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentInvoiceCo
 		{
 			try
 			{
+				identityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");
 				var model = facade.ReadById(id);
 				var viewModel = mapper.Map<GarmentInvoiceViewModel>(model);
 				if (viewModel == null)
@@ -214,6 +218,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentInvoiceCo
 		{
 			try
 			{
+				identityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");
 				var indexAcceptPdf = Request.Headers["Accept"].ToList().IndexOf("application/pdf");
 
 				GarmentInvoice model = facade.ReadById(id);
@@ -269,6 +274,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentInvoiceCo
 			try
 			{
 				identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+				identityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");
 
 				IValidateService validateService = (IValidateService)serviceProvider.GetService(typeof(IValidateService));
 
@@ -302,6 +308,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentInvoiceCo
 		public IActionResult Delete([FromRoute]int id)
 		{
 			identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+			identityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");
 
 			try
 			{
@@ -319,6 +326,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentInvoiceCo
 			try
 			{
 				identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+				identityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");
 
 				IValidateService validateService = (IValidateService)serviceProvider.GetService(typeof(IValidateService));
 

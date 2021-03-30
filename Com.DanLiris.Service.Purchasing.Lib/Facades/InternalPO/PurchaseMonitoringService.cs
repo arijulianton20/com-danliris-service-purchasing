@@ -417,10 +417,10 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.InternalPO
             result.Columns.Add(new DataColumn() { ColumnName = "Tanggal Target Datang", DataType = typeof(string) });
             result.Columns.Add(new DataColumn() { ColumnName = "No PO Eksternal", DataType = typeof(string) });
             result.Columns.Add(new DataColumn() { ColumnName = "Tanggal Surat Jalan", DataType = typeof(string) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Jumlah Surat Jalan", DataType = typeof(double) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Satuan Surat Jalan", DataType = typeof(string) });
             result.Columns.Add(new DataColumn() { ColumnName = "Tanggal Datang Barang", DataType = typeof(string) });
             result.Columns.Add(new DataColumn() { ColumnName = "No Surat Jalan", DataType = typeof(string) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Jumlah Surat Jalan", DataType = typeof(double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Satuan Surat Jalan", DataType = typeof(string) });
             result.Columns.Add(new DataColumn() { ColumnName = "Tanggal Bon Terima Unit", DataType = typeof(string) });
             result.Columns.Add(new DataColumn() { ColumnName = "No Bon Terima Unit", DataType = typeof(string) });
             result.Columns.Add(new DataColumn() { ColumnName = "Jumlah Bon", DataType = typeof(double) });

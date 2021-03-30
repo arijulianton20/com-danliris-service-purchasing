@@ -33,6 +33,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentDeliveryOrderVie
 
         public bool useVat { get; set; }
         public bool useIncomeTax { get; set; }
+        public bool isPayVAT { get; set; }
+        public bool isPayIncomeTax { get; set; }
 
         public IncomeTaxViewModel incomeTax { get; set; }
 

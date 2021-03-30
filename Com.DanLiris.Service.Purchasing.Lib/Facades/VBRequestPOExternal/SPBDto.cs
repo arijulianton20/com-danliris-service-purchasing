@@ -1,4 +1,5 @@
-﻿using Com.DanLiris.Service.Purchasing.Lib.Models.GarmentInternNoteModel;
+﻿using Com.DanLiris.Service.Purchasing.Lib.Models.GarmentCorrectionNoteModel;
+using Com.DanLiris.Service.Purchasing.Lib.Models.GarmentInternNoteModel;
 using Com.DanLiris.Service.Purchasing.Lib.Models.GarmentInvoiceModel;
 using Com.DanLiris.Service.Purchasing.Lib.Models.UnitPaymentOrderModel;
 using Com.DanLiris.Service.Purchasing.Lib.Models.UnitReceiptNoteModel;
@@ -130,8 +131,37 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.VBRequestPOExternal
             var selectedInternNoteItemIds = selectedInternNoteItems.Select(item => item.Id).ToList();
             var selectedInternNoteDetails = internNoteDetails.Where(detail => selectedInternNoteItemIds.Contains(detail.GarmentItemINId)).ToList();
 
-            UnitCosts = selectedInternNoteDetails.Select(detail => new UnitCostDto(detail, selectedInternNoteItems, element, elementInvoice)).ToList();
-            Amount = selectedInternNoteDetails.Sum(detail => detail.PriceTotal);
+            //Amount = selectedInternNoteDetails.Sum(detail => detail.PriceTotal);
+        }
+
+        public SPBDto(GarmentInternNote internNote, List<GarmentInvoice> invoices, List<GarmentInternNoteItem> internNoteItems, List<GarmentInternNoteDetail> internNoteDetails, List<GarmentCorrectionNote> corrections, List<GarmentCorrectionNoteItem> correctionItems) : this(internNote, invoices, internNoteItems, internNoteDetails)
+        {
+            var selectedInternalNoteItems = internNoteItems.Where(element => element.GarmentINId == internNote.Id).ToList();
+            var selectedInternalNoteItemIds = selectedInternalNoteItems.Select(element => element.Id).ToList();
+            var selectedInvoiceIds = selectedInternalNoteItems.Select(element => element.InvoiceId).ToList();
+
+            var selectedInternalNoteDetails = internNoteDetails.Where(element => selectedInternalNoteItemIds.Contains(element.GarmentItemINId)).ToList();
+            var selectedDOIds = selectedInternalNoteDetails.Select(element => element.DOId).ToList();
+            var selectedCorrections = corrections.Where(element => selectedDOIds.Contains(element.DOId)).ToList();
+
+            Amount = invoices.Where(element => selectedInvoiceIds.Contains(element.Id)).Sum(element => element.TotalAmount);
+
+            var correctionAmount = selectedCorrections.Sum(element =>
+            {
+                var selectedCorrectionItems = correctionItems.Where(item => item.GCorrectionId == element.Id);
+
+                var total = 0.0;
+                if (element.CorrectionType.ToUpper() == "RETUR")
+                    total = (double)selectedCorrectionItems.Sum(item => item.PricePerDealUnitAfter * item.Quantity);
+                else
+                    total = (double)element.TotalCorrection;
+
+                return total;
+            });
+            Amount += correctionAmount;
+            var invoiceIds = selectedInternalNoteItems.Select(item => item.InvoiceId).ToList();
+            var elementInvoice = invoices.FirstOrDefault(entity => invoiceIds.Contains(entity.Id));
+            UnitCosts = selectedInternalNoteDetails.Select(detail => new UnitCostDto(detail, selectedInternalNoteItems, internNote, elementInvoice)).ToList();
         }
 
         public long Id { get; private set; }

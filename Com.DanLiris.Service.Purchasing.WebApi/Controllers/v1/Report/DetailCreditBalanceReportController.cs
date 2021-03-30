@@ -1,12 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Com.DanLiris.Service.Purchasing.Lib.Facades.Report;
-using Com.DanLiris.Service.Purchasing.Lib.PDFTemplates;
-using Com.DanLiris.Service.Purchasing.WebApi.Helpers;
+﻿using Com.DanLiris.Service.Purchasing.Lib.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using Com.DanLiris.Service.Purchasing.WebApi.Helpers;
+using Microsoft.Extensions.DependencyInjection;
+//using Com.DanLiris.Service.Purchasing.Lib.Facades.Report;
+using System.Collections.Generic;
+using Com.DanLiris.Service.Purchasing.Lib.Interfaces;
+using Com.DanLiris.Service.Purchasing.Lib.PDFTemplates;
 
 namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.Report
 {
@@ -16,21 +19,34 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.Report
     [Authorize]
     public class DetailCreditBalanceReportController : Controller
     {
+        private readonly IDetailCreditBalanceReportFacade _service;
+        private readonly IdentityService _identityService;
         private string ApiVersion = "1.0.0";
 
-        private readonly IDetailCreditBalanceReportFacade detailCreditBalanceReportFacade;
-
-        public DetailCreditBalanceReportController(IDetailCreditBalanceReportFacade detailCreditBalanceReportFacade)
+        public DetailCreditBalanceReportController(IServiceProvider serviceProvider)
         {
-            this.detailCreditBalanceReportFacade = detailCreditBalanceReportFacade;
+            _service = serviceProvider.GetService<IDetailCreditBalanceReportFacade>();
+            _identityService = serviceProvider.GetService<IdentityService>();
+        }
+
+        private void VerifyUser()
+        {
+            _identityService.Username = User.Claims.ToArray().SingleOrDefault(p => p.Type.Equals("username")).Value;
+            _identityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");
+            _identityService.TimezoneOffset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
         }
 
         [HttpGet]
-        public async Task<IActionResult> Get(int categoryId, int accountingUnitId, int divisionId, DateTime? dateTo, bool isImport, bool isForeignCurrency)
+        public async Task<IActionResult> Get(int categoryId, int accountingUnitId, int divisionId, DateTimeOffset? dateTo, bool isImport, bool isForeignCurrency)
         {
             try
             {
-                var data = await detailCreditBalanceReportFacade.GetReport(categoryId, accountingUnitId, divisionId, dateTo, isImport, isForeignCurrency);
+                VerifyUser();
+
+                if (!dateTo.HasValue)
+                    dateTo = DateTimeOffset.MaxValue;
+
+                var data = await _service.GetReport(categoryId, accountingUnitId, divisionId, dateTo, isImport, isForeignCurrency);
                 
                 return Ok(new
                 {
@@ -52,15 +68,18 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.Report
         }
 
         [HttpGet("pdf")]
-        public async Task<IActionResult> GetPdf(int categoryId, int accountingUnitId, int divisionId, DateTime? dateTo, bool isImport, bool isForeignCurrency)
+        public async Task<IActionResult> GetPdf(int categoryId, int accountingUnitId, int divisionId, DateTimeOffset? dateTo, bool isImport, bool isForeignCurrency)
         {
             try
             {
+                if (!dateTo.HasValue)
+                    dateTo = DateTimeOffset.MaxValue;
+
                 var clientTimeZoneOffset = int.Parse(Request.Headers["x-timezone-offset"].First());
 
-                var data = await detailCreditBalanceReportFacade.GetReport(categoryId, accountingUnitId, divisionId, dateTo, isImport, isForeignCurrency);
+                var data = await _service.GetReport(categoryId, accountingUnitId, divisionId, dateTo, isImport, isForeignCurrency);
 
-                var stream = DetailCreditBalanceReportPdfTemplate.Generate(data, clientTimeZoneOffset, dateTo, isImport, isForeignCurrency);
+                var stream = DetailCreditBalanceReportPdfTemplate.Generate(data, clientTimeZoneOffset, dateTo, isImport, isForeignCurrency, accountingUnitId, divisionId);
 
                 var filename = isImport ? "Laporan Detail Saldo Hutang Usaha Impor" : isForeignCurrency ? "Laporan Detail Saldo Hutang Usaha Lokal Valas" : "Laporan Detail Saldo Hutang Usaha Lokal";
                 filename += ".pdf";
@@ -80,20 +99,22 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.Report
         }
 
         [HttpGet("xls")]
-        public async Task<IActionResult> GetXls(int categoryId, int accountingUnitId, int divisionId, DateTime? dateTo, bool isImport, bool isForeignCurrency)
+        public async Task<IActionResult> GetXls(int categoryId, int accountingUnitId, int divisionId, DateTimeOffset? dateTo, bool isImport, bool isForeignCurrency)
         {
             try
             {
-                byte[] xlsInBytes;
-                var xls = await detailCreditBalanceReportFacade.GenerateExcel(categoryId, accountingUnitId, divisionId, dateTo, isImport, isForeignCurrency);
+                if (!dateTo.HasValue)
+                    dateTo = DateTimeOffset.MaxValue;
 
+                byte[] xlsInBytes;
+                var xls = await _service.GenerateExcel(categoryId, accountingUnitId, divisionId, dateTo, isImport, isForeignCurrency);
 
                 var sTitle = isImport ? "Impor" : isForeignCurrency ? "Lokal Valas" : "Lokal";
                 string filename = $"Laporan Saldo Hutang Usaha (Detail) {sTitle}";
                 filename += ".xlsx";
 
                 //if (dateFrom != null) filename += " " + ((DateTime)dateFrom).ToString("dd-MM-yyyy");
-                if (dateTo != null) filename += "_" + ((DateTime)dateTo).ToString("dd-MM-yyyy");
+                //if (dateTo != null) filename += "_" + ((DateTime)dateTo).ToString("dd-MM-yyyy");
 
                 xlsInBytes = xls.ToArray();
                 var file = File(xlsInBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);

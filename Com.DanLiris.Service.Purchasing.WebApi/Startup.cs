@@ -69,6 +69,13 @@ using Com.DanLiris.Service.Purchasing.Lib.Facades.VBRequestPOExternal;
 using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentStockOpnameFacades;
 using Com.DanLiris.Service.Purchasing.Lib.Facades.DebtAndDispositionSummary;
 using Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFacades;
+using Com.DanLiris.Service.Purchasing.Lib.Facades.BudgetCashflowService;
+using Com.DanLiris.Service.Purchasing.Lib.Facades.BudgetCashflowService.ExcelGenerator;
+using Com.DanLiris.Service.Purchasing.Lib.Facades.BudgetCashflowService.PdfGenerator;
+using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentPurchasingExpedition;
+using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentPurchasingBookReport;
+using Com.DanLiris.Service.Purchasing.Lib.Services.GarmentDebtBalance;
+using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDispositionPurchaseFacades;
 
 namespace Com.DanLiris.Service.Purchasing.WebApi
 {
@@ -189,7 +196,17 @@ namespace Com.DanLiris.Service.Purchasing.WebApi
                 .AddTransient<IVBRequestPOExternalService, VBRequestPOExternalService>()
                 .AddTransient<IDebtAndDispositionSummaryService, DebtAndDispositionSummaryService>()
                 .AddTransient<IGarmentStockOpnameFacade, GarmentStockOpnameFacade>()
-                .AddTransient<IUnpaidDispositionReportDetailFacade, UnpaidDispositionReportDetailFacade>();
+                .AddTransient<IBudgetCashflowService, BudgetCashflowService>()
+                .AddTransient<IBudgetCashflowUnitPdf, BudgetCashflowUnitPdf>()
+                .AddTransient<IBudgetCashflowDivisionPdf, BudgetCashflowDivisionPdf>()
+                .AddTransient<IBudgetCashflowUnitExcelGenerator, BudgetCashflowUnitExcelGenerator>()
+                .AddTransient<IBudgetCashflowDivisionExcelGenerator, BudgetCashflowDivisionExcelGenerator>()
+                .AddTransient<IGarmentPurchasingExpeditionService, GarmentPurchasingExpeditionService>()
+                .AddTransient<IUnpaidDispositionReportDetailFacade, UnpaidDispositionReportDetailFacade>()
+                .AddTransient<IGarmentPurchasingBookReportService, GarmentPurchasingBookReportService>()
+                .AddTransient<IGarmentDebtBalanceService, GarmentDebtBalanceService>()
+                .AddTransient<IGarmentDispositionPurchaseFacade, GarmentDispositionPurchaseFacade>()
+                .AddTransient<IROFeatureFacade, ROFeatureFacade>();
         }
 
         private void RegisterServices(IServiceCollection services, bool isTest)
@@ -312,16 +329,16 @@ namespace Com.DanLiris.Service.Purchasing.WebApi
             }
 
             /* Update Database */
-            using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
-            {
-                PurchasingDbContext context = serviceScope.ServiceProvider.GetService<PurchasingDbContext>();
-                
-                if (context.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
-                {
-                    context.Database.SetCommandTimeout(10 * 60 * 1000);
-                    context.Database.Migrate();
-                }
-            }
+            //using (var serviceScope = app.ApplicationServices.GetRequiredService<IServiceScopeFactory>().CreateScope())
+            //{
+            //    PurchasingDbContext context = serviceScope.ServiceProvider.GetService<PurchasingDbContext>();
+
+            //    if (context.Database.ProviderName != "Microsoft.EntityFrameworkCore.InMemory")
+            //    {
+            //        context.Database.SetCommandTimeout(10 * 60 * 1000);
+            //        context.Database.Migrate();
+            //    }
+            //}
 
             app.UseAuthentication();
             app.UseCors(PURCHASING_POLICITY);

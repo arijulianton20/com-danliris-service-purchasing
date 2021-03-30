@@ -43,21 +43,28 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
                     List<MonitoringROJobOrderItemViewModel> garmentPOMasterDistributions = new List<MonitoringROJobOrderItemViewModel>();
                     if (m.IsPRMaster.GetValueOrDefault())
                     {
-                        var Query = from poDistDetail in dbContext.GarmentPOMasterDistributionDetails
-                                    join poDistItem in dbContext.GarmentPOMasterDistributionItems on poDistDetail.POMasterDistributionItemId equals poDistItem.Id
-                                    join poDist in dbContext.GarmentPOMasterDistributions on poDistItem.POMasterDistributionId equals poDist.Id
-                                    join doDetail in dbContext.GarmentDeliveryOrderDetails on poDistItem.DODetailId equals doDetail.Id
-                                    where poDistDetail.POSerialNumber == m.PO_SerialNumber
+                        var Query = from prmasteritem in dbContext.GarmentPurchaseRequestItems
+                                    join prmaster in dbContext.GarmentPurchaseRequests on prmasteritem.GarmentPRId equals prmaster.Id
+                                    join doDetail in dbContext.GarmentDeliveryOrderDetails on prmasteritem.Id equals doDetail.PRItemId into a
+                                    from DODTL in a.DefaultIfEmpty()
+                                    join poDistItem in dbContext.GarmentPOMasterDistributionItems on DODTL.Id equals poDistItem.DODetailId into b
+                                    from DISTITEM in b.DefaultIfEmpty()
+                                    join poDistDetail in dbContext.GarmentPOMasterDistributionDetails on DISTITEM.Id equals poDistDetail.POMasterDistributionItemId into c
+                                    from DISTDTL in c.DefaultIfEmpty()
+                                    join poDist in dbContext.GarmentPOMasterDistributions on DISTITEM.POMasterDistributionId equals poDist.Id into d
+                                    from DISTHDR in d.DefaultIfEmpty()
+                                    where DISTDTL.POSerialNumber == m.PO_SerialNumber || prmasteritem.PO_SerialNumber == m.POMaster
+
                                     select new MonitoringROJobOrderItemViewModel
                                     {
-                                        ROMaster = doDetail.RONo,
-                                        POMaster = doDetail.POSerialNumber,
-                                        DistributionQuantity = poDistDetail.Quantity,
-                                        Conversion = poDistDetail.Conversion,
-                                        UomCCUnit = poDistDetail.UomCCUnit,
-                                        DONo = poDist.DONo,
-                                        SupplierName = poDist.SupplierName,
-                                        OverUsageReason = poDistDetail.OverUsageReason
+                                        ROMaster = prmaster.RONo,
+                                        POMaster = prmasteritem.PO_SerialNumber,
+                                        DistributionQuantity = DISTDTL == null ? 0 : DISTDTL.Quantity,
+                                        Conversion = DISTDTL == null ? 0 : DISTDTL.Conversion,
+                                        UomCCUnit = DISTDTL == null ? "-" : DISTDTL.UomCCUnit,
+                                        DONo = DISTHDR == null ? "-" : DISTHDR.DONo,
+                                        SupplierName = DISTHDR == null ? "-" : DISTHDR.SupplierName,
+                                        OverUsageReason = DISTDTL == null ? "-" : DISTDTL.OverUsageReason
                                     };
                         garmentPOMasterDistributions = Query.ToList();
                     }
@@ -65,7 +72,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
                     return new MonitoringROJobOrderViewModel
                     {
                         POSerialNumber = m.PO_SerialNumber,
+                        POMasterNumber = m.POMaster,
                         ProductCode = m.Product.Code,
+                        Description = m.Description, 
                         ProductName = productNames.GetValueOrDefault(m.Product.Id),
                         BudgetQuantity = m.BudgetQuantity,
                         UomPriceUnit = m.UOMPrice.Unit,
