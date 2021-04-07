@@ -1495,6 +1495,95 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentUnitReceiptNoteFaca
             return Tuple.Create(Query.ToList(), Query.Count());
         }
 
+        public MemoryStream GenerateExcelFlowForUnit(DateTime? dateFrom, DateTime? dateTo, string unit, string category, string categoryname, int offset, string unitname)
+        {
+            var Query = GetReportQueryFlow(dateFrom, dateTo, unit, category, offset, 1, int.MaxValue);
+
+            DataTable result = new DataTable();
+            result.Columns.Add(new DataColumn() { ColumnName = "No", DataType = typeof(Double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Kode Barang", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Nama Barang", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "No PO", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Keterangan Barang", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "No R/O", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Artikel", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Kode Buyer", DataType = typeof(String) });
+            //result.Columns.Add(new DataColumn() { ColumnName = "Jenis", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Asal", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Nomor Bukti", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Tanggal", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Jumlah Beli", DataType = typeof(Double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Satuan Beli", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Jumlah Terima", DataType = typeof(Double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Satuan Terima", DataType = typeof(String) });
+
+            List<(string, Enum, Enum)> mergeCells = new List<(string, Enum, Enum)>() { };
+
+
+            double ReceiptQtyTotal = 0;
+            double PurchaseQtyTotal = 0;
+            if (Query.ToArray().Count() == 0)
+            {
+                //result.Rows.Add("", "", "", "", "", "", "", "", "", "", "", "", 0, "", 0, "", 0, ""); // to allow column name to be generated properly for empty data as template
+                result.Rows.Add(0, "", "", "", "", "", "", "", "", "", "", 0, "", 0, ""); // to allow column name to be generated properly for empty data as template
+            }
+            else
+            {
+                int index = 0;
+                foreach (FlowDetailPenerimaanViewModels data in Query)
+                {
+                    index++;
+                    string tgl = data.tanggal == null ? "-" : data.tanggal.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
+                    result.Rows.Add(index, data.kdbarang, data.nmbarang, data.nopo, data.keterangan, data.noro, data.artikel, data.kdbuyer, data.asal, data.nobukti, tgl, data.jumlahbeli, data.satuanbeli, data.jumlahterima, data.satuanterima);
+                    ReceiptQtyTotal += data.jumlahterima;
+                    PurchaseQtyTotal += data.jumlahbeli;
+                }
+
+            }
+            ExcelPackage package = new ExcelPackage();
+            DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : (DateTime)dateFrom;
+            DateTime DateTo = dateTo == null ? DateTime.Now : (DateTime)dateTo;
+            CultureInfo Id = new CultureInfo("id-ID");
+            string Month = Id.DateTimeFormat.GetMonthName(DateTo.Month);
+            var sheet = package.Workbook.Worksheets.Add("Report");
+
+            var col = (char)('A' + result.Columns.Count);
+            string tglawal = DateFrom.ToString("dd MMM yyyy", new CultureInfo("id-ID"));
+            string tglakhir = DateTo.ToString("dd MMM yyyy", new CultureInfo("id-ID"));
+            sheet.Cells[$"A1:{col}1"].Value = string.Format("LAPORAN FLOW PENERIMAAN {0}", categoryname);
+            sheet.Cells[$"A1:{col}1"].Merge = true;
+            sheet.Cells[$"A1:{col}1"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+            sheet.Cells[$"A1:{col}1"].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+            sheet.Cells[$"A1:{col}1"].Style.Font.Bold = true;
+            sheet.Cells[$"A2:{col}2"].Value = string.Format("Periode {0} - {1}", tglawal, tglakhir);
+            sheet.Cells[$"A2:{col}2"].Merge = true;
+            sheet.Cells[$"A2:{col}2"].Style.Font.Bold = true;
+            sheet.Cells[$"A2:{col}2"].Style.HorizontalAlignment = OfficeOpenXml.Style.ExcelHorizontalAlignment.Left;
+            sheet.Cells[$"A2:{col}2"].Style.VerticalAlignment = OfficeOpenXml.Style.ExcelVerticalAlignment.Center;
+            sheet.Cells[$"A3:{col}3"].Value = string.Format("KONFEKSI : {0}", (string.IsNullOrWhiteSpace(unitname) ? "ALL" : unitname));
+            sheet.Cells[$"A3:{col}3"].Merge = true;
+
+            sheet.Cells["A5"].LoadFromDataTable(result, true, OfficeOpenXml.Table.TableStyles.Light16);
+
+            var a = Query.Count();
+            sheet.Cells[$"A{6 + a}"].Value = "T O T A L  . . . . . . . . . . . . . . .";
+            sheet.Cells[$"A{6 + a}:K{6 + a}"].Merge = true;
+            sheet.Cells[$"A{6 + a}:K{6 + a}"].Style.Font.Bold = true;
+            sheet.Cells[$"A{6 + a}:K{6 + a}"].Style.Border.BorderAround(ExcelBorderStyle.Medium);
+            sheet.Cells[$"A{6 + a}:K{6 + a}"].Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+            sheet.Cells[$"A{6 + a}:K{6 + a}"].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
+            sheet.Cells[$"L{6 + a}"].Value = PurchaseQtyTotal;
+            sheet.Cells[$"L{6 + a}"].Style.Border.BorderAround(ExcelBorderStyle.Medium);
+            sheet.Cells[$"M{6 + a}"].Style.Border.BorderAround(ExcelBorderStyle.Medium);
+            sheet.Cells[$"N{6 + a}"].Value = ReceiptQtyTotal;
+            sheet.Cells[$"N{6 + a}"].Style.Border.BorderAround(ExcelBorderStyle.Medium);
+            sheet.Cells[$"O{6 + a}"].Style.Border.BorderAround(ExcelBorderStyle.Medium);
+
+            MemoryStream stream = new MemoryStream();
+            package.SaveAs(stream);
+            return stream;
+            //return Excel.CreateExcel(new List<(DataTable, string, List<(string, Enum, Enum)>)>() { (result, "Report", mergeCells) }, true);
+        }
 
         public MemoryStream GenerateExcelLow(DateTime? dateFrom, DateTime? dateTo, string unit, string category, string categoryname, int offset, string unitname)
         {

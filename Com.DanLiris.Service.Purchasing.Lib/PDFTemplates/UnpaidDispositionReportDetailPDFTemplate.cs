@@ -118,6 +118,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
                 VerticalAlignment = Element.ALIGN_CENTER
             };
 
+
             cellHeader.Phrase = new Phrase("Mata Uang", _smallerBoldWhiteFont);
             table.AddCell(cellHeader);
 
@@ -357,6 +358,170 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
             return new PdfPCell(table) { Border = Rectangle.NO_BORDER };
         }
 
+        private static PdfPCell GetCategorySummaryTable(List<Summary> categorySummary)
+        {
+            var table = new PdfPTable(2)
+            {
+                WidthPercentage = 100
+            };
+
+            var widths = new List<float>() { 1f, 2f };
+            table.SetWidths(widths.ToArray());
+
+            // set header
+            var cellHeader = new PdfPCell()
+            {
+                BackgroundColor = new BaseColor(23, 50, 80),
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                VerticalAlignment = Element.ALIGN_MIDDLE
+            };
+
+            var cell = new PdfPCell()
+            {
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                VerticalAlignment = Element.ALIGN_MIDDLE
+            };
+
+            cellHeader.Phrase = new Phrase("Category", _smallerBoldWhiteFont);
+            table.AddCell(cellHeader);
+
+            cellHeader.Phrase = new Phrase("Total", _smallerBoldWhiteFont);
+            table.AddCell(cellHeader);
+
+            foreach (var category in categorySummary)
+            {
+                cell.HorizontalAlignment = Element.ALIGN_CENTER;
+                cell.Phrase = new Phrase(category.CategoryName, _smallerFont);
+                table.AddCell(cell);
+
+                cell.HorizontalAlignment = Element.ALIGN_RIGHT;
+                cell.Phrase = new Phrase(string.Format("{0:n}", category.SubTotal), _smallerFont);
+                table.AddCell(cell);
+
+                //cell.HorizontalAlignment = Element.ALIGN_RIGHT;
+                //cell.Phrase = new Phrase(string.Format("{0:n}", currency.SubTotalIDR), _smallerFont);
+                //table.AddCell(cell);
+            }
+
+            return new PdfPCell(table) { Border = Rectangle.NO_BORDER };
+        }
+
+        private static PdfPCell GetCategoryValasTable(List<Summary> categorySummaries)
+        {
+            var table = new PdfPTable(3)
+            {
+                WidthPercentage = 100
+            };
+
+            var widths = new List<float>() { 2f, 1f, 2f };
+            table.SetWidths(widths.ToArray());
+
+            // set header
+            var cellHeader = new PdfPCell()
+            {
+                BackgroundColor = new BaseColor(23, 50, 80),
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                VerticalAlignment = Element.ALIGN_CENTER
+            };
+
+            var cell = new PdfPCell()
+            {
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                VerticalAlignment = Element.ALIGN_CENTER
+            };
+
+            var cellNoBorderBot = new PdfPCell()
+            {
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                VerticalAlignment = Element.ALIGN_CENTER,
+                BorderWidthBottom = 0
+            };
+
+            var cellNoBorderTop = new PdfPCell()
+            {
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                VerticalAlignment = Element.ALIGN_CENTER,
+                BorderWidthTop = 0
+            };
+
+            var cellNoBorderTopAndBot = new PdfPCell()
+            {
+                HorizontalAlignment = Element.ALIGN_CENTER,
+                VerticalAlignment = Element.ALIGN_CENTER,
+                BorderWidthTop = 0,
+                BorderWidthBottom = 0
+            };
+
+            var emptyCell = new PdfPCell()
+            {
+                Border = Rectangle.NO_BORDER
+            };
+
+            cellHeader.Phrase = new Phrase("Category", _smallerBoldWhiteFont);
+            table.AddCell(cellHeader);
+
+            cellHeader.Phrase = new Phrase("Currency", _smallerBoldWhiteFont);
+            table.AddCell(cellHeader);
+
+            cellHeader.Phrase = new Phrase("Total", _smallerBoldWhiteFont);
+            table.AddCell(cellHeader);
+
+            List<Summary> summaries = new List<Summary>();
+
+            foreach (var categorySummary in categorySummaries)
+            {
+                if (summaries.Any(x => x.CategoryName == categorySummary.CategoryName))
+                    summaries.Add(new Summary
+                    {
+                        CategoryName = "",
+                        CurrencyCode = categorySummary.CurrencyCode,
+                        SubTotal = categorySummary.SubTotal,
+                        
+                    });
+                else
+                    summaries.Add(categorySummary);
+            }
+
+            var lastItem = summaries.Last();
+            foreach (var summary in summaries)
+            {
+                if (summary.Equals(lastItem))
+                {
+                    cellNoBorderTop.HorizontalAlignment = Element.ALIGN_CENTER;
+                    cellNoBorderTop.Phrase = new Phrase(summary.CategoryName, _smallerFont);
+                    table.AddCell(cellNoBorderTop);
+                }
+                else if (String.IsNullOrEmpty(summary.CategoryName))
+                {
+                    cellNoBorderTopAndBot.HorizontalAlignment = Element.ALIGN_CENTER;
+                    cellNoBorderTopAndBot.Phrase = new Phrase(summary.CategoryName, _smallerFont);
+                    table.AddCell(cellNoBorderTopAndBot);
+                }
+                else
+                {
+                    cellNoBorderBot.HorizontalAlignment = Element.ALIGN_CENTER;
+                    cellNoBorderBot.Phrase = new Phrase(summary.CategoryName, _smallerFont);
+                    table.AddCell(cellNoBorderBot);
+                }
+
+                cell.HorizontalAlignment = Element.ALIGN_CENTER;
+                cell.Phrase = new Phrase(summary.CurrencyCode, _smallerFont);
+                table.AddCell(cell);
+
+                cell.HorizontalAlignment = Element.ALIGN_RIGHT;
+                cell.Phrase = new Phrase(string.Format("{0:n}", summary.SubTotal), _smallerFont);
+                table.AddCell(cell);
+            }
+
+            //cell.Phrase = new Phrase("", _smallerFont);
+            //table.AddCell(cell);
+
+            //cell.Phrase = new Phrase(string.Format("{0:n}", totalSummary), _smallerFont);
+            //table.AddCell(cell);
+
+            return new PdfPCell(table) { Border = Rectangle.NO_BORDER };
+        }
+
         private static void SetReportTable(Document document, UnpaidDispositionReportDetailViewModel viewModel, int timezoneOffset, bool isImport, bool isForeignCurrency)
         {
             var table = new PdfPTable(12)
@@ -476,25 +641,116 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
 
             document.Add(new Paragraph("\n"));
 
-            var summaryTable = new PdfPTable(4)
+            //var summaryTable = new PdfPTable(5)
+            //{
+            //    WidthPercentage = 95,
+
+            //};            
+
+            //var widthSummaryTable = new List<float>() { 2f, 1f, 2f,1f,2f};
+            //summaryTable.SetWidths(widthSummaryTable.ToArray());
+
+            ////UnitSummary
+            //if (isForeignCurrency || isImport)
+            //    summaryTable.AddCell(GetUnitSummaryValasTable(viewModel.UnitSummaries));
+            //else
+            //    summaryTable.AddCell(GetUnitSummaryTable(viewModel.UnitSummaries));
+
+            //summaryTable.AddCell(new PdfPCell() { Border = Rectangle.NO_BORDER });
+
+            ////CategorySummary
+            //if (isForeignCurrency || isImport)
+            //    summaryTable.AddCell(GetCategoryValasTable(viewModel.CategorySummaries));
+            //else
+            //    summaryTable.AddCell(GetCategorySummaryTable(viewModel.CategorySummaries));
+
+            //summaryTable.AddCell(new PdfPCell() { Border = Rectangle.NO_BORDER });
+            ////CurrencySummary
+            //summaryTable.AddCell(GetCurrencySummaryTable(viewModel.CurrencySummaries));
+
+
+
+            //document.Add(summaryTable);
+
+            //New PDF Summary Table Setter
+            
+            var currencyTable = new PdfPTable(5)
             {
                 WidthPercentage = 95,
 
             };
 
-            var widthSummaryTable = new List<float>() { 3f, 1f, 3f, 3f };
-            summaryTable.SetWidths(widthSummaryTable.ToArray());
+            var leftTable = new PdfPTable(1)
+            {
+                WidthPercentage = 95,
 
+            };
+            var centerTable = new PdfPTable(1)
+            {
+                WidthPercentage = 95,
+            };
+            var rightTable = new PdfPTable(1)
+            {
+                WidthPercentage = 95,
+
+            };
+
+            var leftTableCell = new PdfPCell()
+            {
+                HorizontalAlignment = Element.ALIGN_LEFT,
+                VerticalAlignment = Element.ALIGN_TOP,
+                Border = Rectangle.NO_BORDER
+
+            };
+            var centerTableCell = new PdfPCell()
+            {
+                HorizontalAlignment = Element.ALIGN_LEFT,
+                VerticalAlignment = Element.ALIGN_TOP,
+                Border = Rectangle.NO_BORDER
+            };
+            var RightTableCell = new PdfPCell()
+            {
+                HorizontalAlignment = Element.ALIGN_LEFT,
+                VerticalAlignment = Element.ALIGN_TOP,
+                Border = Rectangle.NO_BORDER
+
+            };
+
+            var currencyWidthTable = new List<float>() { 3f, 1f, 3f, 1f, 3f };
+            currencyTable.SetWidths(currencyWidthTable.ToArray());
+
+            //UnitSummary
             if (isForeignCurrency || isImport)
-                summaryTable.AddCell(GetUnitSummaryValasTable(viewModel.UnitSummaries));
+                leftTable.AddCell(GetUnitSummaryValasTable(viewModel.UnitSummaries));
             else
-                summaryTable.AddCell(GetUnitSummaryTable(viewModel.UnitSummaries));
+                leftTable.AddCell(GetUnitSummaryTable(viewModel.UnitSummaries));
 
-            summaryTable.AddCell(new PdfPCell() { Border = Rectangle.NO_BORDER });
-            summaryTable.AddCell(GetCurrencySummaryTable(viewModel.CurrencySummaries));
-            summaryTable.AddCell(new PdfPCell() { Border = Rectangle.NO_BORDER });
+            leftTableCell.AddElement(leftTable);
+            currencyTable.AddCell(leftTableCell);
 
-            document.Add(summaryTable);
+            currencyTable.AddCell(new PdfPCell() { Border = Rectangle.NO_BORDER });
+
+
+            //CategorySummary
+            if (isForeignCurrency || isImport)
+                centerTable.AddCell(GetCategoryValasTable(viewModel.CategorySummaries));
+            else
+                centerTable.AddCell(GetCategorySummaryTable(viewModel.CategorySummaries));
+
+            centerTableCell.AddElement(centerTable);
+            currencyTable.AddCell(centerTableCell);
+
+            currencyTable.AddCell(new PdfPCell() { Border = Rectangle.NO_BORDER });
+
+            //CurrencySummary
+            rightTable.AddCell(GetCurrencySummaryTable(viewModel.CurrencySummaries));
+            RightTableCell.AddElement(rightTable);
+            currencyTable.AddCell(RightTableCell);
+
+            //RightTableCell.AddElement(rightTable);
+            //currencyTable.AddCell(RightTableCell);
+
+            document.Add(currencyTable);
         }
 
         private static void SetReportTableHeader(PdfPTable table)

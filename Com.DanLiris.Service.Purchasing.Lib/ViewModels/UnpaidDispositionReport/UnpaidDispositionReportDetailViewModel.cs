@@ -14,6 +14,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.UnpaidDispositionReport
         public List<DispositionReport> Reports { get; set; }
         public List<Summary> UnitSummaries { get; set; }
         public List<Summary> CurrencySummaries { get; set; }
+        public List<Summary> CategorySummaries { get; set; }
         public decimal GrandTotal { get; set; }
         public decimal UnitSummaryTotal { get; set; }
     }
@@ -25,6 +26,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.UnpaidDispositionReport
         public decimal SubTotal { get; set; }
         public decimal SubTotalCurrency { get; set; }
         public int AccountingLayoutIndex { get; set; }
+        public string CategoryId { get; set; }
+        public string CategoryName { get; set; }
     }
 
     public class DispositionReport

@@ -238,6 +238,17 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFac
                     SubTotalCurrency = report.Sum(sum => sum.TotalCurrency)
                 }).OrderBy(order => order.CurrencyCode).ToList();
 
+            reportResult.CategorySummaries = reportResult.Reports
+                .GroupBy(report => new { report.CategoryName, report.CategoryId, report.CurrencyCode })
+                .Select(report => new Summary()
+                {
+                    CategoryName = report.Key.CategoryName,
+                    CategoryId = report.Key.CategoryId,
+                    CurrencyCode = report.Key.CurrencyCode,
+                    SubTotal = report.Sum(sum => sum.Total)                    
+                })
+                .OrderBy(order => order.CategoryName).ToList();
+
             reportResult.Reports = reportResult.Reports.OrderBy(order => order.CategoryLayoutIndex).ToList();
             reportResult.GrandTotal = reportResult.Reports.Sum(sum => sum.TotalCurrency);
             reportResult.UnitSummaryTotal = reportResult.UnitSummaries.Sum(categorySummary => categorySummary.SubTotalCurrency);
@@ -325,6 +336,19 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFac
             currencyDataTable.Columns.Add(new DataColumn() { ColumnName = "Mata Uang", DataType = typeof(string) });
             currencyDataTable.Columns.Add(new DataColumn() { ColumnName = "Total", DataType = typeof(decimal) });
 
+            var categoryDataTable = new DataTable();
+            if (isForeignCurrency || isImport)
+            {
+                categoryDataTable.Columns.Add(new DataColumn() { ColumnName = "Category", DataType = typeof(string) });
+                categoryDataTable.Columns.Add(new DataColumn() { ColumnName = "Currency", DataType = typeof(string) });
+                categoryDataTable.Columns.Add(new DataColumn() { ColumnName = "Total", DataType = typeof(decimal) });
+            }
+            else
+            {
+                categoryDataTable.Columns.Add(new DataColumn() { ColumnName = "Category", DataType = typeof(string) });
+                categoryDataTable.Columns.Add(new DataColumn() { ColumnName = "Total (IDR)", DataType = typeof(decimal) });
+            }
+
             int space = 0;
             if (result.Reports.Count > 0)
             {
@@ -374,6 +398,25 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFac
                         summaries.Add(unitSummary);
                 }
 
+                List<Summary> categSummaries = new List<Summary>();
+
+                foreach (var categorySummary in result.CategorySummaries)
+                {
+                    if (categSummaries.Any(x => x.CategoryName == categorySummary.CategoryName))
+                        categSummaries.Add(new Summary
+                        {
+                            CategoryName = "",
+                            CurrencyCode = categorySummary.CurrencyCode,
+                            SubTotal = categorySummary.SubTotal,
+                            SubTotalCurrency = categorySummary.SubTotalCurrency
+                            
+                        });
+                    else
+                    {
+                        categSummaries.Add(categorySummary);
+                    }
+                }
+
                 foreach (var unitSummary in summaries)
                 {
                     if (isForeignCurrency || isImport)
@@ -384,6 +427,16 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFac
 
                 foreach(var currencySummary in result.CurrencySummaries)
                     currencyDataTable.Rows.Add(currencySummary.CurrencyCode, currencySummary.SubTotal);
+
+                foreach (var categorySummary in categSummaries)
+                {
+                    if (isForeignCurrency || isImport)
+                        categoryDataTable.Rows.Add(categorySummary.CategoryName, categorySummary.CurrencyCode, categorySummary.SubTotal);
+                    else
+                        categoryDataTable.Rows.Add(categorySummary.CategoryName, categorySummary.SubTotal);
+                }
+
+
             }
 
             using (var package = new ExcelPackage())
@@ -404,6 +457,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnpaidDispositionReportFac
                 worksheet.Cells["A5"].LoadFromDataTable(reportDataTable, true);
                 worksheet.Cells[$"A{5 + 3 + result.Reports.Count + space}"].LoadFromDataTable(unitDataTable, true);
                 worksheet.Cells[$"A{5 + result.Reports.Count + space + 3 + result.UnitSummaries.Count + 3}"].LoadFromDataTable(currencyDataTable, true);
+                worksheet.Cells[$"H{5 + 3 + result.Reports.Count + space}"].LoadFromDataTable(categoryDataTable, true);
 
                 var stream = new MemoryStream();
                 package.SaveAs(stream);

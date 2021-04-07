@@ -91,16 +91,16 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Report
                         join purchaseRequest in purchaseRequests on unitReceiptNoteItem.PRId equals purchaseRequest.Id into urnPRs
                         from urnPR in urnPRs.DefaultIfEmpty()
 
-                        // Additional
-                        //join epoDetail in _dbContext.ExternalPurchaseOrderDetails on unitReceiptNoteItem.EPODetailId equals epoDetail.Id into joinExternalPurchaseOrderDetails
-                        //from urnEPODetail in joinExternalPurchaseOrderDetails.DefaultIfEmpty()
+                            // Additional
+                            //join epoDetail in _dbContext.ExternalPurchaseOrderDetails on unitReceiptNoteItem.EPODetailId equals epoDetail.Id into joinExternalPurchaseOrderDetails
+                            //from urnEPODetail in joinExternalPurchaseOrderDetails.DefaultIfEmpty()
 
-                        //where urnWithItem != null && urnWithItem.ReceiptDate != null  
-                        //&& urnEPO != null && urnEPO.PaymentDueDays != null
-                        //&& urnWithItem.ReceiptDate.AddDays(Convert.ToInt32(urnEPO.PaymentDueDays)) <= d2
-                        //&& upoWithItem != null && upoWithItem.IsPaid == false && urnEPO != null && urnEPO.SupplierIsImport == isImport
-                        
-                        //where upoWithItem != null && !upoWithItem.IsPaid && (urnWithItem.SupplierIsImport == isImport) && urnWithItem.ReceiptDate.AddDays(Convert.ToInt32(urnEPO.PaymentDueDays)) <= d2
+                            //where urnWithItem != null && urnWithItem.ReceiptDate != null  
+                            //&& urnEPO != null && urnEPO.PaymentDueDays != null
+                            //&& urnWithItem.ReceiptDate.AddDays(Convert.ToInt32(urnEPO.PaymentDueDays)) <= d2
+                            //&& upoWithItem != null && upoWithItem.IsPaid == false && urnEPO != null && urnEPO.SupplierIsImport == isImport
+
+                            //where upoWithItem != null && !upoWithItem.IsPaid && (urnWithItem.SupplierIsImport == isImport) && urnWithItem.ReceiptDate.AddDays(Convert.ToInt32(urnEPO.PaymentDueDays)) <= d2
 
                         select new DetailCreditBalanceReport
                         {
@@ -205,7 +205,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Report
             //}).Distinct().ToList();
             //var categories = await _currencyProvider.GetCategoriesByCategoryIds(itemCategoryIds);
             //var accountingCategories = await _currencyProvider.GetAccountingCategoriesByCategoryIds(itemCategoryIds);
-            
+
 
             var reportResult = new DetailCreditBalanceReportViewModel();
             foreach (var element in queryResult)
@@ -362,7 +362,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Report
                             SubTotalIDR = report.Sum(sum => sum.TotalIDR),
                         })
                         .OrderBy(order => order.AccountingUnitName).ToList();
-            
+
             reportResult.CurrencySummaries = reportResult.Reports
                         .GroupBy(report => new { report.CurrencyCode })
                         .Select(report => new SummaryDCB()
@@ -372,6 +372,18 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Report
                             SubTotalIDR = report.Sum(sum => sum.TotalIDR)
                         })
                         .OrderBy(order => order.CurrencyCode).ToList();
+
+            reportResult.CategorySummaries = reportResult.Reports
+                .GroupBy(report => new { report.CategoryName, report.CategoryId, report.CurrencyCode })
+                .Select(report => new SummaryDCB()
+                {
+                    CategoryName = report.Key.CategoryName,
+                    CategoryId = report.Key.CategoryId,
+                    CurrencyCode = report.Key.CurrencyCode,
+                    SubTotal = report.Sum(sum => sum.Total),
+                    SubTotalIDR = report.Sum(sum => sum.TotalIDR)
+                })
+                .OrderBy(order => order.CategoryName).ToList();
 
             //reportResult.Reports = reportResult.Reports
             reportResult.Reports = reportResult.Reports
@@ -561,6 +573,20 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Report
             currencyDataTable.Columns.Add(new DataColumn() { ColumnName = "Mata Uang", DataType = typeof(string) });
             currencyDataTable.Columns.Add(new DataColumn() { ColumnName = "Total", DataType = typeof(decimal) });
 
+            var categoryDataTable = new DataTable();
+            if (isForeignCurrency || isImport)
+            {
+                categoryDataTable.Columns.Add(new DataColumn() { ColumnName = "Category", DataType = typeof(string) });
+                categoryDataTable.Columns.Add(new DataColumn() { ColumnName = "Currency", DataType = typeof(string) });
+                categoryDataTable.Columns.Add(new DataColumn() { ColumnName = "Total", DataType = typeof(decimal) });
+            }
+            else
+            {
+                categoryDataTable.Columns.Add(new DataColumn() { ColumnName = "Category", DataType = typeof(string) });
+                categoryDataTable.Columns.Add(new DataColumn() { ColumnName = "Total (IDR)", DataType = typeof(decimal) });
+            }
+
+
             int space = 0;
             if (result.Reports.Count > 0)
             {
@@ -610,6 +636,24 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Report
                         summaries.Add(unitSummary);
                 }
 
+                List<SummaryDCB> categSummaries = new List<SummaryDCB>();
+
+                foreach (var categorySummary in result.CategorySummaries)
+                {
+                    if (categSummaries.Any(x => x.CategoryName == categorySummary.CategoryName))
+                        categSummaries.Add(new SummaryDCB
+                        {
+                            CategoryName = "",
+                            CurrencyCode = categorySummary.CurrencyCode,
+                            SubTotal = categorySummary.SubTotal,
+                            SubTotalIDR = categorySummary.SubTotalIDR
+                        });
+                    else
+                    {
+                        categSummaries.Add(categorySummary);
+                    }
+                }
+
                 foreach (var unitSummary in summaries)
                 {
                     if (isForeignCurrency || isImport)
@@ -620,6 +664,14 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Report
 
                 foreach (var currencySummary in result.CurrencySummaries)
                     currencyDataTable.Rows.Add(currencySummary.CurrencyCode, currencySummary.SubTotal);
+
+                foreach (var categorySummary in categSummaries)
+                {
+                    if (isForeignCurrency || isImport)
+                        categoryDataTable.Rows.Add(categorySummary.CategoryName, categorySummary.CurrencyCode, categorySummary.SubTotal);
+                    else
+                        categoryDataTable.Rows.Add(categorySummary.CategoryName, categorySummary.SubTotal);
+                }
             }
 
             using (var package = new ExcelPackage())
@@ -641,6 +693,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Report
                 worksheet.Cells["A5"].LoadFromDataTable(reportDataTable, true);
                 worksheet.Cells[$"A{5 + 3 + result.Reports.Count + space}"].LoadFromDataTable(unitDataTable, true);
                 worksheet.Cells[$"A{5 + result.Reports.Count + space + 3 + result.AccountingUnitSummaries.Count + 3}"].LoadFromDataTable(currencyDataTable, true);
+                worksheet.Cells[$"F{5 + 3 + result.Reports.Count + space}"].LoadFromDataTable(categoryDataTable, true);
 
                 var stream = new MemoryStream();
                 package.SaveAs(stream);

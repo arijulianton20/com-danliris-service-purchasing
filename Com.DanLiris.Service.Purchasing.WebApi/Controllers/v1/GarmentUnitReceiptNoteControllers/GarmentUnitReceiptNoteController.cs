@@ -397,6 +397,33 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentUnitRecei
             }
         }
 
+        [HttpGet("laporan/download-for-unit")]
+        public IActionResult GetXlsForUnit(DateTime? dateFrom, DateTime? dateTo, string unit, string category, string categoryname, string unitname, int page, int size, string Order = "{}")
+        {
+            try
+            {
+                byte[] xlsInBytes;
+                int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
+                var xls = facade.GenerateExcelFlowForUnit(dateFrom, dateTo, unit, category, categoryname, offset, unitname);
+
+                string filename = "Laporan Flow BUM";
+                if (dateFrom != null) filename += " " + ((DateTime)dateFrom).ToString("dd-MM-yyyy");
+                if (dateTo != null) filename += "_" + ((DateTime)dateTo).ToString("dd-MM-yyyy");
+                filename += ".xlsx";
+
+                xlsInBytes = xls.ToArray();
+                var file = File(xlsInBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+                return file;
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
+
         #endregion 
 
         [HttpGet("monitoring-in")]

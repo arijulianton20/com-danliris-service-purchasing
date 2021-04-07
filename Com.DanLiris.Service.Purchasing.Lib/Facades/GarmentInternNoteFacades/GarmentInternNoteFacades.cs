@@ -363,7 +363,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentInternNoteFacades
                          && e.IsDeleted == false
                          && a.INNo == (string.IsNullOrWhiteSpace(no) ? a.INNo : no)
                          && b.InvoiceNo == (string.IsNullOrWhiteSpace(invoiceNo) ? b.InvoiceNo : invoiceNo)
-                         && e.NPN == (string.IsNullOrWhiteSpace(npn) ? e.NPN : npn)
+                         //&& npn != null ? e.NPN == npn : false 
+                         //&& e.NPN == (string.IsNullOrWhiteSpace(npn) ? e.NPN : npn)
                          && c.DONo == (string.IsNullOrWhiteSpace(doNo) ? c.DONo : doNo)
                          && d.BillNo == (string.IsNullOrWhiteSpace(billNo) ? d.BillNo : billNo)
                          && d.PaymentBill == (string.IsNullOrWhiteSpace(paymentBill) ? d.PaymentBill : paymentBill)
@@ -386,8 +387,25 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentInternNoteFacades
                              deliveryOrderId = Do.Id,
                              invoiceId = Inv.Id,
                              priceTotal = pg.Sum(m => m.c.PriceTotal),
-                             INDate = IN.INDate
+                             INDate = IN.INDate,
+                             NPN =  Inv.NPN
                          });
+            //  select new
+            //{
+            //    InternNoteId = a.Id,
+            //    internNoteItemId = b.Id,
+            //    internNoteDetailId = c.Id,
+            //    deliveryOrderId = d.Id,
+            //    invoiceId = e.Id,
+            //    //priceTotal = pg.Sum(m => m.c.PriceTotal),
+            //    INDate = a.INDate
+            //});
+
+
+            if (npn != null)
+            {
+                Query = Query.Where( x => x.NPN == npn);
+            }
             //var Data = Query.GroupBy(s => s.doNo);
             TotalCountReport = Query.Distinct().Count();
             var queryResult = Query.Distinct().OrderByDescending(o => o.INDate).Skip((page - 1) * size).Take(size).ToList();
@@ -421,7 +439,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentInternNoteFacades
                     NPN = invoice.NPN,
                     VatNo = invoice.VatNo,
                     //pOSerialNumber = String.Join(",",pg.Select(m=>m.c.POSerialNumber)),//InDetail.POSerialNumber,
-                    priceTotal = item.priceTotal,//InDetail.PriceTotal,
+                    //priceTotal = item.priceTotal,//InDetail.PriceTotal,
                     doNo = internnotedetail.DONo,
                     doDate = internnotedetail.DODate,
                     ProductName = internnotedetail.ProductName,

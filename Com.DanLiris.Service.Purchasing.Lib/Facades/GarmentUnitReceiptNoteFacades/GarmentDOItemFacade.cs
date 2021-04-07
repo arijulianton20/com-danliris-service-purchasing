@@ -103,7 +103,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentUnitReceiptNoteFaca
             return ListData;
         }
 
-        public List<object> ReadForUnitDOMore(string Keyword = null, string Filter = "{}", int size = 25)
+        public List<object> ReadForUnitDOMore(string Keyword = null, string Filter = "{}", int size = 50)
         {
             IQueryable<GarmentDOItems> GarmentDOItemsQuery = dbSetGarmentDOItems.Where(w => w.IsDeleted == false);
             IQueryable<GarmentUnitReceiptNoteItem> GarmentUnitReceiptNoteItemsQuery = dbSetGarmentUnitReceiptNoteItem.Where(w => w.IsDeleted == false);
@@ -132,7 +132,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentUnitReceiptNoteFaca
             }
 
             Keyword = (Keyword ?? "").Trim();
-            GarmentDOItemsQuery = GarmentDOItemsQuery.Where(x => x.RemainingQuantity > 0 && x.RO.Contains(Keyword));
+            GarmentDOItemsQuery = GarmentDOItemsQuery.Where(x => x.RemainingQuantity > 0 && (x.RO.Contains(Keyword) || x.POSerialNumber.Contains(Keyword)));
 
             var data = from doi in GarmentDOItemsQuery
                        join urni in GarmentUnitReceiptNoteItemsQuery on doi.URNItemId equals urni.Id

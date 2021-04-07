@@ -72,7 +72,37 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentUnitExpen
                 return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
             }
         }
+        [HttpGet("custom-loader")]
+        public IActionResult GetCustomLoader(int page = 1, int size = 25, string order = "{}", string keyword = null, string filter = "{}", Lib.Helpers.ConditionType conditionType = Lib.Helpers.ConditionType.ENUM_INT)
+        {
+            try
+            {
+                identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
 
+                var model = facade.ReadLoader(page, size, order, keyword, filter, conditionType);
+
+                var info = new Dictionary<string, object>
+                    {
+                        { "count", model.Data.Count },
+                        { "total", model.TotalData },
+                        { "order", model.Order },
+                        { "page", page },
+                        { "size", size }
+                    };
+
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.OK_STATUS_CODE, General.OK_MESSAGE)
+                    .Ok(model.Data, info);
+                return Ok(Result);
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
         [HttpGet("by-user")]
         public IActionResult GetByUser(int page = 1, int size = 25, string order = "{}", string keyword = null, string filter = "{}")
         {

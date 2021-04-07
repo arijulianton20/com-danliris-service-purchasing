@@ -13,41 +13,36 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentReports
 {
     [Produces("application/json")]
     [ApiVersion("1.0")]
-    [Route("v{version:apiVersion}/intern-note-payment-status")]
+    [Route("v{version:apiVersion}/bc-23")]
     [Authorize]
-    public class GarmentInternNotePaymentStatusReportController : Controller
+    public class GarmentBC23ReportController : Controller
     {
         private string ApiVersion = "1.0.0";
         private readonly IMapper mapper;
-        private readonly IGarmenInternNotePaymentStatusFacade _facade;
+        private readonly IGarmentBC23ReportFacade _facade;
         private readonly IServiceProvider serviceProvider;
-        private IdentityService IdentityService;
+        private readonly IdentityService identityService;
 
-        public GarmentInternNotePaymentStatusReportController(IdentityService identityService, IGarmenInternNotePaymentStatusFacade facade, IServiceProvider serviceProvider)
+        public GarmentBC23ReportController(IGarmentBC23ReportFacade facade, IServiceProvider serviceProvider)
         {
             this._facade = facade;
             this.serviceProvider = serviceProvider;
-            IdentityService = identityService;
-        }
-
-        protected void VerifyUser()
-        {
-            IdentityService.Username = User.Claims.ToArray().SingleOrDefault(p => p.Type.Equals("username")).Value;
-            IdentityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");
-            IdentityService.TimezoneOffset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
+            identityService = (IdentityService)serviceProvider.GetService(typeof(IdentityService));
         }
 
         [HttpGet]
-        public IActionResult GetReport(string inno, string invono, string dono, string billno, string paymentbill, string npn, string nph, string corrno, string supplier, DateTime? dateNIFrom, DateTime? dateNITo, DateTime? dueDateFrom, DateTime? dueDateTo, string status, int page = 1, int size = 25, string Order = "{}")
+        public IActionResult GetReport(DateTime? dateFrom, DateTime? dateTo, int page = 1, int size = 25, string Order = "{}")
         {
             try
             {
-                VerifyUser();
+                identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+                identityService.TimezoneOffset = int.Parse(Request.Headers["x-timezone-offset"].First());
+                identityService.Token = Request.Headers["Authorization"].First().Replace("Bearer ", "");
 
                 int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
                 string accept = Request.Headers["Accept"];
 
-                var data = _facade.GetReport(inno, invono, dono, billno, paymentbill, npn, nph, corrno, supplier, dateNIFrom, dateNITo, dueDateFrom, dueDateTo, status, page , size, Order,offset);
+                var data = _facade.GetReport(dateFrom, dateTo, page, size, Order, offset);
 
                 return Ok(new
                 {
@@ -66,17 +61,21 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentReports
                 return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
             }
         }
+
         [HttpGet("download")]
-        public IActionResult GetXlsPayment(string inno, string invono, string dono, string billno, string paymentbill, string npn, string nph, string corrno, string supplier, DateTime? dateNIFrom, DateTime? dateNITo, DateTime? dueDateFrom, DateTime? dueDateTo, string status, int page = 1, int size = 25, string Order = "{}")
+        public IActionResult GetXls(DateTime? dateFrom, DateTime? dateTo, int page = 1, int size = 25, string Order = "{}")
         {
             try
             {
-                VerifyUser();
+                identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+                identityService.TimezoneOffset = int.Parse(Request.Headers["x-timezone-offset"].First());
+                identityService.Token = Request.Headers["Authorization"].First().Replace("Bearer ", "");
+
                 byte[] xlsInBytes;
                 int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
-                var xls = _facade.GetXLs(inno, invono, dono, billno, paymentbill, npn, nph, corrno, supplier, dateNIFrom, dateNITo, dueDateFrom, dueDateTo, status, offset);
+                var xls = _facade.GetXLs(dateFrom, dateTo, offset);
 
-                string filename = status == "BB" ? String.Format("Laporan Status Bayar Nota Intern Belum Bayar - {0}.xlsx", DateTime.UtcNow.ToString("ddMMyyyy")) : status == "SB" ? String.Format("Laporan Status Bayar Nota Intern Sudah Bayar - {0}.xlsx", DateTime.UtcNow.ToString("ddMMyyyy")) : String.Format("Laporan Status Bayar Nota Intern All - {0}.xlsx", DateTime.UtcNow.ToString("ddMMyyyy"));
+                string filename = String.Format("Laporan BC 23 - {0}.xlsx", DateTime.UtcNow.ToString("ddMMyyyy"));
 
                 xlsInBytes = xls.ToArray();
                 var file = File(xlsInBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
@@ -90,5 +89,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentReports
                 return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
             }
         }
+
+
     }
 }

@@ -31,5 +31,6 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentReports
         public string Nomor { get; set; }
         public DateTimeOffset? Tgl { get; set; }
         public decimal Jumlah { get; set; }
+        public long InvoiceId { get; set; }
     }
 }

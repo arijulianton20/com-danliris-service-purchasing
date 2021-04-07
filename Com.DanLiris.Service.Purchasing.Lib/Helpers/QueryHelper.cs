@@ -67,6 +67,46 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Helpers
             }
             return Query;
         }
+        /// <summary>
+        /// Helper for Filter With Condition that custom Defined,
+        /// note : enum that failed to be parse as Description String it will be ignore
+        /// </summary>
+        /// <param name="Query"></param>
+        /// <param name="FilterModel"></param>
+        /// <returns></returns>
+        public static IQueryable<TModel> ConfigureFilter(IQueryable<TModel> Query, List<FilterViewModel> FilterModel)
+        {
+            if (FilterModel != null && !FilterModel.Count.Equals(0))
+            {
+                foreach (var f in FilterModel)
+                {
+                    string Key = f.Key;
+                    object Value = f.Value;
+                    bool ParsedValueBoolean;
+                    string ConditionString = string.Empty;
+                    //try parse condition
+                    try
+                    {
+                        ConditionString = f.GetConditionOperator();
+                    }catch(Exception ex)
+                    {
+                        ///if condition string cannot be parse then it will be Cancel for filter
+                        continue;
+                    }
+                    string filterQuery = string.Concat(string.Empty, Key, " "+ConditionString+" @0");
+
+                    if (Boolean.TryParse(Value.ToString(), out ParsedValueBoolean))
+                    {
+                        Query = Query.Where(filterQuery, ParsedValueBoolean);
+                    }
+                    else
+                    {
+                        Query = Query.Where(filterQuery, Value);
+                    }
+                }
+            }
+            return Query;
+        }
 
         public static IQueryable<TModel> ConfigureOrder(IQueryable<TModel> Query, Dictionary<string, string> OrderDictionary)
         {

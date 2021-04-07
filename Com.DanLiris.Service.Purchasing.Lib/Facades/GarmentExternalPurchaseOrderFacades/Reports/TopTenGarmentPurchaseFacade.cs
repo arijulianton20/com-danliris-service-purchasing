@@ -68,19 +68,19 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentExternalPurchaseOrd
                          });
 
             var Query = (from a in Query1
-                         group a by new { a.SupplierName, a.Currencycode, a.ProductName } into G
-                         orderby G.Sum(a => a.Amount) descending
+                         group a by new { a.SupplierName, a.ProductName } into G
+                         orderby G.Sum(a => a.Amount1) descending
                          select new TopTenGarmenPurchasebySupplierViewModel
                          {
                              SupplierName = G.Key.SupplierName,
                              Amount = G.Sum(a => a.Amount),
-                             CurrencyCode = G.Key.Currencycode,
+                             CurrencyCode = G.FirstOrDefault().Currencycode,
                              AmountIDR = G.Sum(a => a.Amount1),
                              ProductName = G.FirstOrDefault().ProductName
                          }
                          );
 
-            return Query.OrderByDescending(b => b.Amount).Take(10);
+            return Query.OrderByDescending(b => b.AmountIDR).Take(10);
         }
 
         public List<TopTenGarmenPurchasebySupplierViewModel> GetTopTenGarmentPurchaseSupplierReport(string unit, bool jnsSpl, string payMtd, string category, DateTime? dateFrom, DateTime? dateTo, int offset)
@@ -130,7 +130,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentExternalPurchaseOrd
                         index++;
                         if (jnsSpl == false)
                         {
-                            result.Rows.Add(index, item.SupplierName, (Decimal)Math.Round((item.Amount), 2), item.ProductName);
+                            result.Rows.Add(index, item.SupplierName, (Decimal)Math.Round((item.AmountIDR), 2), item.ProductName);
                         }
                         else
                         {

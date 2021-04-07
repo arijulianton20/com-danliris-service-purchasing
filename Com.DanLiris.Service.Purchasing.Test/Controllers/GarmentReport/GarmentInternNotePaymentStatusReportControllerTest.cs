@@ -54,7 +54,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentReport
 
             var servicePMock = GetServiceProvider();
 
-            var controller = new GarmentInternNotePaymentStatusReportController(facadeM.Object, servicePMock.Object)
+            var controller = new GarmentInternNotePaymentStatusReportController(new IdentityService(), facadeM.Object, servicePMock.Object)
             {
                 ControllerContext = new ControllerContext()
                 {
@@ -92,7 +92,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentReport
                 new Claim("username", "unittestusername")
             };
             user.Setup(u => u.Claims).Returns(claims);
-            GarmentInternNotePaymentStatusReportController controller = new GarmentInternNotePaymentStatusReportController(mockFacade.Object, GetServiceProvider().Object);
+            GarmentInternNotePaymentStatusReportController controller = new GarmentInternNotePaymentStatusReportController(new IdentityService(), mockFacade.Object, GetServiceProvider().Object);
             controller.ControllerContext = new ControllerContext()
             {
                 HttpContext = new DefaultHttpContext()
@@ -122,7 +122,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentReport
             };
             user.Setup(u => u.Claims).Returns(claims);
 
-            GarmentInternNotePaymentStatusReportController controller = new GarmentInternNotePaymentStatusReportController(mockFacade.Object, GetServiceProvider().Object);
+            GarmentInternNotePaymentStatusReportController controller = new GarmentInternNotePaymentStatusReportController(new IdentityService(), mockFacade.Object, GetServiceProvider().Object);
             controller.ControllerContext = new ControllerContext()
             {
                 HttpContext = new DefaultHttpContext()
@@ -152,7 +152,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentReport
                 new Claim("username", "unittestusername")
             };
             user.Setup(u => u.Claims).Returns(claims);
-            GarmentInternNotePaymentStatusReportController controller = new GarmentInternNotePaymentStatusReportController(mockFacade.Object, GetServiceProvider().Object);
+            GarmentInternNotePaymentStatusReportController controller = new GarmentInternNotePaymentStatusReportController(new IdentityService(), mockFacade.Object, GetServiceProvider().Object);
             controller.ControllerContext = new ControllerContext()
             {
                 HttpContext = new DefaultHttpContext()
@@ -180,7 +180,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentReport
                 new Claim("username", "unittestusername")
             };
             user.Setup(u => u.Claims).Returns(claims);
-            GarmentInternNotePaymentStatusReportController controller = new GarmentInternNotePaymentStatusReportController(mockFacade.Object, GetServiceProvider().Object);
+            GarmentInternNotePaymentStatusReportController controller = new GarmentInternNotePaymentStatusReportController(new IdentityService(), mockFacade.Object, GetServiceProvider().Object);
             controller.ControllerContext = new ControllerContext()
             {
                 HttpContext = new DefaultHttpContext()

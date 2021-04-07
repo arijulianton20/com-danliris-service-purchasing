@@ -954,6 +954,77 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentUnitExpenditureNote
             return new ReadResponse<object>(ListData, TotalData, OrderDictionary);
         }
 
+        public ReadResponse<object> ReadLoader(int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}",ConditionType conditionType=ConditionType.ENUM_INT)
+        {
+            IQueryable<GarmentUnitExpenditureNote> Query = dbSet;
+
+            List<string> searchAttributes = new List<string>()
+            {
+                "UENNo", "UnitDONo", "ExpenditureType", "ExpenditureTo", "CreatedBy"
+            };
+
+            Query = QueryHelper<GarmentUnitExpenditureNote>.ConfigureSearch(Query, searchAttributes, Keyword);
+
+            //List<object> FilterDictionary = JsonConvert.DeserializeObject<List<object>>(Filter);
+            List<FilterViewModel> filter = FilterViewModel.ConvertJsonAsList(Filter, conditionType);
+            Query = QueryHelper<GarmentUnitExpenditureNote>.ConfigureFilter(Query, filter);
+
+            Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
+            Query = QueryHelper<GarmentUnitExpenditureNote>.ConfigureOrder(Query, OrderDictionary);
+
+            Query = Query.Select(m => new GarmentUnitExpenditureNote
+            {
+                Id = m.Id,
+                UENNo = m.UENNo,
+                UnitDONo = m.UnitDONo,
+                ExpenditureDate = m.ExpenditureDate,
+                ExpenditureTo = m.ExpenditureTo,
+                ExpenditureType = m.ExpenditureType,
+                UnitDOId = m.UnitDOId,
+                Items = m.Items.Select(i => new GarmentUnitExpenditureNoteItem
+                {
+                    Id = i.Id,
+                    UENId = i.UENId,
+                    ProductId = i.ProductId,
+                    ProductCode = i.ProductCode,
+                    ProductName = i.ProductName,
+                    RONo = i.RONo,
+                    Quantity = i.Quantity,
+                    UomId = i.UomId,
+                    UomUnit = i.UomUnit,
+                    ReturQuantity = i.ReturQuantity,
+                    UnitDOItemId = i.UnitDOItemId,
+                    FabricType = i.FabricType,
+                    ProductRemark = i.ProductRemark
+                }).ToList(),
+                CreatedAgent = m.CreatedAgent,
+                CreatedBy = m.CreatedBy,
+                LastModifiedUtc = m.LastModifiedUtc
+            });
+
+            Pageable<GarmentUnitExpenditureNote> pageable = new Pageable<GarmentUnitExpenditureNote>(Query, Page - 1, Size);
+            List<GarmentUnitExpenditureNote> Data = pageable.Data.ToList();
+            int TotalData = pageable.TotalCount;
+
+            List<object> ListData = new List<object>();
+            ListData.AddRange(Data.Select(s => new
+            {
+                s.Id,
+                s.UENNo,
+                s.ExpenditureDate,
+                s.ExpenditureTo,
+                s.ExpenditureType,
+                s.UnitDONo,
+                s.CreatedAgent,
+                s.CreatedBy,
+                s.LastModifiedUtc,
+                s.UnitDOId,
+                s.Items
+            }));
+
+            return new ReadResponse<object>(ListData, TotalData, OrderDictionary);
+        }
+
         public GarmentUnitExpenditureNoteViewModel ReadById(int id)
         {
             var model = dbSet.Where(m => m.Id == id)

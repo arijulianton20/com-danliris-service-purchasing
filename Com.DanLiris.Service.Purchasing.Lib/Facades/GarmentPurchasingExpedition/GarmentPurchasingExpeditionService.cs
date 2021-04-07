@@ -30,8 +30,6 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentPurchasingExpeditio
 
             if (position > 0)
                 query = query.Where(entity => entity.Position == position);
-            else
-                query = query.Where(entity => entity.Position == PurchasingGarmentExpeditionPosition.Purchasing);
 
             if (!string.IsNullOrWhiteSpace(keyword))
                 query = query.Where(entity => entity.DispositionNo.Contains(keyword));
@@ -58,7 +56,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentPurchasingExpeditio
                     {
                         resultItems.Add(new GarmentDispositionNoteItemDto(detail.UnitId, detail.UnitCode, detail.UnitName, detail.ProductId, detail.ProductName, detail.QTYPaid, detail.PricePerQTY));
                     }
-                }
+                }  
 
                 result.Add(new GarmentDispositionNoteDto(dispositionNote.Id, dispositionNote.DispositionNo, dispositionNote.CreatedUtc.ToUniversalTime(), dispositionNote.DueDate, dispositionNote.SupplierId, dispositionNote.SupplierCode, dispositionNote.SupplierName, dispositionNote.VAT, dispositionNote.VAT, dispositionNote.IncomeTax, dispositionNote.IncomeTax, dispositionNote.Amount, dispositionNote.Amount, dispositionNote.CurrencyId, dispositionNote.CurrencyName, 0, dispositionNote.Dpp, dispositionNote.Dpp, resultItems, dispositionNote.InvoiceProformaNo,dispositionNote.Category));
             }

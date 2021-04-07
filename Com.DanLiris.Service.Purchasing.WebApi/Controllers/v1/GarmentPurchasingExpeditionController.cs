@@ -1,5 +1,6 @@
 ﻿using AutoMapper;
 using Com.DanLiris.Service.Purchasing.Lib.Enums;
+using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDispositionPaymentReport;
 using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentPurchasingExpedition;
 using Com.DanLiris.Service.Purchasing.Lib.Models.GarmentInternNoteModel;
 using Com.DanLiris.Service.Purchasing.Lib.Services;
@@ -7,6 +8,7 @@ using Com.DanLiris.Service.Purchasing.WebApi.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,6 +24,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1
         private readonly IGarmentPurchasingExpeditionService _service;
         private readonly IdentityService _identityService;
         private readonly IMapper _mapper;
+        private readonly IGarmentDispositionPaymentReportService _dispositionPaymentReportService;
         private const string ApiVersion = "1.0";
 
         public GarmentPurchasingExpeditionController(IServiceProvider serviceProvider, IMapper mapper)
@@ -29,6 +32,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1
             _service = serviceProvider.GetService<IGarmentPurchasingExpeditionService>();
             _identityService = serviceProvider.GetService<IdentityService>();
             _mapper = mapper;
+            _dispositionPaymentReportService = serviceProvider.GetService<IGarmentDispositionPaymentReportService>();
         }
 
         private void VerifyUser()
@@ -43,7 +47,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1
         {
             try
             {
-                var result = _service.GetGarmentInternalNotes(keyword,filter);
+                var result = _service.GetGarmentInternalNotes(keyword, filter);
                 return Ok(new
                 {
                     apiVersion = ApiVersion,
@@ -100,7 +104,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1
         }
 
         [HttpPut("internal-notes-update-paid-pph")]
-        public IActionResult UpdateGarmentInternalNoteIsPaidPph([FromBody] List<GarmentInternNoteUpdateIsPphPaidDto> listModel )
+        public IActionResult UpdateGarmentInternalNoteIsPaidPph([FromBody] List<GarmentInternNoteUpdateIsPphPaidDto> listModel)
         {
             try
             {
@@ -144,6 +148,45 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1
 
                 var result = _service.UpdateDispositionNotePosition(form);
                 return NoContent();
+            }
+            catch (Exception e)
+            {
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, e.Message + " " + e.StackTrace);
+            }
+        }
+
+        [HttpGet("report/disposition-payment")]
+        public IActionResult GetDispositionPaymentReport([FromQuery] DateTimeOffset startDate, [FromQuery] DateTimeOffset endDate, [FromQuery] string dispositionIds = "[]")
+        {
+            try
+            {
+                var parsedDispositionIds = JsonConvert.DeserializeObject<List<int>>(dispositionIds);
+
+                if (parsedDispositionIds.Count > 0)
+                {
+                    var result = _dispositionPaymentReportService.GetReportByDispositionIds(parsedDispositionIds);
+
+                    return Ok(new
+                    {
+                        apiVersion = ApiVersion,
+                        statusCode = General.OK_STATUS_CODE,
+                        message = General.OK_MESSAGE,
+                        data = result
+                    });
+                }
+                else
+                {
+                    var result = _dispositionPaymentReportService.GetReportByDate(startDate, endDate);
+
+                    return Ok(new
+                    {
+                        apiVersion = ApiVersion,
+                        statusCode = General.OK_STATUS_CODE,
+                        message = General.OK_MESSAGE,
+                        data = result
+                    });
+                }
+
             }
             catch (Exception e)
             {

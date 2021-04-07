@@ -4,6 +4,7 @@ using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDeliveryOrderFacades;
 using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentExternalPurchaseOrderFacades;
 using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentInternalPurchaseOrderFacades;
 using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentPurchaseRequestFacades;
+using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports;
 using Com.DanLiris.Service.Purchasing.Lib.Interfaces;
 using Com.DanLiris.Service.Purchasing.Lib.Models.GarmentBeacukaiModel;
 using Com.DanLiris.Service.Purchasing.Lib.Services;
@@ -14,6 +15,7 @@ using Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentDeliveryOrderDataUti
 using Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentExternalPurchaseOrderDataUtils;
 using Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentInternalPurchaseOrderDataUtils;
 using Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentPurchaseRequestDataUtils;
+using Com.DanLiris.Service.Purchasing.Test.DataUtils.NewIntegrationDataUtils;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Moq;
@@ -21,7 +23,9 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
+using System.Net;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -67,8 +71,11 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentBeacukaiTests
 			HttpClientService
 				.Setup(x => x.GetAsync(It.IsAny<string>()))
 				.ReturnsAsync(message);
+            HttpClientService
+               .Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("master/garment-suppliers"))))
+               .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(new GarmentSupplierDataUtil().GetMultipleResultFormatterOkString()) });
 
-			var serviceProvider = new Mock<IServiceProvider>();
+            var serviceProvider = new Mock<IServiceProvider>();
 			serviceProvider
 				.Setup(x => x.GetService(typeof(IdentityService)))
 				.Returns(new IdentityService() { Token = "Token", Username = "Test" });
@@ -260,5 +267,39 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentBeacukaiTests
 			Assert.True(viewModel.Validate(null).Count() > 0);
 
 		}
-	}
+
+        [Fact]
+        public async Task Should_Success_Get_All_Data_BC_23()
+        {
+            var facade = new GarmentBeacukaiFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+            GarmentBeacukai data = await dataUtil(facade, GetCurrentMethod()).GetNewData(USERNAME);
+
+            data.CustomsType = "BC 23";
+            var Responses = await facade.Create(data, USERNAME);
+
+            var facadeReport = new GarmentBC23ReportFacade(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
+
+            var Response = facadeReport.GetReport(DateTime.Now, DateTime.Now, 1, 25, "", 7);
+
+            Assert.NotNull(Response.Item1);
+        }
+
+
+        [Fact]
+        public async Task Should_Success_Get_Excel_Data_BC_23()
+        {
+            var facade = new GarmentBeacukaiFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+            GarmentBeacukai data = await dataUtil(facade, GetCurrentMethod()).GetNewData(USERNAME);
+
+            data.CustomsType = "BC 23";
+            var Responses = await facade.Create(data, USERNAME);
+
+            var facadeReport = new GarmentBC23ReportFacade(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
+
+            var Response = facadeReport.GetXLs(DateTime.Now, DateTime.Now, 7);
+
+            Assert.IsType<MemoryStream>(Response);
+        }
+
+    }
 }
