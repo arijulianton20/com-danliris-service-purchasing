@@ -15,5 +15,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Interfaces
 		Task<int> Create(GarmentBeacukai m, string user, int clientTimeZoneOffset = 7);
 		Task<int> Update(int id, GarmentBeacukaiViewModel vm,GarmentBeacukai  m, string user, int clientTimeZoneOffset = 7);
 		int Delete(int id, string username);
-	}
+        List<object> ReadBCByPOSerialNumber(string Keyword = null, string Filter = "{}");
+
+    }
 }

@@ -19,7 +19,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Interfaces
         Task<int> Delete(int id, string deletedReason);
         List<object> ReadForUnitDO(string Keyword = null, string Filter = "{}");
         List<object> ReadForUnitDOHeader(string Keyword = null, string Filter = "{}");
-        ReadResponse<object> ReadURNItem(int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}");
+        List<object> ReadURNItem(string Keyword = null, string Filter = "{}");
         Tuple<List<FlowDetailPenerimaanViewModels>, int> GetReportFlow(DateTime? dateFrom, DateTime? dateTo, string unit, string category, int page, int size, string Order, int offset);
         MemoryStream GenerateExcelLow(DateTime? dateFrom, DateTime? dateTo, string unit, string category, string categoryname, int offset, string unitname);
         MemoryStream GenerateExcelFlowForUnit(DateTime? dateFrom, DateTime? dateTo, string unit, string category, string categoryname, int offset, string unitname);

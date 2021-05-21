@@ -273,8 +273,12 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnitReceiptNoteFacade
             var dpp = model.Items.Sum(s => s.ReceiptQuantity + s.PricePerDealUnit);
             var productList = string.Join("\n", model.Items.Select(s => s.ProductName).ToList());
 
-            var currency = await _currencyProvider.GetCurrencyByCurrencyCode(currencyCode);
-            var currencyRate = currency != null ? currency.Rate.GetValueOrDefault() : 1;
+            var currencyTuples = new List<Tuple<string, DateTimeOffset>> { new Tuple<string, DateTimeOffset>(currencyCode, model.ReceiptDate) };
+
+            //var currency = await _currencyProvider.GetCurrencyByCurrencyCode(currencyCode);
+            var currency = await _currencyProvider.GetCurrencyByCurrencyCodeDateList(currencyTuples);
+
+            var currencyRate = currency != null && currency.FirstOrDefault() != null ? currency.FirstOrDefault().Rate.GetValueOrDefault() : 1;
 
             var creditorAccount = new
             {
@@ -380,10 +384,10 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnitReceiptNoteFacade
                 MissingMemberHandling = MissingMemberHandling.Ignore
             };
 
-            var divisions = JsonConvert.DeserializeObject<List<IdCOAResult>>(_jsonDivisions, jsonSerializerSettings);
-            var units = JsonConvert.DeserializeObject<List<IdCOAResult>>(_jsonUnits, jsonSerializerSettings);
-            var categories = JsonConvert.DeserializeObject<List<CategoryCOAResult>>(_jsonCategories, jsonSerializerSettings);
-            var incomeTaxes = JsonConvert.DeserializeObject<List<IncomeTaxCOAResult>>(_jsonIncomeTaxes, jsonSerializerSettings);
+            var divisions = JsonConvert.DeserializeObject<List<IdCOAResult>>(_jsonDivisions ?? "[]", jsonSerializerSettings);
+            var units = JsonConvert.DeserializeObject<List<IdCOAResult>>(_jsonUnits ?? "[]", jsonSerializerSettings);
+            var categories = JsonConvert.DeserializeObject<List<CategoryCOAResult>>(_jsonCategories ?? "[]", jsonSerializerSettings);
+            var incomeTaxes = JsonConvert.DeserializeObject<List<IncomeTaxCOAResult>>(_jsonIncomeTaxes ?? "[]", jsonSerializerSettings);
 
             var purchaseRequestIds = model.Items.Select(s => s.PRId).ToList();
             var purchaseRequests = dbContext.PurchaseRequests.Where(w => purchaseRequestIds.Contains(w.Id)).Select(s => new { s.Id, s.CategoryCode, s.CategoryId }).ToList();
@@ -456,8 +460,12 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnitReceiptNoteFacade
 
                 //double.TryParse(externalPurchaseOrder.IncomeTaxRate, out var incomeTaxRate);
 
-                var currency = await _currencyProvider.GetCurrencyByCurrencyCode(externalPurchaseOrder.CurrencyCode);
-                var currencyRate = currency != null ? (decimal)currency.Rate.GetValueOrDefault() : (decimal)externalPurchaseOrder.CurrencyRate;
+                //var currency = await _currencyProvider.GetCurrencyByCurrencyCode(externalPurchaseOrder.CurrencyCode);
+                //var currencyTupples = new Tuple<>
+                var currencyTuples = new List<Tuple<string, DateTimeOffset>> { new Tuple<string, DateTimeOffset>(externalPurchaseOrder.CurrencyCode, model.ReceiptDate) };
+                var currency = await _currencyProvider.GetCurrencyByCurrencyCodeDateList(currencyTuples);
+
+                var currencyRate = currency != null && currency.FirstOrDefault() != null ? (decimal)currency.FirstOrDefault().Rate.GetValueOrDefault() : (decimal)externalPurchaseOrder.CurrencyRate;
 
                 //if (!externalPurchaseOrder.UseIncomeTax)
                 //    incomeTaxRate = 1;

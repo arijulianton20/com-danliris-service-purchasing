@@ -30,17 +30,22 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentReports
         {
             this._facade = facade;
             this.serviceProvider = serviceProvider;
+            identityService = (IdentityService)serviceProvider.GetService(typeof(IdentityService));
         }
 
         [HttpGet]
-        public IActionResult GetReportAccountStock(DateTime? dateFrom, DateTime? dateTo, string category, string unitcode, int page = 1, int size = 25, string Order = "{}")
+        public async Task<IActionResult> GetReportAccountStockAsync(DateTime? dateFrom, DateTime? dateTo, string category, string unitcode, int page = 1, int size = 25, string Order = "{}")
         {
             try
             {
+                identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+                identityService.TimezoneOffset = int.Parse(Request.Headers["x-timezone-offset"].First());
+                identityService.Token = Request.Headers["Authorization"].First().Replace("Bearer ", "");
+
                 int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
                 string accept = Request.Headers["Accept"];
 
-                var data = _facade.GetStockReport(offset, unitcode, category, page, size, Order, dateFrom, dateTo);
+                var data = await _facade.GetStockReportAsync(offset, unitcode, category, page, size, Order, dateFrom, dateTo);
 
 
 
@@ -63,17 +68,21 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentReports
         }
 
         [HttpGet("download")]
-        public IActionResult GetXls(DateTime? dateFrom, DateTime? dateTo, string category, string categoryname, string unitcode, string unitname)
+        public async Task<IActionResult> GetXlsAsync(DateTime? dateFrom, DateTime? dateTo, string category, string categoryname, string unitcode, string unitname)
         {
 
             try
             {
+                identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+                identityService.TimezoneOffset = int.Parse(Request.Headers["x-timezone-offset"].First());
+                identityService.Token = Request.Headers["Authorization"].First().Replace("Bearer ", "");
+
                 byte[] xlsInBytes;
                 int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
                 DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : Convert.ToDateTime(dateFrom);
                 DateTime DateTo = dateTo == null ? DateTime.Now : Convert.ToDateTime(dateTo);
 
-                MemoryStream xls = _facade.GenerateExcelAStockReport(category, categoryname, unitcode, unitname, DateFrom, DateTo, offset);
+                MemoryStream xls = await _facade.GenerateExcelAStockReportAsync(category, categoryname, unitcode, unitname, DateFrom, DateTo, offset);
 
 
                 //string filename = String.IsNullOrWhiteSpace(unitcode) ? String.Format("Laporan Stock Pembukuan All Unit - {0}.xlsx", DateTime.UtcNow.ToString("ddMMyyyy")) : unitcode == "C2A" ? String.Format("Laporan Stock Pembukuan KONFEKSI 2A - {0}.xlsx", DateTime.UtcNow.ToString("ddMMyyyy")) : unitcode == "C2B" ? String.Format("Laporan Stock Pembukuan KONFEKSI 2B - {0}.xlsx", DateTime.UtcNow.ToString("ddMMyyyy")) : unitcode == "C2C" ? String.Format("Laporan Stock Pembukuan KONFEKSI 2C - {0}.xlsx", DateTime.UtcNow.ToString("ddMMyyyy")) : unitcode == "C1B" ? String.Format("Laporan Stock Pembukuan KONFEKSI 2D - {0}.xlsx", DateTime.UtcNow.ToString("ddMMyyyy")) : String.Format("Laporan Stock Pembukuan All KONFEKSI 1 MNS - {0}.xlsx", DateTime.UtcNow.ToString("ddMMyyyy"));

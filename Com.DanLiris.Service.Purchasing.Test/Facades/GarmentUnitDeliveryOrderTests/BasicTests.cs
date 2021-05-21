@@ -128,21 +128,21 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentUnitDeliveryOrderT
             Assert.NotNull(e.Message);
         }
 
-        [Fact]
-        public async Task Should_Error_Create_Data_DOCurrencyRate()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            var facade = new GarmentUnitDeliveryOrderFacade(dbContext, GetServiceProvider().Object);
-            var data = await dataUtil(facade, GetCurrentMethod()).GetNewData();
-            foreach (var item in data.Items)
-            {
-                var urn = dbContext.GarmentUnitReceiptNotes.Single(s => s.Id == item.URNId);
-                urn.DOCurrencyRate = 0;
-            }
+        //[Fact]
+        //public async Task Should_Error_Create_Data_DOCurrencyRate()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    var facade = new GarmentUnitDeliveryOrderFacade(dbContext, GetServiceProvider().Object);
+        //    var data = await dataUtil(facade, GetCurrentMethod()).GetNewData();
+        //    foreach (var item in data.Items)
+        //    {
+        //        var urn = dbContext.GarmentUnitReceiptNotes.Single(s => s.Id == item.URNId);
+        //        urn.DOCurrencyRate = 0;
+        //    }
 
-            Exception e = await Assert.ThrowsAsync<Exception>(async () => await facade.Create(data));
-            Assert.NotNull(e.Message);
-        }
+        //    Exception e = await Assert.ThrowsAsync<Exception>(async () => await facade.Create(data));
+        //    Assert.NotNull(e.Message);
+        //}
 
         [Fact]
         public async Task Should_Success_Update_Data()

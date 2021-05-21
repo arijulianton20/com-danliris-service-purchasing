@@ -78,6 +78,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.BankExpenditureNoteFacades
                     BankCurrencyCode = s.BankCurrencyCode,
                     CurrencyRate = s.CurrencyRate,
                     IsPosted = s.IsPosted,
+                    Date = s.Date,
                     Details = s.Details.Where(x => x.BankExpenditureNoteId == s.Id).Select(a => new BankExpenditureNoteDetailModel
                     {
                         SupplierName = a.SupplierName,
@@ -116,6 +117,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.BankExpenditureNoteFacades
                    s.GrandTotal,
                    s.BankCurrencyCode,
                    s.IsPosted,
+                   s.Date,
                    Details = s.Details.Select(sl => new { sl.SupplierName, sl.UnitPaymentOrderNo, sl.Items }).ToList(),
                }).ToList()
             );
@@ -228,13 +230,14 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.BankExpenditureNoteFacades
         {
             int Created = 0;
             string username = identityService.Username;
+            TimeSpan timeOffset = new TimeSpan(identityService.TimezoneOffset, 0, 0);
             using (var transaction = dbContext.Database.BeginTransaction())
             {
                 try
                 {
                     EntityExtension.FlagForCreate(model, username, USER_AGENT);
 
-                    model.DocumentNo = await bankDocumentNumberGenerator.GenerateDocumentNumber("K", model.BankCode, username);
+                    model.DocumentNo = await bankDocumentNumberGenerator.GenerateDocumentNumber("K", model.BankCode, username,model.Date.ToOffset(timeOffset).Date);
 
                     if (model.BankCurrencyCode != "IDR")
                     {
@@ -310,7 +313,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.BankExpenditureNoteFacades
                         {
                             Code = COAGenerator.GetDebtCOA(model.SupplierImport, detail.DivisionName, datum.UnitCode)
                         },
-                        Debit = Convert.ToDecimal(datum.Total),
+                        Debit = Convert.ToDecimal(datum.Total + (datum.Total * 0.1)),
                         Remark = detail.UnitPaymentOrderNo + " / " + detail.InvoiceNo
                     };
 
@@ -548,6 +551,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.BankExpenditureNoteFacades
         public ReadResponse<object> GetReport(int Size, int Page, string DocumentNo, string UnitPaymentOrderNo, string InvoiceNo, string SupplierCode, string DivisionCode, string PaymentMethod, DateTimeOffset? DateFrom, DateTimeOffset? DateTo, int Offset)
         {
             IQueryable<BankExpenditureNoteReportViewModel> Query;
+            TimeSpan offset = new TimeSpan(7, 0, 0);
 
             DateFrom = DateFrom.HasValue ? DateFrom : DateTimeOffset.MinValue;
             DateTo = DateTo.HasValue ? DateTo : DateFrom.GetValueOrDefault().AddMonths(1);
@@ -556,7 +560,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.BankExpenditureNoteFacades
             {
                 Query = (from a in dbContext.BankExpenditureNotes
                          join b in dbContext.BankExpenditureNoteDetails on a.Id equals b.BankExpenditureNoteId
-                         join c in dbContext.PurchasingDocumentExpeditions on b.UnitPaymentOrderNo equals c.UnitPaymentOrderNo
+                         join c in dbContext.PurchasingDocumentExpeditions on new { BankExpenditureNoteNo = b.BankExpenditureNote.DocumentNo, b.UnitPaymentOrderNo } equals new { c.BankExpenditureNoteNo, c.UnitPaymentOrderNo }
                          //where c.InvoiceNo == (InvoiceNo ?? c.InvoiceNo)
                          //   && c.SupplierCode == (SupplierCode ?? c.SupplierCode)
                          //   && c.UnitPaymentOrderNo == (UnitPaymentOrderNo ?? c.UnitPaymentOrderNo)
@@ -590,7 +594,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.BankExpenditureNoteFacades
             {
                 Query = (from a in dbContext.BankExpenditureNotes
                          join b in dbContext.BankExpenditureNoteDetails on a.Id equals b.BankExpenditureNoteId
-                         join c in dbContext.PurchasingDocumentExpeditions on b.UnitPaymentOrderNo equals c.UnitPaymentOrderNo
+                         join c in dbContext.PurchasingDocumentExpeditions on new { BankExpenditureNoteNo = b.BankExpenditureNote.DocumentNo, b.UnitPaymentOrderNo } equals new { c.BankExpenditureNoteNo, c.UnitPaymentOrderNo }
                          //where c.InvoiceNo == (InvoiceNo ?? c.InvoiceNo)
                          //   && c.SupplierCode == (SupplierCode ?? c.SupplierCode)
                          //   && c.UnitPaymentOrderNo == (UnitPaymentOrderNo ?? c.UnitPaymentOrderNo)
@@ -616,13 +620,39 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.BankExpenditureNoteFacades
                              VAT = c.Vat,
                              TotalPaid = c.TotalPaid,
                              InvoiceNumber = c.InvoiceNo,
-                             DivisionCode = c.DivisionCode
+                             DivisionCode = c.DivisionCode,
+                             TotalDPP = c.TotalPaid - c.Vat,
+                             TotalPPN = c.Vat,
                          }
                       );
             }
 
-            Query = Query.Where(entity => entity.Date >= DateFrom && entity.Date <= DateTo);
-
+            Query = Query.Where(entity => entity.Date.ToOffset(offset) >= DateFrom.GetValueOrDefault().ToOffset(offset) && entity.Date.ToOffset(offset) <= DateTo.GetValueOrDefault().ToOffset(offset));
+            // override duplicate 
+            Query = Query.GroupBy(
+                key => new { key.BankName, key.CategoryName, key.Currency,key.Date, key.DivisionCode,key.DivisionName,key.DocumentNo,key.DPP,key.InvoiceNumber,key.PaymentMethod,key.SupplierCode,key.SupplierName,key.TotalDPP,key.TotalPaid,key.TotalPPN,key.VAT,key.UnitPaymentOrderNo},
+                value => value,
+                (key, value) => new BankExpenditureNoteReportViewModel
+                {
+                    DocumentNo = key.DocumentNo,
+                    Currency = key.Currency,
+                    Date = key.Date,
+                    SupplierCode = key.SupplierCode,
+                    SupplierName = key.SupplierName,
+                    CategoryName = key.CategoryName == null ? "-" : key.CategoryName,
+                    DivisionName = key.DivisionName,
+                    PaymentMethod = key.PaymentMethod,
+                    UnitPaymentOrderNo = key.UnitPaymentOrderNo,
+                    BankName = key.BankName,
+                    DPP = key.DPP,
+                    VAT = key.VAT,
+                    TotalPaid = key.TotalPaid,
+                    InvoiceNumber = key.InvoiceNumber,
+                    DivisionCode = key.DivisionCode,
+                    TotalDPP = key.TotalDPP,
+                    TotalPPN = key.TotalPPN
+                }
+                );
             if (!string.IsNullOrWhiteSpace(DocumentNo))
                 Query = Query.Where(entity => entity.DocumentNo == DocumentNo);
 
@@ -669,7 +699,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.BankExpenditureNoteFacades
                 Nominal = model.GrandTotal,
                 CurrencyRate = model.CurrencyRate,
                 ReferenceNo = model.DocumentNo,
-                ReferenceType = "Bayar Hutang",
+                ReferenceType = "Bayar PPh",
                 Remark = model.CurrencyCode != "IDR" ? $"Pembayaran atas {model.BankCurrencyCode} dengan nominal {string.Format("{0:n}", model.GrandTotal)} dan kurs {model.CurrencyCode}" : "",
                 SourceType = "Operasional",
                 Status = "OUT",

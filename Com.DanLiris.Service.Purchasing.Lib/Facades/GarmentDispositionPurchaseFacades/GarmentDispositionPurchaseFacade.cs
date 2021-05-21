@@ -45,6 +45,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDispositionPurchase
             {
                 try
                 {
+                    model.FixingVatAndIncomeTax();
                     GarmentDispositionPurchase dataModel = mapper.Map<FormDto, GarmentDispositionPurchase>(model);
                     EntityExtension.FlagForCreate(dataModel, identityService.Username, USER_AGENT);
                     var DispositionNo = await GenerateNo(identityService.TimezoneOffset);
@@ -172,6 +173,14 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDispositionPurchase
             }).ToList(); 
 
             var model = mapper.Map<GarmentDispositionPurchase, FormDto>(dataModel);
+            model.FixingVatAndIncomeTaxView();
+            var modelFixing = model.Items.Select(s => { 
+                var epo =ReadByEPOWithDisposition(s.EPOId, model.SupplierId, model.CurrencyId);
+                s.IsPayIncomeTax = epo.IsPayIncomeTax;
+                s.IsPayVat = epo.IsPayVAT;
+                return s;
+                });
+            model.Items = modelFixing.ToList();
             return model;
         }
 
@@ -201,7 +210,10 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDispositionPurchase
 
             Query = QueryHelper<GarmentDispositionPurchase>.ConfigureSearch(Query, searchAttributes, keyword);
 
+            
             Dictionary<string, string> FilterDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(filter);
+            //override by user
+            FilterDictionary.Add("CreatedBy", identityService.Username);
             Query = QueryHelper<GarmentDispositionPurchase>.ConfigureFilter(Query, FilterDictionary);
 
             Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(order);

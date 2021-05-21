@@ -91,30 +91,30 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentReportTests
             return new GarmentBeacukaiDataUtil(garmentDeliveryOrderDataUtil, facade);
         }
 
-        [Fact]
-        public async Task Should_Success_Get_All_Data()
-        {
-            var facade = new GarmentBeacukaiFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-            GarmentBeacukai data = await dataUtil(facade, GetCurrentMethod()).GetNewData(USERNAME);
-            var Responses = await facade.Create(data, USERNAME);
+        //[Fact]
+        //public async Task Should_Success_Get_All_Data()
+        //{
+        //    var facade = new GarmentBeacukaiFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+        //    GarmentBeacukai data = await dataUtil(facade, GetCurrentMethod()).GetNewData(USERNAME);
+        //    var Responses = await facade.Create(data, USERNAME);
 
-            int year = DateTimeOffset.Now.Year;
-            var Facade = new GarmentPurchaseDayBookReportFacade(ServiceProvider, _dbContext(GetCurrentMethod()));
-            var Response = Facade.GetReport(null,true,null,null,year,0,"",1,25);
-            Assert.NotNull(Response.Item1);
-        }
+        //    int year = DateTimeOffset.Now.Year;
+        //    var Facade = new GarmentPurchaseDayBookReportFacade(ServiceProvider, _dbContext(GetCurrentMethod()));
+        //    var Response = Facade.GetReport(null,true,null,null,year,0,"",1,25);
+        //    Assert.NotNull(Response.Item1);
+        //}
 
-        [Fact]
-        public async Task Should_Success_Get_All_Data_Excel()
-        {
-            var facade = new GarmentBeacukaiFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-            GarmentBeacukai data = await dataUtil(facade, GetCurrentMethod()).GetNewData(USERNAME);
-            var Responses = await facade.Create(data, USERNAME);
+        //[Fact]
+        //public async Task Should_Success_Get_All_Data_Excel()
+        //{
+        //    var facade = new GarmentBeacukaiFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+        //    GarmentBeacukai data = await dataUtil(facade, GetCurrentMethod()).GetNewData(USERNAME);
+        //    var Responses = await facade.Create(data, USERNAME);
 
-            int year = DateTimeOffset.Now.Year;
-            var Facade = new GarmentPurchaseDayBookReportFacade(ServiceProvider, _dbContext(GetCurrentMethod()));
-            var Response = Facade.GenerateExcel(null, true, null, null, year, 0);
-            Assert.NotNull(Response);
-        }
+        //    int year = DateTimeOffset.Now.Year;
+        //    var Facade = new GarmentPurchaseDayBookReportFacade(ServiceProvider, _dbContext(GetCurrentMethod()));
+        //    var Response = Facade.GenerateExcel(null, true, null, null, year, 0);
+        //    Assert.NotNull(Response);
+        //}
     }
 }

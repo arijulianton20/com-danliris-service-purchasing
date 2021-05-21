@@ -39,7 +39,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
 
             var penerimaan = (from a in dbContext.GarmentUnitReceiptNoteItems
                               join b in dbContext.GarmentUnitReceiptNotes on a.URNId equals b.Id
-                              join c in dbContext.GarmentInternalPurchaseOrders on a.POId equals c.Id
+                              join c in dbContext.GarmentPurchaseRequests on a.RONo equals c.RONo
                               where a.RONo == (string.IsNullOrWhiteSpace(RO) ? a.RONo : RO) && a.IsDeleted == false && b.IsDeleted == false
                               select new ROFeatureTemp
                               {
@@ -47,54 +47,75 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
                                   NamaBarang = a.ProductName,
                                   NoBukti = b.URNNo,
                                   PO = a.POSerialNumber,
-                                  Article = c.Article,
+                                  Article = c.Article.ToUpper(),
                                   QtyTerima = Math.Round((double)(a.ReceiptQuantity * a.Conversion), 2),
                                   QtyKeluar = 0,
                                   RONo = a.RONo,
                                   UomMasuk = a.SmallUomUnit,
-                                  UomKeluar = ""
+                                  UomKeluar = a.SmallUomUnit,
+                                  Unitcode = b.UnitCode
                               }).ToList();
-            var pengeluaran = (from a in dbContext.GarmentUnitExpenditureNoteItems
-                               join b in dbContext.GarmentUnitExpenditureNotes on a.UENId equals b.Id
-                               join c in dbContext.GarmentInternalPurchaseOrderItems on a.POItemId equals c.Id
-                               join d in dbContext.GarmentInternalPurchaseOrders on c.GPOId equals d.Id
-                               where a.RONo == (string.IsNullOrWhiteSpace(RO) ? a.RONo : RO) && a.IsDeleted == false && b.IsDeleted == false
-                               select new ROFeatureTemp
-                               {
-                                   KodeBarang = a.ProductCode,
-                                   NoBukti = b.UENNo,
-                                   NamaBarang = a.ProductName,
-                                   Article = d.Article,
-                                   PO = a.POSerialNumber,
-                                   QtyTerima = 0,
-                                   QtyKeluar = a.Quantity,
-                                   RONo = a.RONo,
-                                   UomMasuk = "",
-                                   UomKeluar = a.UomUnit
-                               }).ToList();
+            //var pengeluaran = (from a in dbContext.GarmentUnitExpenditureNoteItems
+            //                   join b in dbContext.GarmentUnitExpenditureNotes on a.UENId equals b.Id
+            //                   join c in dbContext.GarmentUnitDeliveryOrderItems on a.UnitDOItemId equals c.Id
+            //                   join d in dbContext.GarmentUnitDeliveryOrders on c.UnitDOId equals d.Id
+            //                   join e in dbContext.GarmentPurchaseRequests on a.RONo equals e.RONo
+            //                   join f in penerimaan on c.URNNo equals f.NoBukti
+            //                   //join c in dbContext.GarmentInternalPurchaseOrderItems on a.POItemId equals c.Id
+            //                   //join d in dbContext.GarmentInternalPurchaseOrders on c.GPOId equals d.Id
+            //                   where a.RONo == (string.IsNullOrWhiteSpace(RO) ? a.RONo : RO) && a.IsDeleted == false && b.IsDeleted == false
+            //                   select new ROFeatureTemp
+            //                   {
+            //                       KodeBarang = a.ProductCode,
+            //                       NoBukti = b.UENNo,
+            //                       NamaBarang = a.ProductName,
+            //                       Article = d.Article.ToUpper(),
+            //                       PO = a.POSerialNumber,
+            //                       QtyTerima = 0,
+            //                       QtyKeluar = a.Quantity,
+            //                       RONo = a.RONo,
+            //                       UomMasuk = f.UomMasuk,
+            //                       UomKeluar = f.UomKeluar
+            //                   }).ToList();
 
-            var report = penerimaan.Union(pengeluaran).ToList();
-            var datas = (from a in report
-                        group a by new { a.KodeBarang, a.PO } into groupdata
-                        select new ROFeatureTemp
-                        {
-                            KodeBarang = groupdata.Key.KodeBarang,
-                            NoBukti = groupdata.FirstOrDefault().NoBukti,
-                            NamaBarang = groupdata.FirstOrDefault().NamaBarang,
-                            Article = groupdata.FirstOrDefault().Article,
-                            PO = groupdata.Key.PO,
-                            QtyTerima = groupdata.Sum(x => x.QtyTerima),
-                            QtyKeluar = groupdata.Sum(x => x.QtyKeluar),
-                            RONo = groupdata.FirstOrDefault().RONo,
-                            UomMasuk = string.Join("", groupdata.FirstOrDefault().UomMasuk),
-                            UomKeluar = string.Join("", groupdata.FirstOrDefault().UomKeluar),
-                        }).ToList();
-
-            foreach(var data in datas)
+            //var report = penerimaan.ToList();
+            var datas = penerimaan.GroupBy(a => new { a.KodeBarang, a.NamaBarang, a.NoBukti, a.Article, a.PO, a.RONo, a.UomMasuk, a.UomKeluar, a.Unitcode }, (key, groupdata) => new ROFeatureTemp
             {
-                var masuk = from a in dbContext.GarmentUnitReceiptNotes
+                KodeBarang = key.KodeBarang,
+                NoBukti = key.NoBukti,
+                NamaBarang = key.NamaBarang,
+                Article = key.Article,
+                PO = key.PO,
+                QtyTerima = groupdata.Sum(x => x.QtyTerima),
+                QtyKeluar = groupdata.Sum(x => x.QtyKeluar),
+                RONo = key.RONo,
+                UomMasuk = key.UomMasuk,
+                UomKeluar = key.UomKeluar,
+                Unitcode = key.Unitcode
+            }).ToList();
+            //var datas = (from a in report
+            //            group a by new { a.KodeBarang, a.NamaBarang, a.NoBukti, a.Article, a.PO, a.RONo, a.UomMasuk, a.UomKeluar, a.Unitcode} into groupdata
+            //            select new ROFeatureTemp
+            //            {
+            //                KodeBarang = groupdata.Key.KodeBarang,
+            //                NoBukti = groupdata.Key.NoBukti,
+            //                NamaBarang = groupdata.Key.NamaBarang,
+            //                Article = groupdata.Key.Article,
+            //                PO = groupdata.Key.PO,
+            //                QtyTerima = groupdata.Sum(x => x.QtyTerima),
+            //                QtyKeluar = groupdata.Sum(x => x.QtyKeluar),
+            //                RONo = groupdata.Key.RONo,
+            //                UomMasuk = groupdata.Key.UomMasuk,
+            //                UomKeluar = groupdata.Key.UomKeluar,
+            //                Unitcode = groupdata.Key.Unitcode
+            //            }).ToList();
+
+            foreach (var data in datas)
+            {
+
+                var masuk = (from a in dbContext.GarmentUnitReceiptNotes
                             join b in dbContext.GarmentUnitReceiptNoteItems on a.Id equals b.URNId
-                            where b.ProductCode == data.KodeBarang && b.POSerialNumber == data.PO && b.RONo == data.RONo
+                            where a.URNNo == data.NoBukti && b.POSerialNumber == data.PO
                             select new {
                                 a.ReceiptDate,
                                 a.URNNo,
@@ -104,13 +125,24 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
                                 Qty = Math.Round(b.ReceiptQuantity * b.Conversion, 2),
                                 b.SmallUomUnit,
                                 b.RONo
-                            };
-                var keluar = from a in dbContext.GarmentUnitExpenditureNotes
+                            }).GroupBy(x=> new { x.ReceiptDate, x.POSerialNumber, x.ProductCode, x.ProductName, x.RONo, x.SmallUomUnit, x.URNNo },(key, group) => new {
+                                ReceiptDate = key.ReceiptDate,
+                                URNNo = key.URNNo,
+                                POSerialNumber = key.POSerialNumber,
+                                ProductCode = key.ProductCode,
+                                ProductName = key.ProductName,
+                                Qty = group.Sum(x=>x.Qty),
+                                SmallUomUnit = key.SmallUomUnit,
+                                RONo = key.RONo
+
+                            }).ToList();
+                var keluar = (from a in dbContext.GarmentUnitExpenditureNotes
                              join b in dbContext.GarmentUnitExpenditureNoteItems on a.Id equals b.UENId
                              join c in dbContext.GarmentUnitDeliveryOrderItems on b.UnitDOItemId equals c.Id
                              join d in dbContext.GarmentUnitDeliveryOrders on c.UnitDOId equals d.Id
-                             where b.ProductCode == data.KodeBarang && b.POSerialNumber == data.PO && b.RONo == data.RONo
-                             select new
+                             //where b.ProductCode == data.KodeBarang && b.POSerialNumber == data.PO && b.RONo == data.RONo
+                             where c.URNNo == data.NoBukti && b.POSerialNumber == data.PO
+                              select new
                              {
                                  a.ExpenditureDate,
                                  RO = b.RONo,
@@ -120,12 +152,27 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
                                  b.ProductName,
                                  Qty = b.Quantity,
                                  UomKeluar = b.UomUnit,
-                                 c.RONo,
+                                 d.RONo,
                                  c.Quantity,
                                  c.UomUnit,
                                  d.UnitDONo,
                                  a.ExpenditureType
-                             };
+                             }).GroupBy(x=> new { x.ExpenditureDate, x.RO, x.UENNo, x.POSerialNumber, x.ProductCode, x.ProductName, x.UomKeluar, x.RONo, x.UomUnit, x.UnitDONo, x.ExpenditureType },(key, group) => new {
+                                 ExpenditureDate = key.ExpenditureDate,
+                                 RO = key.RONo,
+                                 UENNo = key.UENNo,
+                                 POSerialNumber = key.POSerialNumber,
+                                 ProductCode = key.ProductCode,
+                                 ProductName = key.ProductName,
+                                 Qty = group.Sum(x=>x.Qty),
+                                 UomKeluar = key.UomKeluar,
+                                 RONo = key.RONo,
+                                 Quantity = group.Sum(x=>x.Quantity),
+                                 UomUnit = key.UomUnit,
+                                 UnitDONo = key.UnitDONo,
+                                 ExpenditureType = key.ExpenditureType
+
+                             }).ToList();
 
                 List<RODetailMasukViewModel> masukdata = new List<RODetailMasukViewModel>();
                 List<RODetailViewModel> keluardata = new List<RODetailViewModel>();
@@ -169,11 +216,12 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
                     NamaBarang = data.NamaBarang,
                     Article = data.Article,
                     PO = data.PO,
-                    QtyKeluar = data.QtyKeluar,
-                    QtyTerima = data.QtyTerima,
+                    QtyKeluar = Math.Round(keluardata.Sum(x=>x.Qty), 2),
+                    QtyTerima = Math.Round(masukdata.Sum(x => x.Qty), 2),
                     RONo = data.RONo,
                     UomKeluar = data.UomKeluar,
                     UomMasuk = data.UomMasuk,
+                    Unitcode = data.Unitcode,
                     items = new ROItemViewModel
                     {
                         Masuk = masukdata,

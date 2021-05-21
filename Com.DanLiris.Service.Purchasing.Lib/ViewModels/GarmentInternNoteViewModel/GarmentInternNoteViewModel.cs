@@ -20,6 +20,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentInternNoteViewMo
         public CurrencyViewModel currency { get; set; }
         public SupplierViewModel supplier { get; set; }
         public List<GarmentInternNoteItemViewModel> items { get; set; }
+        public bool isEdit { get; set; }
+
         public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
         {
             IGarmentInvoice invoiceFacade = validationContext == null ? null : (IGarmentInvoice)validationContext.GetService(typeof(IGarmentInvoice));

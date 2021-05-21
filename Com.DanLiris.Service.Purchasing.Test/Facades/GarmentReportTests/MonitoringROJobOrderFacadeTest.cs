@@ -116,115 +116,115 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentReportTests
             return new BasicDataUtil(facade, garmentDeliveryOrderDataUtil);
         }
 
-        [Fact]
-        public async Task Should_Success_Get_Monitoring()
-        {
-            var mockServiceProvider = GetMockServiceProvider();
+        //[Fact]
+        //public async Task Should_Success_Get_Monitoring()
+        //{
+        //    var mockServiceProvider = GetMockServiceProvider();
 
-            var dbContext = GetDbContext(GetCurrentMethod());
+        //    var dbContext = GetDbContext(GetCurrentMethod());
 
-            var garmentPOMasterDistributionFacade  = new GarmentPOMasterDistributionFacade(mockServiceProvider.Object, dbContext);
-            var dataGarmentPOMasterDistribution = await dataUtil(garmentPOMasterDistributionFacade, dbContext).GetTestData();
+        //    var garmentPOMasterDistributionFacade  = new GarmentPOMasterDistributionFacade(mockServiceProvider.Object, dbContext);
+        //    var dataGarmentPOMasterDistribution = await dataUtil(garmentPOMasterDistributionFacade, dbContext).GetTestData();
 
-            var costCalculationGarmentDataUtil = new CostCalculationGarmentDataUtil();
-            var ccData = costCalculationGarmentDataUtil.GetNewData();
-            ccData.CostCalculationGarment_Materials.First().PO_SerialNumber = dataGarmentPOMasterDistribution.Items.First().Details.First().POSerialNumber;
+        //    var costCalculationGarmentDataUtil = new CostCalculationGarmentDataUtil();
+        //    var ccData = costCalculationGarmentDataUtil.GetNewData();
+        //    ccData.CostCalculationGarment_Materials.First().PO_SerialNumber = dataGarmentPOMasterDistribution.Items.First().Details.First().POSerialNumber;
 
-            var mockHttpClientService = GetMockHttpClientService();
-            mockHttpClientService
-               .Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("cost-calculation-garments"))))
-               .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(costCalculationGarmentDataUtil.GetResultFormatterOkString(ccData)) });
-            mockServiceProvider
-                .Setup(x => x.GetService(typeof(IHttpClientService)))
-                .Returns(mockHttpClientService.Object);
+        //    var mockHttpClientService = GetMockHttpClientService();
+        //    mockHttpClientService
+        //       .Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("cost-calculation-garments"))))
+        //       .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(costCalculationGarmentDataUtil.GetResultFormatterOkString(ccData)) });
+        //    mockServiceProvider
+        //        .Setup(x => x.GetService(typeof(IHttpClientService)))
+        //        .Returns(mockHttpClientService.Object);
 
-            var facade = new MonitoringROJobOrderFacade(mockServiceProvider.Object, dbContext);
+        //    var facade = new MonitoringROJobOrderFacade(mockServiceProvider.Object, dbContext);
 
-            var Response = await facade.GetMonitoring(dataGarmentPOMasterDistribution.Id);
-            Assert.NotEmpty(Response);
+        //    var Response = await facade.GetMonitoring(dataGarmentPOMasterDistribution.Id);
+        //    Assert.NotEmpty(Response);
 
-            Assert.NotEqual(0, Response.Sum(d => d.Items.Count()));
-        }
+        //    Assert.NotEqual(0, Response.Sum(d => d.Items.Count()));
+        //}
 
-        [Fact]
-        public async Task Should_Error_Get_Monitoring_Failed_Get_CostCalculationGarment()
-        {
-            var httpClientService = GetMockHttpClientService();
-            httpClientService
-               .Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("cost-calculation-garments"))))
-               .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = new StringContent(string.Empty) });
+        //[Fact]
+        //public async Task Should_Error_Get_Monitoring_Failed_Get_CostCalculationGarment()
+        //{
+        //    var httpClientService = GetMockHttpClientService();
+        //    httpClientService
+        //       .Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("cost-calculation-garments"))))
+        //       .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = new StringContent(string.Empty) });
 
-            var mockServiceProvider = GetMockServiceProvider();
-            mockServiceProvider
-                .Setup(x => x.GetService(typeof(IHttpClientService)))
-                .Returns(httpClientService.Object);
+        //    var mockServiceProvider = GetMockServiceProvider();
+        //    mockServiceProvider
+        //        .Setup(x => x.GetService(typeof(IHttpClientService)))
+        //        .Returns(httpClientService.Object);
 
-            var serviceProvider = mockServiceProvider.Object;
-            var dbContext = GetDbContext(GetCurrentMethod());
+        //    var serviceProvider = mockServiceProvider.Object;
+        //    var dbContext = GetDbContext(GetCurrentMethod());
 
-            var garmentPOMasterDistributionFacade  = new GarmentPOMasterDistributionFacade(serviceProvider, dbContext);
-            var data = await dataUtil(garmentPOMasterDistributionFacade, dbContext).GetTestData();
+        //    var garmentPOMasterDistributionFacade  = new GarmentPOMasterDistributionFacade(serviceProvider, dbContext);
+        //    var data = await dataUtil(garmentPOMasterDistributionFacade, dbContext).GetTestData();
 
-            var facade = new MonitoringROJobOrderFacade(serviceProvider, dbContext);
+        //    var facade = new MonitoringROJobOrderFacade(serviceProvider, dbContext);
 
-            Exception e = await Assert.ThrowsAsync<Exception>(async () => await facade.GetMonitoring(data.Id));
-            Assert.NotNull(e.Message);
-        }
+        //    Exception e = await Assert.ThrowsAsync<Exception>(async () => await facade.GetMonitoring(data.Id));
+        //    Assert.NotNull(e.Message);
+        //}
 
-        [Fact]
-        public async Task Should_Error_Get_Monitoring_Failed_Get_GarmentProduct()
-        {
-            var httpClientService = GetMockHttpClientService();
-            httpClientService
-               .Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("master/garmentProducts"))))
-               .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = new StringContent(string.Empty) });
+        //[Fact]
+        //public async Task Should_Error_Get_Monitoring_Failed_Get_GarmentProduct()
+        //{
+        //    var httpClientService = GetMockHttpClientService();
+        //    httpClientService
+        //       .Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("master/garmentProducts"))))
+        //       .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.InternalServerError) { Content = new StringContent(string.Empty) });
 
-            var mockServiceProvider = GetMockServiceProvider();
-            mockServiceProvider
-                .Setup(x => x.GetService(typeof(IHttpClientService)))
-                .Returns(httpClientService.Object);
+        //    var mockServiceProvider = GetMockServiceProvider();
+        //    mockServiceProvider
+        //        .Setup(x => x.GetService(typeof(IHttpClientService)))
+        //        .Returns(httpClientService.Object);
 
-            var serviceProvider = mockServiceProvider.Object;
-            var dbContext = GetDbContext(GetCurrentMethod());
+        //    var serviceProvider = mockServiceProvider.Object;
+        //    var dbContext = GetDbContext(GetCurrentMethod());
 
-            var garmentPOMasterDistributionFacade  = new GarmentPOMasterDistributionFacade(serviceProvider, dbContext);
-            var data = await dataUtil(garmentPOMasterDistributionFacade, dbContext).GetTestData();
+        //    var garmentPOMasterDistributionFacade  = new GarmentPOMasterDistributionFacade(serviceProvider, dbContext);
+        //    var data = await dataUtil(garmentPOMasterDistributionFacade, dbContext).GetTestData();
 
-            var facade = new MonitoringROJobOrderFacade(serviceProvider, dbContext);
+        //    var facade = new MonitoringROJobOrderFacade(serviceProvider, dbContext);
 
-            Exception e = await Assert.ThrowsAsync<Exception>(async () => await facade.GetMonitoring(data.Id));
-            Assert.NotNull(e.Message);
-        }
+        //    Exception e = await Assert.ThrowsAsync<Exception>(async () => await facade.GetMonitoring(data.Id));
+        //    Assert.NotNull(e.Message);
+        //}
 
-        [Fact]
-        public async Task Should_Success_Get_Excel()
-        {
-            var mockServiceProvider = GetMockServiceProvider();
+        //[Fact]
+        //public async Task Should_Success_Get_Excel()
+        //{
+        //    var mockServiceProvider = GetMockServiceProvider();
 
-            var dbContext = GetDbContext(GetCurrentMethod());
+        //    var dbContext = GetDbContext(GetCurrentMethod());
 
-            var garmentPOMasterDistributionFacade = new GarmentPOMasterDistributionFacade(mockServiceProvider.Object, dbContext);
-            var dataGarmentPOMasterDistribution = await dataUtil(garmentPOMasterDistributionFacade, dbContext).GetTestData();
+        //    var garmentPOMasterDistributionFacade = new GarmentPOMasterDistributionFacade(mockServiceProvider.Object, dbContext);
+        //    var dataGarmentPOMasterDistribution = await dataUtil(garmentPOMasterDistributionFacade, dbContext).GetTestData();
 
-            var costCalculationGarmentDataUtil = new CostCalculationGarmentDataUtil();
-            var ccData = costCalculationGarmentDataUtil.GetNewData();
-            ccData.CostCalculationGarment_Materials.First().PO_SerialNumber = dataGarmentPOMasterDistribution.Items.First().Details.First().POSerialNumber;
-            var ccData2 = costCalculationGarmentDataUtil.GetNewData();
-            ccData.CostCalculationGarment_Materials.Add(ccData2.CostCalculationGarment_Materials.First());
+        //    var costCalculationGarmentDataUtil = new CostCalculationGarmentDataUtil();
+        //    var ccData = costCalculationGarmentDataUtil.GetNewData();
+        //    ccData.CostCalculationGarment_Materials.First().PO_SerialNumber = dataGarmentPOMasterDistribution.Items.First().Details.First().POSerialNumber;
+        //    var ccData2 = costCalculationGarmentDataUtil.GetNewData();
+        //    ccData.CostCalculationGarment_Materials.Add(ccData2.CostCalculationGarment_Materials.First());
 
-            var mockHttpClientService = GetMockHttpClientService();
-            mockHttpClientService
-               .Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("cost-calculation-garments"))))
-               .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(costCalculationGarmentDataUtil.GetResultFormatterOkString(ccData)) });
-            mockServiceProvider
-                .Setup(x => x.GetService(typeof(IHttpClientService)))
-                .Returns(mockHttpClientService.Object);
+        //    var mockHttpClientService = GetMockHttpClientService();
+        //    mockHttpClientService
+        //       .Setup(x => x.GetAsync(It.Is<string>(s => s.Contains("cost-calculation-garments"))))
+        //       .ReturnsAsync(new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(costCalculationGarmentDataUtil.GetResultFormatterOkString(ccData)) });
+        //    mockServiceProvider
+        //        .Setup(x => x.GetService(typeof(IHttpClientService)))
+        //        .Returns(mockHttpClientService.Object);
 
-            var facade = new MonitoringROJobOrderFacade(mockServiceProvider.Object, dbContext);
+        //    var facade = new MonitoringROJobOrderFacade(mockServiceProvider.Object, dbContext);
 
-            var Response = await facade.GetExcel(dataGarmentPOMasterDistribution.Id);
-            Assert.NotNull(Response.Item2);
-        }
+        //    var Response = await facade.GetExcel(dataGarmentPOMasterDistribution.Id);
+        //    Assert.NotNull(Response.Item2);
+        //}
 
     }
 }

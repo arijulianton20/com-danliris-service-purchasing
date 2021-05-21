@@ -878,6 +878,83 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.UnitPaymentOrderContr
             Assert.Equal((int)HttpStatusCode.InternalServerError, GetStatusCode(response));
 
         }
-        #endregion 
+        #endregion
+
+        #region Monitoring Tax All 
+        [Fact]
+        public void Should_Success_Get_Tax_Report_All()
+        {
+            var mockFacade = new Mock<IUnitPaymentOrderFacade>();
+            mockFacade.Setup(x => x.GetReportTax(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), It.IsAny<int>()))
+                .Returns(Tuple.Create(new List<UnitPaymentOrderTaxReportViewModel>(), 5));
+
+            var mockMapper = new Mock<IMapper>();
+
+            UnitPaymentOrderController controller = GetController(mockFacade, null, mockMapper);
+            var response = controller.GetReportTax(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>());
+            Assert.Equal((int)HttpStatusCode.OK, GetStatusCode(response));
+        }
+
+        [Fact]
+        public void Should_Error_Get_Tax_Report_All()
+        {
+            var mockFacade = new Mock<IUnitPaymentOrderFacade>();
+
+            var mockMapper = new Mock<IMapper>();
+
+
+            UnitPaymentOrderController controller = GetController(mockFacade, null, mockMapper);
+            var response = controller.GetReportTax(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>());
+            Assert.Equal((int)HttpStatusCode.InternalServerError, GetStatusCode(response));
+        }
+
+
+
+        [Fact]
+        public void Should_Success_Get_Tax_Xls_All()
+        {
+            var mockFacade = new Mock<IUnitPaymentOrderFacade>();
+            mockFacade.Setup(x => x.GenerateExcelTax(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<int>()))
+                .Returns(new MemoryStream());
+
+            var mockMapper = new Mock<IMapper>();
+            //mockMapper.Setup(x => x.Map<List<GarmentDeliveryOrderReportViewModel>>(It.IsAny<List<GarmentDeliveryOrder>>()))
+            //    .Returns(new List<GarmentDeliveryOrderReportViewModel> { ViewModel });
+
+            var user = new Mock<ClaimsPrincipal>();
+            var claims = new Claim[]
+            {
+                new Claim("username", "unittestusername")
+            };
+            user.Setup(u => u.Claims).Returns(claims);
+            UnitPaymentOrderController controller = new UnitPaymentOrderController(GetServiceProvider().Object, mockMapper.Object, mockFacade.Object);
+            controller.ControllerContext = new ControllerContext()
+            {
+                HttpContext = new DefaultHttpContext()
+                {
+                    User = user.Object
+                }
+            };
+
+            controller.ControllerContext.HttpContext.Request.Headers["x-timezone-offset"] = "0";
+            var response = controller.GetXlsTax(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>());
+            Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", response.GetType().GetProperty("ContentType").GetValue(response, null));
+
+        }
+
+        [Fact]
+        public void Should_Error_Get_Tax_Xls_All()
+        {
+            var mockFacade = new Mock<IUnitPaymentOrderFacade>();
+
+            var mockMapper = new Mock<IMapper>();
+
+            UnitPaymentOrderController controller = new UnitPaymentOrderController(GetServiceProvider().Object, mockMapper.Object, mockFacade.Object);
+
+            var response = controller.GetXlsTax(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>(), It.IsAny<DateTime>());
+            Assert.Equal((int)HttpStatusCode.InternalServerError, GetStatusCode(response));
+
+        }
+        #endregion
     }
 }

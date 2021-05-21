@@ -14,6 +14,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentReports
         public double QtyKeluar { get; set; }
         public string UomMasuk { get; set; }
         public string UomKeluar { get; set; }
+        public string Unitcode { get; set; }
         public string RONo { get; set; }
         public ROItemViewModel items { get; set; }
     }
@@ -32,6 +33,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentReports
         public string PO { get; set; }
         public string RONo { get; set; }
         public string NoBukti { get; set; }
+        public string Unitcode { get; set; }
         public double Qty { get; set; }
         public string Uom { get; set; }
     }
@@ -63,6 +65,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentReports
         public double QtyTerima { get; set; }
         public double QtyKeluar { get; set; }
         public string UomMasuk { get; set; }
+        public string Unitcode { get; set; }
         public string UomKeluar { get; set; }
         public string RONo { get; set; }
     }

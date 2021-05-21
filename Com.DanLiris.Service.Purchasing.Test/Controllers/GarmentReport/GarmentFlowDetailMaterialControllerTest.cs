@@ -90,35 +90,35 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentReport
             return (int)response.GetType().GetProperty("StatusCode").GetValue(response, null);
         }
 
-        [Fact]
-        public void Should_Success_Get_All_Data()
-        {
-            var mockFacade = new Mock<IGarmentFlowDetailMaterialReport>();
-            mockFacade.Setup(x => x.GetReport(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<int>(),It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
-                .Returns(Tuple.Create(new List<GarmentFlowDetailMaterialViewModel> { ViewModel }, 25));
+        //[Fact]
+        //public void Should_Success_Get_All_Data()
+        //{
+        //    var mockFacade = new Mock<IGarmentFlowDetailMaterialReport>();
+        //    mockFacade.Setup(x => x.GetReport(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<int>(),It.IsAny<string>(), It.IsAny<int>(), It.IsAny<int>()))
+        //        .Returns(Tuple.Create(new List<GarmentFlowDetailMaterialViewModel> { ViewModel }, 25));
 
-            var mockMapper = new Mock<IMapper>();
+        //    var mockMapper = new Mock<IMapper>();
 
-            var user = new Mock<ClaimsPrincipal>();
-            var claims = new Claim[]
-            {
-                new Claim("username", "unittestusername")
-            };
-            user.Setup(u => u.Claims).Returns(claims);
-            GarmentFlowDetailMaterialController controller = GetController(mockFacade, null, mockMapper);
-            controller.ControllerContext = new ControllerContext()
-            {
-                HttpContext = new DefaultHttpContext()
-                {
-                    User = user.Object
-                }
-            };
+        //    var user = new Mock<ClaimsPrincipal>();
+        //    var claims = new Claim[]
+        //    {
+        //        new Claim("username", "unittestusername")
+        //    };
+        //    user.Setup(u => u.Claims).Returns(claims);
+        //    GarmentFlowDetailMaterialController controller = GetController(mockFacade, null, mockMapper);
+        //    controller.ControllerContext = new ControllerContext()
+        //    {
+        //        HttpContext = new DefaultHttpContext()
+        //        {
+        //            User = user.Object
+        //        }
+        //    };
 
-            controller.ControllerContext.HttpContext.Request.Headers["x-timezone-offset"] = "0";
+        //    controller.ControllerContext.HttpContext.Request.Headers["x-timezone-offset"] = "0";
 
-            var response = controller.GetReport(null, null, null, null, null,  0, 0, "");
-            Assert.Equal((int)HttpStatusCode.OK, GetStatusCode(response));
-        }
+        //    var response = controller.GetReport(null, null, null, null, null,  0, 0, "");
+        //    Assert.Equal((int)HttpStatusCode.OK, GetStatusCode(response));
+        //}
 
         [Fact]
         public void Should_Fail_Get_All_Data()
@@ -132,36 +132,36 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.GarmentReport
             Assert.Equal((int)HttpStatusCode.InternalServerError, GetStatusCode(response));
         }
 
-        [Fact]
-        public void Should_Success_Get_Xls_Data()
-        {
-            var mockFacade = new Mock<IGarmentFlowDetailMaterialReport>();
-            mockFacade.Setup(x => x.GenerateExcel(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<int>()))
-                .Returns(new MemoryStream());
+        //[Fact]
+        //public void Should_Success_Get_Xls_Data()
+        //{
+        //    var mockFacade = new Mock<IGarmentFlowDetailMaterialReport>();
+        //    mockFacade.Setup(x => x.GenerateExcel(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<int>()))
+        //        .Returns(new MemoryStream());
 
-            var mockMapper = new Mock<IMapper>();
+        //    var mockMapper = new Mock<IMapper>();
 
 
-            var user = new Mock<ClaimsPrincipal>();
-            var claims = new Claim[]
-            {
-                new Claim("username", "unittestusername")
-            };
-            user.Setup(u => u.Claims).Returns(claims);
-            GarmentFlowDetailMaterialController controller = GetController(mockFacade, null, mockMapper);
-            controller.ControllerContext = new ControllerContext()
-            {
-                HttpContext = new DefaultHttpContext()
-                {
-                    User = user.Object
-                }
-            };
+        //    var user = new Mock<ClaimsPrincipal>();
+        //    var claims = new Claim[]
+        //    {
+        //        new Claim("username", "unittestusername")
+        //    };
+        //    user.Setup(u => u.Claims).Returns(claims);
+        //    GarmentFlowDetailMaterialController controller = GetController(mockFacade, null, mockMapper);
+        //    controller.ControllerContext = new ControllerContext()
+        //    {
+        //        HttpContext = new DefaultHttpContext()
+        //        {
+        //            User = user.Object
+        //        }
+        //    };
 
-            controller.ControllerContext.HttpContext.Request.Headers["x-timezone-offset"] = "0";
+        //    controller.ControllerContext.HttpContext.Request.Headers["x-timezone-offset"] = "0";
 
-            var response = controller.GetXls(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>());
-            Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", response.GetType().GetProperty("ContentType").GetValue(response, null));
-        }
+        //    var response = controller.GetXls(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>(), It.IsAny<DateTimeOffset>(), It.IsAny<DateTimeOffset>(), It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>());
+        //    Assert.Equal("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", response.GetType().GetProperty("ContentType").GetValue(response, null));
+        //}
 
 
         [Fact]

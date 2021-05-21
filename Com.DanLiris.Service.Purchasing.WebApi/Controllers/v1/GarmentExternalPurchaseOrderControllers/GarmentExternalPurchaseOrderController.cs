@@ -482,7 +482,61 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentExternalP
                 return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
             }
         }
+        [HttpGet("by-epo-no-str")]
+        public IActionResult ByEPONOCurrencyCode(string keyword = null, string Filter = "{}", int supplierId = 0, string currencyCode = null, string paymentType = null, int page = 1, int size = 10)
+        {
 
+            try
+            {
+                identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+
+                var Data = facade.ReadItemByEPONoSimply(keyword, Filter, supplierId, currencyCode, paymentType);
+
+                var viewModel = mapper.Map<List<GarmentExternalPurchaseOrderViewModel>>(Data.Item1);
+
+                List<object> listData = new List<object>();
+                listData.AddRange(
+                    viewModel.AsQueryable().Select(s => new
+                    {
+                        s.Id,
+                        s.Category,
+                        s.OrderDate,
+                        s.EPONo,
+                        s.Supplier,
+                        s.IsOverBudget,
+                        s.IsApproved,
+                        Items = s.Items.Select(i => new
+                        {
+                            i.PRNo,
+                        }),
+                        s.CreatedBy,
+                        s.IsPosted,
+                        s.LastModifiedUtc
+                    }).ToList()
+                );
+
+                var info = new Dictionary<string, object>
+                    {
+                        { "count", listData.Count },
+                        { "total", Data.Item2 },
+                        { "order", Data.Item3 },
+                        { "page", page },
+                        { "size", size }
+                    };
+
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.OK_STATUS_CODE, General.OK_MESSAGE)
+                    .Ok(listData, info);
+                return Ok(Result);
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
         [HttpGet("by-epo-no")]
         public IActionResult ByEPONO(string keyword = null, string Filter = "{}",int supplierId = 0, int currencyId=0,int page=1, int size=10)
         {
@@ -540,6 +594,136 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentExternalP
                         s.CreatedBy,
                         s.IsPosted,
                         s.LastModifiedUtc
+                    }).ToList()
+                );
+
+                var info = new Dictionary<string, object>
+                    {
+                        { "count", listData.Count },
+                        { "total", Data.Item2 },
+                        { "order", Data.Item3 },
+                        { "page", page },
+                        { "size", size }
+                    };
+
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.OK_STATUS_CODE, General.OK_MESSAGE)
+                    .Ok(listData, info);
+                return Ok(Result);
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
+
+        [HttpGet("unit-do/by-ro")]
+        public IActionResult UnitDOByRO(string keyword = null, string Filter = "{}")
+        {
+            try
+            {
+                identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+
+                var Data = facade.ReadItemForUnitDOByRO(keyword, Filter);
+
+                var newData = mapper.Map<List<GarmentExternalPurchaseOrderItemViewModel>>(Data);
+
+                List<object> listData = new List<object>();
+                listData.AddRange(
+                    newData.AsQueryable().Select(i => new
+                    {
+                        i.Id,
+                        i.RONo,
+                        i.Article,
+                    }).ToList()
+                );
+
+                return Ok(new
+                {
+                    apiVersion = ApiVersion,
+                    statusCode = General.OK_STATUS_CODE,
+                    message = General.OK_MESSAGE,
+                    data = listData,
+                    info = new Dictionary<string, object>
+                    {
+                        { "count", listData.Count },
+                    },
+                });
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
+
+        [HttpGet("by-po-serial-number-loader")]
+        public IActionResult ByPOSerialNumberLoader(int page = 1, int size = 25, string order = "{}", string keyword = null, string Filter = "{}")
+        {
+            try
+            {
+                identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+
+                var Data = facade.ReadItemByPOSerialNumberLoader(page, size, order, keyword, Filter);
+
+                var newData = mapper.Map<List<GarmentExternalPurchaseOrderItemViewModel>>(Data.Item1);
+
+                List<object> listData = new List<object>();
+                listData.AddRange(
+                    newData.AsQueryable().Select(i => new
+                    {
+                        i.Id,
+                        i.PO_SerialNumber,
+                        i.Product,
+                        i.Remark
+                    }).ToList()
+                );
+
+                var info = new Dictionary<string, object>
+                    {
+                        { "count", listData.Count },
+                        { "total", Data.Item2 },
+                        { "order", Data.Item3 },
+                        { "page", page },
+                        { "size", size }
+                    };
+
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.OK_STATUS_CODE, General.OK_MESSAGE)
+                    .Ok(listData, info);
+                return Ok(Result);
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
+
+        [HttpGet("by-ro-loader")]
+        public IActionResult ByROLoader(int page = 1, int size = 25, string order = "{}", string keyword = null, string Filter = "{}")
+        {
+            try
+            {
+                identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+
+                var Data = facade.ReadItemByROLoader(page, size, order, keyword, Filter);
+
+                var newData = mapper.Map<List<GarmentExternalPurchaseOrderItemViewModel>>(Data.Item1);
+
+                List<object> listData = new List<object>();
+                listData.AddRange(
+                    newData.AsQueryable().Select(i => new
+                    {
+                        i.Id,
+                        i.RONo
                     }).ToList()
                 );
 

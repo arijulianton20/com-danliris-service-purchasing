@@ -13,5 +13,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Models.BankDocumentNumber
         [MaxLength(25)]
         public string Type { get; set; } //K or M
         public int LastDocumentNumber { get; set; }
+        public int Month { get; set; }
+        public int Year { get; set; }
     }
 }

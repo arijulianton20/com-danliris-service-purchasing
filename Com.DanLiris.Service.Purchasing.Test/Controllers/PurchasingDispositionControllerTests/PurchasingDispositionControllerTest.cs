@@ -391,26 +391,26 @@ namespace Com.DanLiris.Service.Purchasing.Test.Controllers.PurchasingDisposition
             Assert.Equal((int)HttpStatusCode.InternalServerError, GetStatusCode(response));
         }
 
-        [Fact]
-        public void Should_Success_Get_All_Data_By_User()
-        {
-            var validateMock = new Mock<IValidateService>();
-            validateMock.Setup(s => s.Validate(It.IsAny<PurchasingDispositionViewModel>())).Verifiable();
+        //[Fact]
+        //public void Should_Success_Get_All_Data_By_User()
+        //{
+        //    var validateMock = new Mock<IValidateService>();
+        //    validateMock.Setup(s => s.Validate(It.IsAny<PurchasingDispositionViewModel>())).Verifiable();
 
-            var mockFacade = new Mock<IPurchasingDispositionFacade>();
+        //    var mockFacade = new Mock<IPurchasingDispositionFacade>();
 
-            mockFacade.Setup(x => x.Read(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), null, It.IsAny<string>()))
-                .Returns(Tuple.Create(new List<PurchasingDisposition>(), 0, new Dictionary<string, string>()));
-            mockFacade.Setup(x => x.GetTotalPaidPrice(It.IsAny<List<PurchasingDispositionViewModel>>())).Returns(new List<PurchasingDispositionViewModel>());
-            var mockMapper = new Mock<IMapper>();
-            mockMapper.Setup(x => x.Map<List<PurchasingDispositionViewModel>>(It.IsAny<List<PurchasingDisposition>>()))
-                .Returns(new List<PurchasingDispositionViewModel> { ViewModel });
+        //    mockFacade.Setup(x => x.Read(It.IsAny<int>(), It.IsAny<int>(), It.IsAny<string>(), null, It.IsAny<string>()))
+        //        .Returns(Tuple.Create(new List<PurchasingDisposition>(), 0, new Dictionary<string, string>()));
+        //    mockFacade.Setup(x => x.GetTotalPaidPrice(It.IsAny<List<PurchasingDispositionViewModel>>())).Returns(new List<PurchasingDispositionViewModel>());
+        //    var mockMapper = new Mock<IMapper>();
+        //    mockMapper.Setup(x => x.Map<List<PurchasingDispositionViewModel>>(It.IsAny<List<PurchasingDisposition>>()))
+        //        .Returns(new List<PurchasingDispositionViewModel> { ViewModel });
 
 
-            PurchasingDispositionController controller = GetController(mockFacade, validateMock, mockMapper);
-            var response = controller.GetByUser();
-            Assert.Equal((int)HttpStatusCode.OK, GetStatusCode(response));
-        }
+        //    PurchasingDispositionController controller = GetController(mockFacade, validateMock, mockMapper);
+        //    var response = controller.GetByUser();
+        //    Assert.Equal((int)HttpStatusCode.OK, GetStatusCode(response));
+        //}
 
 
         [Fact]

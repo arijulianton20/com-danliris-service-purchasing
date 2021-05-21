@@ -4,6 +4,7 @@ using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentDispositionPaymentRepor
 using Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentPurchasingExpedition;
 using Com.DanLiris.Service.Purchasing.Lib.Models.GarmentInternNoteModel;
 using Com.DanLiris.Service.Purchasing.Lib.Services;
+using Com.DanLiris.Service.Purchasing.Lib.Services.GarmentDebtBalance;
 using Com.DanLiris.Service.Purchasing.WebApi.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -25,6 +26,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1
         private readonly IdentityService _identityService;
         private readonly IMapper _mapper;
         private readonly IGarmentDispositionPaymentReportService _dispositionPaymentReportService;
+        private readonly IGarmentDebtBalanceService _debtBalanceService;
         private const string ApiVersion = "1.0";
 
         public GarmentPurchasingExpeditionController(IServiceProvider serviceProvider, IMapper mapper)
@@ -33,6 +35,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1
             _identityService = serviceProvider.GetService<IdentityService>();
             _mapper = mapper;
             _dispositionPaymentReportService = serviceProvider.GetService<IGarmentDispositionPaymentReportService>();
+            _debtBalanceService = serviceProvider.GetService<IGarmentDebtBalanceService>();
         }
 
         private void VerifyUser()
@@ -68,6 +71,26 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1
             try
             {
                 var result = _service.GetGarmentDispositionNotes(keyword, position);
+                return Ok(new
+                {
+                    apiVersion = ApiVersion,
+                    statusCode = General.OK_STATUS_CODE,
+                    message = General.OK_MESSAGE,
+                    data = result
+                });
+            }
+            catch (Exception e)
+            {
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, e.Message + " " + e.StackTrace);
+            }
+        }
+
+        [HttpGet("disposition-notes/memo-detail")]
+        public IActionResult GetGarmentDispositionNotesWithMemoDetail([FromQuery] string keyword)
+        {
+            try
+            {
+                var result = _debtBalanceService.GetDispositions(keyword);
                 return Ok(new
                 {
                     apiVersion = ApiVersion,

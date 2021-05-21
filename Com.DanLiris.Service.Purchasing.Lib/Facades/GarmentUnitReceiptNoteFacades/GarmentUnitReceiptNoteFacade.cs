@@ -1230,64 +1230,119 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentUnitReceiptNoteFaca
             return result;
         }
 
-        public ReadResponse<object> ReadURNItem(int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}")
+        public List<object> ReadURNItem(string Keyword = null, string Filter = "{}")
         {
-            IQueryable<GarmentUnitReceiptNote> Query = dbSet;
             Dictionary<string, string> FilterDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Filter);
-            Query = QueryHelper<GarmentUnitReceiptNote>.ConfigureFilter(Query, FilterDictionary);
 
+            bool hasDONoFilter = FilterDictionary.ContainsKey("DONo");
+            bool hasUnitCodeFilter = FilterDictionary.ContainsKey("UnitCode");
+            bool hasStorageCodeFilter = FilterDictionary.ContainsKey("StorageCode");
+            string DONo = hasDONoFilter ? (FilterDictionary["DONo"] ?? "").Trim() : "";
+            string UnitCode = hasUnitCodeFilter ? (FilterDictionary["UnitCode"] ?? "").Trim() : "";
+            string StorageCode = hasStorageCodeFilter ? (FilterDictionary["StorageCode"] ?? "").Trim() : "";
+            var dataDO = (from a in dbContext.GarmentDeliveryOrders
+                               join b in dbContext.GarmentDeliveryOrderItems on a.Id equals b.GarmentDOId
+                               join c in dbContext.GarmentDeliveryOrderDetails on b.Id equals c.GarmentDOItemId
+                               where a.DONo == DONo
+                               select new { DOId=a.Id, c.Id } ).Distinct().ToList();
+            var doDetailIds = dataDO.Select(a => a.Id).Distinct().ToList();
+            var query= (from y in dbContext.GarmentUnitReceiptNoteItems 
+                       join x in dbContext.GarmentUnitReceiptNotes on y.URNId equals x.Id
+                       //join m in dbContext.GarmentExternalPurchaseOrderItems on y.EPOItemId equals m.Id
+                       where x.UnitCode==UnitCode && x.StorageCode==StorageCode && doDetailIds.Contains(y.DODetailId)
+                       select new
+                       {
+                           URNId = x.Id,
+                           URNItemId = y.Id,
+                           y.EPOItemId
+                       }).ToList();
 
-            List<string> searchAttributes = new List<string>()
+            var epoItemIds = query.Select(s => s.EPOItemId).ToList().Distinct().ToList();
+            var epoItems = dbContext.GarmentExternalPurchaseOrderItems.Where(u => epoItemIds.Contains(u.Id))
+                .Select(s => new { s.Id, s.Article }).ToList();
+
+            var urnIds = query.Select(s => s.URNId).ToList().Distinct().ToList();
+            var URNs = dbContext.GarmentUnitReceiptNotes.Where(u => urnIds.Contains(u.Id))
+                .Select(s => new { s.Id, s.DOId, s.DONo, s.URNNo, s.DOCurrencyRate }).ToList();
+
+            var urnItemIds = query.Select(s => s.URNItemId).ToList().Distinct().ToList();
+            var urnItems = dbContext.GarmentUnitReceiptNoteItems.Where(u => urnItemIds.Contains(u.Id))
+                .Select(y => new
+                {   y.URNId,
+                    y.Id,
+                    y.RONo,
+                    y.DODetailId,
+                    y.EPOItemId,
+                    y.POItemId,
+                    y.PRItemId,
+                    y.ProductId,
+                    y.ProductName,
+                    y.ProductCode,
+                    y.ProductRemark,
+                    y.OrderQuantity,
+                    y.SmallQuantity,
+                    y.DesignColor,
+                    y.SmallUomId,
+                    y.SmallUomUnit,
+                    y.POSerialNumber,
+                    y.PricePerDealUnit,
+                    y.Conversion,
+                    y.UomUnit,
+                    y.UomId,
+                    y.ReceiptCorrection,
+                    y.CorrectionConversion,
+                }).ToList();
+
+            List<object> ListData = new List<object>();
+            foreach (var item in query)
             {
-                "URNNo", "UnitName", "SupplierName", "DONo"
-            };
+                var urn = URNs.FirstOrDefault(f => f.Id.Equals(item.URNId));
+                var urnItem = urnItems.FirstOrDefault(f => f.Id.Equals(item.URNItemId));
+                var epoItem = epoItems.FirstOrDefault(f => f.Id.Equals(item.EPOItemId));
+                string doNo = "";
+                long doId = 0;
+                double doCurrencyRate = 0;
+                if(urn.DOId == 0)
+                {
+                    var URN = URNs.FirstOrDefault(a => a.DONo == DONo);
+                    doNo = URN.DONo;
+                    doId = URN.DOId;
+                    doCurrencyRate = (double)URN.DOCurrencyRate;
+                }
+                ListData.Add(new
+                {
+                    DOId = doId == 0 ? urn.DOId : doId,
+                    DONo = doNo == "" ? urn.DONo : doNo,
+                    urn.URNNo,
+                    urnItem.URNId,
+                    urnItem.Id,
+                    urnItem.RONo,
+                    urnItem.DODetailId,
+                    urnItem.EPOItemId,
+                    urnItem.POItemId,
+                    urnItem.PRItemId,
+                    urnItem.ProductId,
+                    urnItem.ProductName,
+                    urnItem.ProductCode,
+                    urnItem.ProductRemark,
+                    urnItem.OrderQuantity,
+                    urnItem.SmallQuantity,
+                    urnItem.DesignColor,
+                    urnItem.SmallUomId,
+                    urnItem.SmallUomUnit,
+                    urnItem.POSerialNumber,
+                    urnItem.PricePerDealUnit,
+                    DOCurrencyRate = doCurrencyRate == 0 ? urn.DOCurrencyRate : doCurrencyRate,
+                    urnItem.Conversion,
+                    urnItem.UomUnit,
+                    urnItem.UomId,
+                    urnItem.ReceiptCorrection,
+                    urnItem.CorrectionConversion,
+                    epoItem.Article
+                });
+            }
 
-            Query = QueryHelper<GarmentUnitReceiptNote>.ConfigureSearch(Query, searchAttributes, Keyword);
-
-
-
-            Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
-            Query = QueryHelper<GarmentUnitReceiptNote>.ConfigureOrder(Query, OrderDictionary);
-
-            Pageable<GarmentUnitReceiptNote> pageable = new Pageable<GarmentUnitReceiptNote>(Query, Page - 1, Size);
-            List<GarmentUnitReceiptNote> Data = pageable.Data.ToList();
-            int TotalData = pageable.TotalCount;
-
-            var data= Query.SelectMany(x => x.Items.Select(y => new
-            {
-                x.DOId,
-                x.DONo,
-                x.URNNo,
-                y.URNId,
-                y.Id,
-                y.RONo,
-                y.DODetailId,
-                y.EPOItemId,
-                y.POItemId,
-                y.PRItemId,
-                y.ProductId,
-                y.ProductName,
-                y.ProductCode,
-                y.ProductRemark,
-                y.OrderQuantity,
-                y.SmallQuantity,
-                y.DesignColor,
-                y.SmallUomId,
-                y.SmallUomUnit,
-                y.POSerialNumber,
-                y.PricePerDealUnit,
-                x.DOCurrencyRate,
-                y.Conversion,
-                y.UomUnit,
-                y.UomId,
-                y.ReceiptCorrection,
-                y.CorrectionConversion,
-                Article = dbContext.GarmentExternalPurchaseOrderItems.Where(m => m.Id == y.EPOItemId).Select(d => d.Article).FirstOrDefault()
-            })).ToList();
-
-            List<object> ListData = new List<object>(data);
-
-            return new ReadResponse<object>(ListData, TotalData, OrderDictionary);
+            return ListData;
         }
 
         public List<object> ReadItemByRO(string Keyword = null, string Filter = "{}")
@@ -1351,7 +1406,29 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentUnitReceiptNoteFaca
             List<object> ListData = new List<object>(data);
             return ListData;
         }
-        #region Flow Detail Penerimaan 
+        #region Flow Detail Penerimaan
+
+        private List<GarmentCategoryViewModel> GetProductCodes(int page, int size, string order, string filter)
+        {
+            //var param = new StringContent(JsonConvert.SerializeObject(codes), Encoding.UTF8, "application/json");
+            IHttpClientService httpClient = (IHttpClientService)this.serviceProvider.GetService(typeof(IHttpClientService));
+            if (httpClient != null)
+            {
+                var garmentSupplierUri = APIEndpoint.Core + $"master/garment-categories";
+                string queryUri = "?page=" + page + "&size=" + size + "&order=" + order + "&filter=" + filter;
+                string uri = garmentSupplierUri + queryUri;
+                var response = httpClient.GetAsync($"{uri}").Result.Content.ReadAsStringAsync();
+                Dictionary<string, object> result = JsonConvert.DeserializeObject<Dictionary<string, object>>(response.Result);
+                List<GarmentCategoryViewModel> viewModel = JsonConvert.DeserializeObject<List<GarmentCategoryViewModel>>(result.GetValueOrDefault("data").ToString());
+                return viewModel;
+            }
+            else
+            {
+                List<GarmentCategoryViewModel> viewModel = null;
+                return viewModel;
+            }
+        }
+
         public IQueryable<FlowDetailPenerimaanViewModels> GetReportQueryFlow(DateTime? dateFrom, DateTime? dateTo, string unit, string category, int offset, int page, int size)
 
         {
@@ -1388,34 +1465,27 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentUnitReceiptNoteFaca
             var productname = (category == "SUBKON" ? "SUBKON" : "");
             category = (category == "SUBKON" ? "BB" : category);
 
-            
+            var categories = GetProductCodes(1, int.MaxValue, "{}", "{}");
+
+            var categories1 = category == "BB" ? categories.Where(x => x.CodeRequirement == "BB").Select(x => x.Name).ToArray() : category == "BP" ? categories.Where(x => x.CodeRequirement == "BP").Select(x => x.Name).ToArray() : categories.Where(x => x.CodeRequirement == "BE").Select(x => x.Name).ToArray();
+
+
             List<FlowDetailPenerimaanViewModels> Data = new List<FlowDetailPenerimaanViewModels>();
 
             var Query = (from a in dbContext.GarmentUnitReceiptNotes
                          join b in dbContext.GarmentUnitReceiptNoteItems on a.Id equals b.URNId
-                         join c in dbContext.GarmentInternalPurchaseOrders on b.POId equals c.Id
-                         join d in dbContext.GarmentDeliveryOrderDetails on b.DODetailId equals d.Id
-                         join e in dbContext.GarmentExternalPurchaseOrderItems on b.EPOItemId equals e.Id
-                         join f in dbContext.GarmentExternalPurchaseOrders on e.GarmentEPOId equals f.Id
-                         //join h in dbContext.GarmentUnitExpenditureNoteItems on b.UENItemId equals h.URNItemId
+                         join e in dbContext.GarmentExternalPurchaseOrderItems.IgnoreQueryFilters() on b.EPOItemId equals e.Id
+                         join f in dbContext.GarmentExternalPurchaseOrders.IgnoreQueryFilters() on e.GarmentEPOId equals f.Id
+                         join c in dbContext.GarmentInternalPurchaseOrders on e.POId equals c.Id into PO
+                         from cc in PO.DefaultIfEmpty()
                          join g in dbContext.GarmentUnitExpenditureNotes on a.UENId equals g.Id into uen
                          from gg in uen.DefaultIfEmpty()
-                             //join e in dbContext.GarmentDeliveryOrderItems on d.GarmentDOItemId equals e.Id
-                             //join f in dbContext.GarmentDeliveryOrders on e.GarmentDOId equals f.Id
                          where a.IsDeleted == false
                             && b.IsDeleted == false
-                            && c.IsDeleted == false
-                            && d.IsDeleted == false
-                            //&& e.IsDeleted == false
-                            //&& f.IsDeleted == false
+                            && categories1.Contains(b.ProductName)
                             && a.CreatedUtc.AddHours(offset).Date >= DateFrom.Date
                             && a.CreatedUtc.AddHours(offset).Date <= DateTo.Date
                             && a.UnitCode == (string.IsNullOrWhiteSpace(unit) ? a.UnitCode : unit)
-                            && d.CodeRequirment == (string.IsNullOrWhiteSpace(category) ? d.CodeRequirment : category)
-                            && d.ProductName == (string.IsNullOrWhiteSpace(productname) ? d.ProductName : productname)
-
-                         //&& (category == "Bahan Baku" ? Status.Contains(b.ProductName) : (category == "Bahan Pendukung" ? Status.Contains(b.ProductName) : (category == "Bahan Embalase" ? Status.Contains(b.ProductName) : b.ProductName == b.ProductName)))
-
                          select new FlowDetailPenerimaanViewModels
                          {
                              kdbarang = b.ProductCode,
@@ -1423,23 +1493,20 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentUnitReceiptNoteFaca
                              nopo = b.POSerialNumber,
                              keterangan = b.ProductRemark,
                              noro = b.RONo,
-                             artikel = c.Article,
-                             kdbuyer = c.BuyerCode,
+                             artikel = e.Article,
+                             kdbuyer = cc != null ? cc.BuyerCode : "-",
                              nobukti = a.URNNo,
                              tanggal = a.CreatedUtc,
                              jumlahbeli = a.URNType == "PEMBELIAN" ? decimal.ToDouble(b.ReceiptQuantity) : a.URNType == "PROSES" ? decimal.ToDouble(b.ReceiptQuantity) : decimal.ToDouble(b.ReceiptQuantity),
-                             satuanbeli = a.URNType == "PEMBELIAN" ? d.UomUnit : a.URNType == "PROSES" ? b.UomUnit : b.UomUnit,
-                             //jumlahterima = decimal.ToDouble(b.SmallQuantity),
+                             satuanbeli = a.URNType == "PEMBELIAN" ? e.DealUomUnit : a.URNType == "PROSES" ? b.UomUnit : b.UomUnit,
                              jumlahterima = Math.Round(decimal.ToDouble(b.ReceiptQuantity) * decimal.ToDouble(b.Conversion), 2),
                              satuanterima = b.SmallUomUnit,
-                             jumlah = b.DOCurrencyRate * decimal.ToDouble(b.PricePerDealUnit) * Math.Round(decimal.ToDouble(b.ReceiptQuantity) * decimal.ToDouble(b.Conversion), 2),
+                             jumlah = ((decimal.ToDouble(b.PricePerDealUnit) / (b.Conversion == 0 ? 1 : decimal.ToDouble(b.Conversion))) * b.DOCurrencyRate) * (decimal.ToDouble(b.ReceiptQuantity) * decimal.ToDouble(b.Conversion)),
                              asal = a.URNType == "PROSES" ? a.URNType : a.URNType == "PEMBELIAN" ? "Pembelian Eksternal" : gg.UnitSenderName,
                              Jenis = a.URNType,
                              tipepembayaran = f.PaymentMethod == "FREE FROM BUYER" || f.PaymentMethod == "CMT" || f.PaymentMethod == "CMT / IMPORT" ? "BY" : "BL"
 
                          });
-
-        
 
             var index = 1;
             foreach (var item in Query)
@@ -1509,8 +1576,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentUnitReceiptNoteFaca
             result.Columns.Add(new DataColumn() { ColumnName = "Artikel", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Kode Buyer", DataType = typeof(String) });
             //result.Columns.Add(new DataColumn() { ColumnName = "Jenis", DataType = typeof(String) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Asal", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Nomor Bukti", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Asal", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Tanggal", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Jumlah Beli", DataType = typeof(Double) });
             result.Columns.Add(new DataColumn() { ColumnName = "Satuan Beli", DataType = typeof(String) });
@@ -1534,7 +1601,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentUnitReceiptNoteFaca
                 {
                     index++;
                     string tgl = data.tanggal == null ? "-" : data.tanggal.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
-                    result.Rows.Add(index, data.kdbarang, data.nmbarang, data.nopo, data.keterangan, data.noro, data.artikel, data.kdbuyer, data.asal, data.nobukti, tgl, data.jumlahbeli, data.satuanbeli, data.jumlahterima, data.satuanterima);
+                    result.Rows.Add(index, data.kdbarang, data.nmbarang, data.nopo, data.keterangan, data.noro, data.artikel, data.kdbuyer, data.nobukti, data.asal,  tgl, data.jumlahbeli, data.satuanbeli, data.jumlahterima, data.satuanterima);
                     ReceiptQtyTotal += data.jumlahterima;
                     PurchaseQtyTotal += data.jumlahbeli;
                 }
@@ -1631,7 +1698,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentUnitReceiptNoteFaca
                     result.Rows.Add(index, data.kdbarang, data.nmbarang, data.nopo, data.keterangan, data.noro, data.artikel, data.kdbuyer, data.asal, data.nobukti, tgl, data.jumlahbeli, data.satuanbeli, data.jumlahterima, data.satuanterima, data.jumlah, data.tipepembayaran);
                     ReceiptQtyTotal += data.jumlahterima;
                     PurchaseQtyTotal += data.jumlahbeli;
-                    PriceReceiptTotal += data.jumlah;
+                    PriceReceiptTotal += (double)data.jumlah;
                 }
 
             }
@@ -1711,13 +1778,19 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentUnitReceiptNoteFaca
 
         public IQueryable<GarmentUnitReceiptNoteINReportViewModel> GetReportQueryIN(DateTime? dateFrom, DateTime? dateTo, string type, int offset)
         {
+            var GudangBP = new[] { "GUDANG ACCESORIES", "GUDANG EMBALANCE", "GUDANG INTERLINING" };
             DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : (DateTime)dateFrom;
             DateTime DateTo = dateTo == null ? DateTime.Now : (DateTime)dateTo;
-            var coderequirement = new[] { "BP", "BE" };  
+            var coderequirement = new[] { "BP", "BE" };
+
+            var categories = GetProductCodes(1, int.MaxValue, "{}", "{}");
+
+            var categories1 = type == "FABRIC" ? categories.Where(x => x.CodeRequirement == "BB").Select(x => x.Name).ToArray() : type == "NON FABRIC" ? categories.Where(x => coderequirement.Contains(x.CodeRequirement)).Select(x => x.Name).ToArray() : categories.Select(x=>x.Name).ToArray();
             var Data1 = from a in dbContext.GarmentUnitReceiptNotes
                         join b in dbContext.GarmentUnitReceiptNoteItems on a.Id equals b.URNId
                         where a.IsDeleted == false && b.IsDeleted == false
-                        && (type == "FABRIC" ? b.ProductName == "FABRIC" : type == "NON FABRIC" ? b.ProductName != "FABRIC" : b.ProductName == b.ProductName)
+                        //&& (type == "FABRIC" ? b.ProductName == "FABRIC" : type == "NON FABRIC" ? b.ProductName != "FABRIC" : b.ProductName == b.ProductName)
+                        && (type == "FABRIC" ? categories1.Contains(b.ProductName) : type == "NON FABRIC" ? categories1.Contains(b.ProductName) : categories1.Contains(b.ProductName))
                         && b.ProductName != "PROCESS"
                         && a.CreatedUtc.Date >= DateFrom.Date
                         && a.CreatedUtc.Date <= DateTo.Date
@@ -1744,7 +1817,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentUnitReceiptNoteFaca
             var Data2 = from a in dbContext.GarmentUnitReceiptNotes
                         join b in dbContext.GarmentUnitReceiptNoteItems on a.Id equals b.URNId
                         where a.IsDeleted == false && b.IsDeleted == false
-                        && (type == "FABRIC" ? b.ProductName == "FABRIC" : type == "NON FABRIC" ? b.ProductName != "FABRIC" : b.ProductName == b.ProductName)
+                        && (type == "FABRIC" ? categories1.Contains(b.ProductName) : type == "NON FABRIC" ? categories1.Contains(b.ProductName) : categories1.Contains(b.ProductName))
                         && b.ProductName != "PROCESS"
                         && a.LastModifiedUtc.Date >= DateFrom.Date
                         && a.LastModifiedUtc.Date <= DateTo.Date
@@ -1894,5 +1967,6 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentUnitReceiptNoteFaca
 
             return Excel.CreateExcel(new List<(DataTable, string, List<(string, Enum, Enum)>)>() { (result, "Report", mergeCells) }, true);
         }
+
     }
 }

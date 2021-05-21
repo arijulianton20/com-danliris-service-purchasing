@@ -153,8 +153,9 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.Expedition
             }
             catch (Exception e)
             {
+                var innerException = e.InnerException != null ? e.InnerException.Message : "";
                 Dictionary<string, object> Result =
-                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, $"- {e.Message}\n- {innerException}")
                     .Fail();
                 return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
             }
@@ -233,12 +234,23 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.Expedition
         [HttpPut("posting")]
         public async Task<IActionResult> Posting([FromBody] List<long> ids)
         {
-            identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
-            identityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");
+            try
+            {
+                identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+                identityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");
 
-            var result = await PPHBankExpenditureNoteFacade.Posting(ids);
+                var result = await PPHBankExpenditureNoteFacade.Posting(ids);
 
-            return NoContent();
+                return NoContent();
+            }
+            catch (Exception e)
+            {
+                var innerException = e.InnerException != null ? e.InnerException.Message : "";
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, $"- {e.Message}\n- {innerException}")
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
         }
     }
 }

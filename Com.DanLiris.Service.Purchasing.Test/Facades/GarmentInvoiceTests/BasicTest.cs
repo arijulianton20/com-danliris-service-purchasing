@@ -104,204 +104,204 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentInvoiceTests
 			return new GarmentInvoiceDataUtil(garmentInvoiceItemDataUtil,garmentInvoiceDetailDataUtil,garmentDeliveryOrderDataUtil,facade );
 		}
 
-		[Fact]
-		public async Task Should_Success_Create_Data()
-		{
+		//[Fact]
+		//public async Task Should_Success_Create_Data()
+		//{
 			 
-			var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-			GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
+		//	var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+		//	GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
 		
-			var Response = await facade.Create(data, USERNAME);
-			Assert.NotEqual(0, Response);
-			GarmentInvoice data2 = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
-			DateTime dateWithoutOffset = new DateTime(2010,8, 16, 13, 32, 00);
-			data2.InvoiceDate = dateWithoutOffset;
-			var Response1 = await facade.Create(data2, USERNAME);
-			Assert.NotEqual(0, Response1);
-		}
+		//	var Response = await facade.Create(data, USERNAME);
+		//	Assert.NotEqual(0, Response);
+		//	GarmentInvoice data2 = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
+		//	DateTime dateWithoutOffset = new DateTime(2010,8, 16, 13, 32, 00);
+		//	data2.InvoiceDate = dateWithoutOffset;
+		//	var Response1 = await facade.Create(data2, USERNAME);
+		//	Assert.NotEqual(0, Response1);
+		//}
 
-		[Fact]
-		public async Task Should_Validate_Double_Data()
-		{
-			var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-			GarmentInvoice model = await dataUtil(facade, GetCurrentMethod()).GetTestData(USERNAME);
-
-			GarmentInvoiceViewModel viewModel = new GarmentInvoiceViewModel
-			{
-				supplier = new SupplierViewModel(),
-			};
-			viewModel.Id = model.Id + 1;
-			viewModel.invoiceNo = model.InvoiceNo;
-			viewModel.supplier.Id = model.SupplierId;
-			viewModel.invoiceDate = model.InvoiceDate;
-		 
-
-			Mock<IServiceProvider> serviceProvider = new Mock<IServiceProvider>();
-			serviceProvider.
-				Setup(x => x.GetService(typeof(PurchasingDbContext)))
-				.Returns(_dbContext(GetCurrentMethod()));
-
-			ValidationContext validationContext = new ValidationContext(viewModel, serviceProvider.Object, null);
-
-			var validationResultCreate = viewModel.Validate(validationContext).ToList();
-
-			var errorDuplicate = validationResultCreate.SingleOrDefault(r => r.ErrorMessage.Equals("No is already exist"));
-			Assert.NotNull(errorDuplicate);
-		}
-		[Fact]
-		public async Task Should_Error_Create_Data()
-		{
-			var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-			GarmentInvoice model =await  dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
-			model.Items = null;
-			Exception e = await Assert.ThrowsAsync<Exception>(async () => await facade.Create(model, USERNAME));
-			Assert.NotNull(e.Message);
-		}
-
-
-		[Fact]
-		public async Task Should_Success_Get_All_Data()
-		{
-			var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-			GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
-			var Responses = await facade.Create(data, USERNAME);
-			var Response = facade.Read();
-			Assert.NotNull(Response);
-		}
-
-		[Fact]
-		public async Task Should_Success_Get_Data_By_Id()
-		{
-			var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-			GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
-			var Responses = await facade.Create(data, USERNAME);
-			var Response = facade.ReadById((int)data.Id);
-			Assert.NotNull(Response);
-		}
-		[Fact]
-		public async Task Should_Success_Update_Data()
-		{
-			var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-			var facadeDO = new GarmentDeliveryOrderFacade(ServiceProvider,_dbContext(GetCurrentMethod()));
-			GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
-			GarmentInvoiceItem item= await dataUtil(facade, GetCurrentMethod()).GetNewDataItem(USERNAME);
-
-			var ResponseUpdate = await facade.Update((int)data.Id, data, USERNAME);
-			Assert.NotEqual(0, ResponseUpdate);
-			 
-			List<GarmentInvoiceItem> Newitems = new List<GarmentInvoiceItem>(data.Items);
-			Newitems.Add(item);
-			data.Items = Newitems;
-			 
-			var ResponseUpdate1 = await facade.Update((int)data.Id, data, USERNAME);
-			Assert.NotEqual(0, ResponseUpdate1);
-
-            //Newitems.Remove(newItem);
-            //data.Items = Newitems;
-            //var ResponseUpdate2 = await facade.Update((int)data.Id, data, USERNAME);
-            //Assert.NotEqual(ResponseUpdate2, 0);
-        }
-
-		[Fact]
-		public async Task Should_Success_Update_Data2()
-		{
-			var dbContext = _dbContext(GetCurrentMethod());
-			var facade = new GarmentInvoiceFacade(dbContext, ServiceProvider);
-			var facadeDO = new GarmentDeliveryOrderFacade(ServiceProvider, dbContext);
-			GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
-			GarmentInvoiceItem item = await dataUtil(facade, GetCurrentMethod()).GetNewDataItem(USERNAME);
-
-			var ResponseUpdate = await facade.Update((int)data.Id, data, USERNAME);
-			Assert.NotEqual(0, ResponseUpdate);
-
-			List<GarmentInvoiceItem> Newitems = new List<GarmentInvoiceItem>(data.Items);
-			Newitems.Add(item);
-			data.Items = Newitems;
-
-			var ResponseUpdate1 = await facade.Update((int)data.Id, data, USERNAME);
-			Assert.NotEqual(0, ResponseUpdate);
-
-			dbContext.Entry(data).State = EntityState.Detached;
-			foreach (var items in data.Items)
-			{
-				dbContext.Entry(items).State = EntityState.Detached;
-				foreach (var detail in items.Details)
-				{
-					dbContext.Entry(detail).State = EntityState.Detached;
-				}
-			}
-
-			var newData = dbContext.GarmentInvoices.AsNoTracking()
-				.Include(m => m.Items)
-					.ThenInclude(i => i.Details)
-				.FirstOrDefault(m => m.Id == data.Id);
-
-			newData.Items = newData.Items.Take(1).ToList();
-
-			var ResponseUpdate2 = await facade.Update((int)newData.Id, newData, USERNAME);
-			Assert.NotEqual(0, ResponseUpdate2);
-		}
-
-		[Fact]
-		public async Task Should_Error_Update_Data()
-		{
-			var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-			GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewData(USERNAME);
-			List<GarmentInvoiceItem> item = new List<GarmentInvoiceItem>(data.Items);
-
-			data.Items.Add(new GarmentInvoiceItem
-			{
-				DeliveryOrderId = It.IsAny<int>(),
-				DODate = DateTimeOffset.Now,
-				DeliveryOrderNo = "donos",
-				ArrivalDate = DateTimeOffset.Now,
-				TotalAmount = 2000,
-				Details = null
-			});
-
-			var ResponseUpdate = await facade.Update((int)data.Id, data, USERNAME);
-			Assert.NotEqual(0, ResponseUpdate);
-			var newItem = new GarmentInvoiceItem
-			{
-				DeliveryOrderId = It.IsAny<int>(),
-				DODate = DateTimeOffset.Now,
-				DeliveryOrderNo = "dono",
-				ArrivalDate = DateTimeOffset.Now,
-				TotalAmount = 2000,
-				Details =null
-			};
-			List<GarmentInvoiceItem> Newitems = new List<GarmentInvoiceItem>(data.Items);
-			Newitems.Add(newItem);
-			data.Items = Newitems;
-
-			Exception errorNullItems = await Assert.ThrowsAsync<Exception>(async () => await facade.Update((int)data.Id, data, USERNAME));
-			Assert.NotNull(errorNullItems.Message);
-        }
-
-		[Fact]
-		public async Task Should_Success_Delete_Data()
-		{
-			var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-			GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
-			await facade.Create(data, USERNAME); 
-			var Response = facade.Delete((int)data.Id, USERNAME);
-			Assert.NotEqual(0, Response);
-		}
-
-		[Fact]
-		//public async Task Should_Error_Delete_Data()
+		//[Fact]
+		//public async Task Should_Validate_Double_Data()
 		//{
 		//	var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-		//	Exception e = await Assert.ThrowsAsync<Exception>(async () => facade.Delete(0, USERNAME));
+		//	GarmentInvoice model = await dataUtil(facade, GetCurrentMethod()).GetTestData(USERNAME);
+
+		//	GarmentInvoiceViewModel viewModel = new GarmentInvoiceViewModel
+		//	{
+		//		supplier = new SupplierViewModel(),
+		//	};
+		//	viewModel.Id = model.Id + 1;
+		//	viewModel.invoiceNo = model.InvoiceNo;
+		//	viewModel.supplier.Id = model.SupplierId;
+		//	viewModel.invoiceDate = model.InvoiceDate;
+		 
+
+		//	Mock<IServiceProvider> serviceProvider = new Mock<IServiceProvider>();
+		//	serviceProvider.
+		//		Setup(x => x.GetService(typeof(PurchasingDbContext)))
+		//		.Returns(_dbContext(GetCurrentMethod()));
+
+		//	ValidationContext validationContext = new ValidationContext(viewModel, serviceProvider.Object, null);
+
+		//	var validationResultCreate = viewModel.Validate(validationContext).ToList();
+
+		//	var errorDuplicate = validationResultCreate.SingleOrDefault(r => r.ErrorMessage.Equals("No is already exist"));
+		//	Assert.NotNull(errorDuplicate);
+		//}
+		//[Fact]
+		//public async Task Should_Error_Create_Data()
+		//{
+		//	var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+		//	GarmentInvoice model =await  dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
+		//	model.Items = null;
+		//	Exception e = await Assert.ThrowsAsync<Exception>(async () => await facade.Create(model, USERNAME));
 		//	Assert.NotNull(e.Message);
 		//}
 
-        public void Should_Error_Delete_Data()
-        {
-            var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-            Exception e = Assert.Throws<Exception>(() => facade.Delete(0, USERNAME));
-            Assert.NotNull(e.Message);
-        }
+
+		//[Fact]
+		//public async Task Should_Success_Get_All_Data()
+		//{
+		//	var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+		//	GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
+		//	var Responses = await facade.Create(data, USERNAME);
+		//	var Response = facade.Read();
+		//	Assert.NotNull(Response);
+		//}
+
+		//[Fact]
+		//public async Task Should_Success_Get_Data_By_Id()
+		//{
+		//	var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+		//	GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
+		//	var Responses = await facade.Create(data, USERNAME);
+		//	var Response = facade.ReadById((int)data.Id);
+		//	Assert.NotNull(Response);
+		//}
+		//[Fact]
+		//public async Task Should_Success_Update_Data()
+		//{
+		//	var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+		//	var facadeDO = new GarmentDeliveryOrderFacade(ServiceProvider,_dbContext(GetCurrentMethod()));
+		//	GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
+		//	GarmentInvoiceItem item= await dataUtil(facade, GetCurrentMethod()).GetNewDataItem(USERNAME);
+
+		//	var ResponseUpdate = await facade.Update((int)data.Id, data, USERNAME);
+		//	Assert.NotEqual(0, ResponseUpdate);
+			 
+		//	List<GarmentInvoiceItem> Newitems = new List<GarmentInvoiceItem>(data.Items);
+		//	Newitems.Add(item);
+		//	data.Items = Newitems;
+			 
+		//	var ResponseUpdate1 = await facade.Update((int)data.Id, data, USERNAME);
+		//	Assert.NotEqual(0, ResponseUpdate1);
+
+  //          //Newitems.Remove(newItem);
+  //          //data.Items = Newitems;
+  //          //var ResponseUpdate2 = await facade.Update((int)data.Id, data, USERNAME);
+  //          //Assert.NotEqual(ResponseUpdate2, 0);
+  //      }
+
+		//[Fact]
+		//public async Task Should_Success_Update_Data2()
+		//{
+		//	var dbContext = _dbContext(GetCurrentMethod());
+		//	var facade = new GarmentInvoiceFacade(dbContext, ServiceProvider);
+		//	var facadeDO = new GarmentDeliveryOrderFacade(ServiceProvider, dbContext);
+		//	GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
+		//	GarmentInvoiceItem item = await dataUtil(facade, GetCurrentMethod()).GetNewDataItem(USERNAME);
+
+		//	var ResponseUpdate = await facade.Update((int)data.Id, data, USERNAME);
+		//	Assert.NotEqual(0, ResponseUpdate);
+
+		//	List<GarmentInvoiceItem> Newitems = new List<GarmentInvoiceItem>(data.Items);
+		//	Newitems.Add(item);
+		//	data.Items = Newitems;
+
+		//	var ResponseUpdate1 = await facade.Update((int)data.Id, data, USERNAME);
+		//	Assert.NotEqual(0, ResponseUpdate);
+
+		//	dbContext.Entry(data).State = EntityState.Detached;
+		//	foreach (var items in data.Items)
+		//	{
+		//		dbContext.Entry(items).State = EntityState.Detached;
+		//		foreach (var detail in items.Details)
+		//		{
+		//			dbContext.Entry(detail).State = EntityState.Detached;
+		//		}
+		//	}
+
+		//	var newData = dbContext.GarmentInvoices.AsNoTracking()
+		//		.Include(m => m.Items)
+		//			.ThenInclude(i => i.Details)
+		//		.FirstOrDefault(m => m.Id == data.Id);
+
+		//	newData.Items = newData.Items.Take(1).ToList();
+
+		//	var ResponseUpdate2 = await facade.Update((int)newData.Id, newData, USERNAME);
+		//	Assert.NotEqual(0, ResponseUpdate2);
+		//}
+
+		//[Fact]
+		//public async Task Should_Error_Update_Data()
+		//{
+		//	var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+		//	GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewData(USERNAME);
+		//	List<GarmentInvoiceItem> item = new List<GarmentInvoiceItem>(data.Items);
+
+		//	data.Items.Add(new GarmentInvoiceItem
+		//	{
+		//		DeliveryOrderId = It.IsAny<int>(),
+		//		DODate = DateTimeOffset.Now,
+		//		DeliveryOrderNo = "donos",
+		//		ArrivalDate = DateTimeOffset.Now,
+		//		TotalAmount = 2000,
+		//		Details = null
+		//	});
+
+		//	var ResponseUpdate = await facade.Update((int)data.Id, data, USERNAME);
+		//	Assert.NotEqual(0, ResponseUpdate);
+		//	var newItem = new GarmentInvoiceItem
+		//	{
+		//		DeliveryOrderId = It.IsAny<int>(),
+		//		DODate = DateTimeOffset.Now,
+		//		DeliveryOrderNo = "dono",
+		//		ArrivalDate = DateTimeOffset.Now,
+		//		TotalAmount = 2000,
+		//		Details =null
+		//	};
+		//	List<GarmentInvoiceItem> Newitems = new List<GarmentInvoiceItem>(data.Items);
+		//	Newitems.Add(newItem);
+		//	data.Items = Newitems;
+
+		//	Exception errorNullItems = await Assert.ThrowsAsync<Exception>(async () => await facade.Update((int)data.Id, data, USERNAME));
+		//	Assert.NotNull(errorNullItems.Message);
+  //      }
+
+		//[Fact]
+		//public async Task Should_Success_Delete_Data()
+		//{
+		//	var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+		//	GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
+		//	await facade.Create(data, USERNAME); 
+		//	var Response = facade.Delete((int)data.Id, USERNAME);
+		//	Assert.NotEqual(0, Response);
+		//}
+
+		//[Fact]
+		////public async Task Should_Error_Delete_Data()
+		////{
+		////	var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+		////	Exception e = await Assert.ThrowsAsync<Exception>(async () => facade.Delete(0, USERNAME));
+		////	Assert.NotNull(e.Message);
+		////}
+
+  //      public void Should_Error_Delete_Data()
+  //      {
+  //          var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+  //          Exception e = Assert.Throws<Exception>(() => facade.Delete(0, USERNAME));
+  //          Assert.NotNull(e.Message);
+  //      }
 
         [Fact]
 		public void Should_Success_Validate_Data()
@@ -406,84 +406,84 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.GarmentInvoiceTests
 
         }
 
-        [Fact]
-        public async Task Should_Success_Get_Data_By_DOId()
-        {
-            var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-            GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetTestData(USERNAME);
-            var Response = facade.ReadByDOId((int)data.Items.First().DeliveryOrderId);
-            Assert.NotNull(Response);
-        }
+        //[Fact]
+        //public async Task Should_Success_Get_Data_By_DOId()
+        //{
+        //    var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+        //    GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetTestData(USERNAME);
+        //    var Response = facade.ReadByDOId((int)data.Items.First().DeliveryOrderId);
+        //    Assert.NotNull(Response);
+        //}
 
-        [Fact]
-        public async Task Should_Success_Get_Data_For_InternNote()
-        {
-            var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-            GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
-            var Responses = await facade.Create(data, USERNAME);
-            var Response = facade.ReadForInternNote(new List<long> { data.Id });
-            Assert.NotEmpty(Response);
-        }
+        //[Fact]
+        //public async Task Should_Success_Get_Data_For_InternNote()
+        //{
+        //    var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+        //    GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
+        //    var Responses = await facade.Create(data, USERNAME);
+        //    var Response = facade.ReadForInternNote(new List<long> { data.Id });
+        //    Assert.NotEmpty(Response);
+        //}
 
-        // Buku Harian Pembelian
-        [Fact]
-        public async Task Should_Success_Get_Buku_Sub_Beli_Data()
-        {
-            var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-            GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
+        //// Buku Harian Pembelian
+        //[Fact]
+        //public async Task Should_Success_Get_Buku_Sub_Beli_Data()
+        //{
+        //    var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+        //    GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
 
-            GarmentDailyPurchasingReportFacade DataInv = new GarmentDailyPurchasingReportFacade(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
+        //    GarmentDailyPurchasingReportFacade DataInv = new GarmentDailyPurchasingReportFacade(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
 
-            DateTime d1 = data.InvoiceDate.DateTime;
-            DateTime d2 = data.InvoiceDate.DateTime;
+        //    DateTime d1 = data.InvoiceDate.DateTime;
+        //    DateTime d2 = data.InvoiceDate.DateTime;
 
-            var Response = DataInv.GetGDailyPurchasingReport(null, true, null, null, null,null, 7);
-            Assert.NotNull(Response.Item1);
-        }
+        //    var Response = DataInv.GetGDailyPurchasingReport(null, true, null, null, null,null, 7);
+        //    Assert.NotNull(Response.Item1);
+        //}
 
-        [Fact]
-        public async Task Should_Success_Get_Buku_Sub_Beli_Null_Parameter()
-        {
-            var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-            GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
+        //[Fact]
+        //public async Task Should_Success_Get_Buku_Sub_Beli_Null_Parameter()
+        //{
+        //    var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+        //    GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
 
-            GarmentDailyPurchasingReportFacade DataInv = new GarmentDailyPurchasingReportFacade(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
+        //    GarmentDailyPurchasingReportFacade DataInv = new GarmentDailyPurchasingReportFacade(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
 
-            DateTime d1 = data.InvoiceDate.DateTime.AddDays(30);
-            DateTime d2 = data.InvoiceDate.DateTime.AddDays(30);
+        //    DateTime d1 = data.InvoiceDate.DateTime.AddDays(30);
+        //    DateTime d2 = data.InvoiceDate.DateTime.AddDays(30);
 
-            var Response = DataInv.GetGDailyPurchasingReport(null, true, null, null, null,null, 7);
-            Assert.NotNull(Response.Item1);
-        }
+        //    var Response = DataInv.GetGDailyPurchasingReport(null, true, null, null, null,null, 7);
+        //    Assert.NotNull(Response.Item1);
+        //}
 
-        [Fact]
-        public async Task Should_Success_Get_Buku_Sub_Beli_Excel()
-        {
-            var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-            GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
+        //[Fact]
+        //public async Task Should_Success_Get_Buku_Sub_Beli_Excel()
+        //{
+        //    var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+        //    GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
 
-            GarmentDailyPurchasingReportFacade DataInv = new GarmentDailyPurchasingReportFacade(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
+        //    GarmentDailyPurchasingReportFacade DataInv = new GarmentDailyPurchasingReportFacade(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
 
-            DateTime d1 = data.InvoiceDate.DateTime;
-            DateTime d2 = data.InvoiceDate.DateTime;
+        //    DateTime d1 = data.InvoiceDate.DateTime;
+        //    DateTime d2 = data.InvoiceDate.DateTime;
 
-            var Response = DataInv.GenerateExcelGDailyPurchasingReport(null, true, null, null, null,null, 7);
-            Assert.IsType<System.IO.MemoryStream>(Response);
-        }
+        //    var Response = DataInv.GenerateExcelGDailyPurchasingReport(null, true, null, null, null,null, 7);
+        //    Assert.IsType<System.IO.MemoryStream>(Response);
+        //}
 
-        [Fact]
-        public async Task Should_Success_Get_Buku_Sub_Beli_Excel_Null_Parameter()
-        {
-            var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
-            GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
+        //[Fact]
+        //public async Task Should_Success_Get_Buku_Sub_Beli_Excel_Null_Parameter()
+        //{
+        //    var facade = new GarmentInvoiceFacade(_dbContext(GetCurrentMethod()), ServiceProvider);
+        //    GarmentInvoice data = await dataUtil(facade, GetCurrentMethod()).GetNewDataViewModel(USERNAME);
 
-            GarmentDailyPurchasingReportFacade DataInv = new GarmentDailyPurchasingReportFacade(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
+        //    GarmentDailyPurchasingReportFacade DataInv = new GarmentDailyPurchasingReportFacade(GetServiceProvider().Object, _dbContext(GetCurrentMethod()));
 
-            DateTime d1 = data.InvoiceDate.DateTime.AddDays(30);
-            DateTime d2 = data.InvoiceDate.DateTime.AddDays(30);
+        //    DateTime d1 = data.InvoiceDate.DateTime.AddDays(30);
+        //    DateTime d2 = data.InvoiceDate.DateTime.AddDays(30);
 
-            var Response = DataInv.GenerateExcelGDailyPurchasingReport(null, true, null, null,null, null, 7);
-            Assert.IsType<System.IO.MemoryStream>(Response);
-        }
+        //    var Response = DataInv.GenerateExcelGDailyPurchasingReport(null, true, null, null,null, null, 7);
+        //    Assert.IsType<System.IO.MemoryStream>(Response);
+        //}
     }
 }

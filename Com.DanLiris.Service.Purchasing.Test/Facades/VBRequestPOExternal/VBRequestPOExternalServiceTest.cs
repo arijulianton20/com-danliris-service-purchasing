@@ -268,25 +268,25 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.VBRequestPOExternal
 
         }
 
-        [Fact]
-        public async Task ShouldSuccess_UpdateSPB_with_GarmentDivision()
-        {
-            //Setup
-            PurchasingDbContext dbContext = GetDbContext(GetCurrentAsyncMethod());
-            var serviceProviderMock = GetServiceProvider();
+        //[Fact]
+        //public async Task ShouldSuccess_UpdateSPB_with_GarmentDivision()
+        //{
+        //    //Setup
+        //    PurchasingDbContext dbContext = GetDbContext(GetCurrentAsyncMethod());
+        //    var serviceProviderMock = GetServiceProvider();
 
-            GarmentInternNoteFacades facades = new GarmentInternNoteFacades(dbContext, serviceProviderMock.Object);
+        //    GarmentInternNoteFacades facades = new GarmentInternNoteFacades(dbContext, serviceProviderMock.Object);
 
-            var data = await dataUtil(facades).GetTestData_VBRequestPOExternal();
+        //    var data = await dataUtil(facades).GetTestData_VBRequestPOExternal();
 
-            //Act
-            VBRequestPOExternalService service = new VBRequestPOExternalService(dbContext, serviceProviderMock.Object);
-            var result = service.UpdateSPB("GARMENT", 1);
+        //    //Act
+        //    VBRequestPOExternalService service = new VBRequestPOExternalService(dbContext, serviceProviderMock.Object);
+        //    var result = service.UpdateSPB("GARMENT", 1);
 
-            //Assert
-            Assert.NotEqual(0, result);
+        //    //Assert
+        //    Assert.NotEqual(0, result);
 
-        }
+        //}
 
         [Fact]
         public void ShouldSuccess_UpdateSPB_with_NonGarmentDivision()
@@ -311,64 +311,64 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.VBRequestPOExternal
 
 
         
-        [Fact]
-        public async Task Should_Success_AutoJournalVBRequest()
-        {
-            //Setup
-            PurchasingDbContext dbContext = GetDbContext(GetCurrentAsyncMethod());
+        //[Fact]
+        //public async Task Should_Success_AutoJournalVBRequest()
+        //{
+        //    //Setup
+        //    PurchasingDbContext dbContext = GetDbContext(GetCurrentAsyncMethod());
 
-            var serviceProviderMock = GetServiceProvider();
-            var memoryCacheManagerMock = new Mock<IMemoryCacheManager>();
-            memoryCacheManagerMock
-                .Setup(x => x.Get(MemoryCacheConstant.Categories, It.IsAny<Func<ICacheEntry, List<CategoryCOAResult>>>()))
-                .Returns(new List<CategoryCOAResult>());
+        //    var serviceProviderMock = GetServiceProvider();
+        //    var memoryCacheManagerMock = new Mock<IMemoryCacheManager>();
+        //    memoryCacheManagerMock
+        //        .Setup(x => x.Get(MemoryCacheConstant.Categories, It.IsAny<Func<ICacheEntry, List<CategoryCOAResult>>>()))
+        //        .Returns(new List<CategoryCOAResult>());
 
-            memoryCacheManagerMock
-                .Setup(x => x.Get(MemoryCacheConstant.Units, It.IsAny<Func<ICacheEntry, List<IdCOAResult>>>()))
-                .Returns(new List<IdCOAResult>());
+        //    memoryCacheManagerMock
+        //        .Setup(x => x.Get(MemoryCacheConstant.Units, It.IsAny<Func<ICacheEntry, List<IdCOAResult>>>()))
+        //        .Returns(new List<IdCOAResult>());
 
-            memoryCacheManagerMock
-                .Setup(x => x.Get(MemoryCacheConstant.Divisions, It.IsAny<Func<ICacheEntry, List<IdCOAResult>>>()))
-                .Returns(new List<IdCOAResult>());
+        //    memoryCacheManagerMock
+        //        .Setup(x => x.Get(MemoryCacheConstant.Divisions, It.IsAny<Func<ICacheEntry, List<IdCOAResult>>>()))
+        //        .Returns(new List<IdCOAResult>());
 
-            memoryCacheManagerMock
-                .Setup(x => x.Get(MemoryCacheConstant.IncomeTaxes, It.IsAny<Func<ICacheEntry, List<IncomeTaxCOAResult>>>()))
-                .Returns(new List<IncomeTaxCOAResult>());
+        //    memoryCacheManagerMock
+        //        .Setup(x => x.Get(MemoryCacheConstant.IncomeTaxes, It.IsAny<Func<ICacheEntry, List<IncomeTaxCOAResult>>>()))
+        //        .Returns(new List<IncomeTaxCOAResult>());
 
-            serviceProviderMock
-                .Setup(x => x.GetService(typeof(IMemoryCacheManager)))
-                .Returns(memoryCacheManagerMock.Object);
+        //    serviceProviderMock
+        //        .Setup(x => x.GetService(typeof(IMemoryCacheManager)))
+        //        .Returns(memoryCacheManagerMock.Object);
 
 
-            var purchaseRequestItemDataUtil = new PurchaseRequestItemDataUtil();
-            var purchaseRequestFacade = new PurchaseRequestFacade(serviceProviderMock.Object, dbContext);
-            var purchaserequestDataUtil = new PurchaseRequestDataUtil(purchaseRequestItemDataUtil, purchaseRequestFacade);
+        //    var purchaseRequestItemDataUtil = new PurchaseRequestItemDataUtil();
+        //    var purchaseRequestFacade = new PurchaseRequestFacade(serviceProviderMock.Object, dbContext);
+        //    var purchaserequestDataUtil = new PurchaseRequestDataUtil(purchaseRequestItemDataUtil, purchaseRequestFacade);
 
-            var internalPurchaseOrderItemDataUtil = new InternalPurchaseOrderItemDataUtil();
-            var internalPurchaseOrderFacade = new InternalPurchaseOrderFacade(serviceProviderMock.Object, dbContext);
-            var internalPurchaseOrderDataUtil = new InternalPurchaseOrderDataUtil(internalPurchaseOrderItemDataUtil, internalPurchaseOrderFacade, purchaserequestDataUtil);
+        //    var internalPurchaseOrderItemDataUtil = new InternalPurchaseOrderItemDataUtil();
+        //    var internalPurchaseOrderFacade = new InternalPurchaseOrderFacade(serviceProviderMock.Object, dbContext);
+        //    var internalPurchaseOrderDataUtil = new InternalPurchaseOrderDataUtil(internalPurchaseOrderItemDataUtil, internalPurchaseOrderFacade, purchaserequestDataUtil);
 
-            var externalPurchaseOrderFacade = new ExternalPurchaseOrderFacade(serviceProviderMock.Object, dbContext);
-            var externalPurchaseOrderDetailDataUtil = new ExternalPurchaseOrderDetailDataUtil();
-            var externalPurchaseOrderItemDataUtil = new ExternalPurchaseOrderItemDataUtil(externalPurchaseOrderDetailDataUtil);
-            var data = await dataUtil(externalPurchaseOrderFacade, internalPurchaseOrderDataUtil, externalPurchaseOrderItemDataUtil).GetTestData("user");
+        //    var externalPurchaseOrderFacade = new ExternalPurchaseOrderFacade(serviceProviderMock.Object, dbContext);
+        //    var externalPurchaseOrderDetailDataUtil = new ExternalPurchaseOrderDetailDataUtil();
+        //    var externalPurchaseOrderItemDataUtil = new ExternalPurchaseOrderItemDataUtil(externalPurchaseOrderDetailDataUtil);
+        //    var data = await dataUtil(externalPurchaseOrderFacade, internalPurchaseOrderDataUtil, externalPurchaseOrderItemDataUtil).GetTestData("user");
 
-            //Act
-            VBRequestPOExternalService service = new VBRequestPOExternalService(dbContext, serviceProviderMock.Object);
+        //    //Act
+        //    VBRequestPOExternalService service = new VBRequestPOExternalService(dbContext, serviceProviderMock.Object);
 
-            VBFormDto dto = new VBFormDto()
-            {
-                EPOIds = new List<long>()
-                {
-                    1
-                }
-            };
-            var result = await service.AutoJournalVBRequest(dto);
+        //    VBFormDto dto = new VBFormDto()
+        //    {
+        //        EPOIds = new List<long>()
+        //        {
+        //            1
+        //        }
+        //    };
+        //    var result = await service.AutoJournalVBRequest(dto);
 
-            //Assert
-            Assert.NotEqual(0, result);
+        //    //Assert
+        //    Assert.NotEqual(0, result);
 
-        }
+        //}
 
 
         //[Fact]

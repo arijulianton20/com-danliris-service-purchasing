@@ -4,6 +4,7 @@ using Com.DanLiris.Service.Purchasing.Lib.Models.GarmentExternalPurchaseOrderMod
 using Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentExternalPurchaseOrderDataUtils;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -469,7 +470,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentDeliveryOrderDat
 
             foreach (var item in datas.Items)
             {
-                gdo.Items.Add(new GarmentDeliveryOrderItem
+                gdo.Items = gdo.Items.Concat(new[] { new GarmentDeliveryOrderItem
                 {
                     EPOId = datas.Id,
                     EPONo = datas.EPONo,
@@ -513,7 +514,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentDeliveryOrderDat
                                     ReturQuantity=0
                                 }
                             }
-                });
+                }});
             }
 
             return gdo;
@@ -572,7 +573,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentDeliveryOrderDat
 
             foreach (var item in datas.Items)
             {
-                gdo.Items.Add(new GarmentDeliveryOrderItem
+                gdo.Items = gdo.Items.Concat(new[] { new GarmentDeliveryOrderItem
                 {
                     EPOId = datas.Id,
                     EPONo = datas.EPONo,
@@ -616,7 +617,7 @@ namespace Com.DanLiris.Service.Purchasing.Test.DataUtils.GarmentDeliveryOrderDat
                                     ReturQuantity=0
                                 }
                             }
-                });
+                }});
             }
 
             return gdo;

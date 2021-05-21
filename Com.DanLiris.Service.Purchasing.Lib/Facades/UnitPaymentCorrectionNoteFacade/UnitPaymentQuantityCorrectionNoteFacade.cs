@@ -23,6 +23,11 @@ using System.Linq.Dynamic.Core;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Caching.Distributed;
+using Com.DanLiris.Service.Purchasing.Lib.Utilities.Currencies;
+using Com.DanLiris.Service.Purchasing.Lib.Enums;
+using Com.DanLiris.Service.Purchasing.Lib.Utilities.CacheManager.CacheData;
+using System.Net.Http;
 
 namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnitPaymentCorrectionNoteFacade
 {
@@ -33,13 +38,26 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnitPaymentCorrectionNoteF
         private readonly PurchasingDbContext dbContext;
         public readonly IServiceProvider serviceProvider;
         private readonly DbSet<UnitPaymentCorrectionNote> dbSet;
+        private readonly IDistributedCache _cacheManager;
+        private readonly ICurrencyProvider _currencyProvider;
+        private readonly IEnumerable<string> SpecialCategoryCode = new List<string>()
+        {
+            "BP","BB","EM","S","R","E","PL","MM","SP","U"
+        };
 
         public UnitPaymentQuantityCorrectionNoteFacade(IServiceProvider serviceProvider, PurchasingDbContext dbContext)
         {
             this.serviceProvider = serviceProvider;
             this.dbContext = dbContext;
             this.dbSet = dbContext.Set<UnitPaymentCorrectionNote>();
+            _cacheManager = serviceProvider.GetService<IDistributedCache>();
+            _currencyProvider = serviceProvider.GetService<ICurrencyProvider>();
         }
+
+        private string _jsonCategories => _cacheManager.GetString(MemoryCacheConstant.Categories);
+        private string _jsonUnits => _cacheManager.GetString(MemoryCacheConstant.Units);
+        private string _jsonDivisions => _cacheManager.GetString(MemoryCacheConstant.Divisions);
+        private string _jsonIncomeTaxes => _cacheManager.GetString(MemoryCacheConstant.IncomeTaxes);
 
         public Tuple<List<UnitPaymentCorrectionNote>, int, Dictionary<string, string>> Read(int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}")
         {
@@ -254,6 +272,321 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.UnitPaymentCorrectionNoteF
             }
 
         }
+
+        private async Task AutoCreateJournalTransaction(UnitPaymentCorrectionNote unitPaymentCorrection)
+        {
+            foreach (var unitPaymentCorrectionItem in unitPaymentCorrection.Items)
+            {
+                var unitReceiptNote = dbContext.UnitReceiptNotes.Where(entity => entity.URNNo == unitPaymentCorrectionItem.URNNo).Include(entity => entity.Items).FirstOrDefault();
+
+                var jsonSerializerSettings = new JsonSerializerSettings
+                {
+                    MissingMemberHandling = MissingMemberHandling.Ignore
+                };
+
+                var divisions = JsonConvert.DeserializeObject<List<IdCOAResult>>(_jsonDivisions ?? "[]", jsonSerializerSettings);
+                var units = JsonConvert.DeserializeObject<List<IdCOAResult>>(_jsonUnits ?? "[]", jsonSerializerSettings);
+                var categories = JsonConvert.DeserializeObject<List<CategoryCOAResult>>(_jsonCategories ?? "[]", jsonSerializerSettings);
+                var incomeTaxes = JsonConvert.DeserializeObject<List<IncomeTaxCOAResult>>(_jsonIncomeTaxes ?? "[]", jsonSerializerSettings);
+
+                var purchaseRequestIds = unitReceiptNote.Items.Select(s => s.PRId).ToList();
+                var purchaseRequests = dbContext.PurchaseRequests.Where(w => purchaseRequestIds.Contains(w.Id)).Select(s => new { s.Id, s.CategoryCode, s.CategoryId }).ToList();
+
+                var externalPurchaseOrderIds = unitReceiptNote.Items.Select(s => s.EPOId).ToList();
+                var externalPurchaseOrders = dbContext.ExternalPurchaseOrders.Where(w => externalPurchaseOrderIds.Contains(w.Id)).Select(s => new { s.Id, s.IncomeTaxId, s.UseIncomeTax, s.IncomeTaxName, s.IncomeTaxRate, s.CurrencyCode, s.CurrencyRate }).ToList();
+
+
+
+                var externalPurchaseOrderDetailIds = unitReceiptNote.Items.Select(s => s.EPODetailId).ToList();
+                var externalPurchaseOrderDetails = dbContext.ExternalPurchaseOrderDetails.Where(w => externalPurchaseOrderDetailIds.Contains(w.Id)).Select(s => new { s.Id, s.ProductId, TotalPrice = s.PricePerDealUnit * s.DealQuantity, s.DealQuantity }).ToList();
+
+                //var postMany = new List<Task<HttpResponseMessage>>();
+
+                //var journalTransactionsToPost = new List<JournalTransaction>();
+
+                var journalTransactionToPost = new JournalTransaction()
+                {
+                    Date = unitPaymentCorrection.CorrectionDate,
+                    Description = $"Nota Koreksi {unitReceiptNote.URNNo}",
+                    ReferenceNo = unitPaymentCorrection.UPCNo,
+                    Status = "POSTED",
+                    Items = new List<JournalTransactionItem>()
+                };
+
+                int.TryParse(unitReceiptNote.DivisionId, out var divisionId);
+                var division = divisions.FirstOrDefault(f => f.Id.Equals(divisionId));
+                if (division == null)
+                {
+                    division = new IdCOAResult()
+                    {
+                        COACode = "0"
+                    };
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty(division.COACode))
+                    {
+                        division.COACode = "0";
+                    }
+                }
+
+
+                int.TryParse(unitReceiptNote.UnitId, out var unitId);
+                var unit = units.FirstOrDefault(f => f.Id.Equals(unitId));
+                if (unit == null)
+                {
+                    unit = new IdCOAResult()
+                    {
+                        COACode = "00"
+                    };
+                }
+                else
+                {
+                    if (string.IsNullOrEmpty(unit.COACode))
+                    {
+                        unit.COACode = "00";
+                    }
+                }
+
+
+                var journalDebitItems = new List<JournalTransactionItem>();
+                var journalCreditItems = new List<JournalTransactionItem>();
+
+                foreach (var unitReceiptNoteItem in unitReceiptNote.Items)
+                {
+
+                    var purchaseRequest = purchaseRequests.FirstOrDefault(f => f.Id.Equals(unitReceiptNoteItem.PRId));
+                    var externalPurchaseOrder = externalPurchaseOrders.FirstOrDefault(f => f.Id.Equals(unitReceiptNoteItem.EPOId));
+
+                    //double.TryParse(externalPurchaseOrder.IncomeTaxRate, out var incomeTaxRate);
+
+                    //var currency = await _currencyProvider.GetCurrencyByCurrencyCode(externalPurchaseOrder.CurrencyCode);
+                    //var currencyTupples = new Tuple<>
+                    var currencyTuples = new List<Tuple<string, DateTimeOffset>> { new Tuple<string, DateTimeOffset>(externalPurchaseOrder.CurrencyCode, unitPaymentCorrection.CorrectionDate) };
+                    var currency = await _currencyProvider.GetCurrencyByCurrencyCodeDateList(currencyTuples);
+
+                    var currencyRate = currency != null && currency.FirstOrDefault() != null ? (decimal)currency.FirstOrDefault().Rate.GetValueOrDefault() : (decimal)externalPurchaseOrder.CurrencyRate;
+
+                    //if (!externalPurchaseOrder.UseIncomeTax)
+                    //    incomeTaxRate = 1;
+                    //var externalPurchaseOrderDetail = externalPurchaseOrderDetails.FirstOrDefault(f => f.Id.Equals(item.EPODetailId));
+                    var externalPOPriceTotal = externalPurchaseOrderDetails.Where(w => w.ProductId.Equals(unitReceiptNoteItem.ProductId) && w.Id.Equals(unitReceiptNoteItem.EPODetailId)).Sum(s => s.TotalPrice);
+
+
+
+                    int.TryParse(purchaseRequest.CategoryId, out var categoryId);
+                    var category = categories.FirstOrDefault(f => f.Id.Equals(categoryId));
+                    if (category == null)
+                    {
+                        category = new CategoryCOAResult()
+                        {
+                            ImportDebtCOA = "9999.00",
+                            LocalDebtCOA = "9999.00",
+                            PurchasingCOA = "9999.00",
+                            StockCOA = "9999.00"
+                        };
+                    }
+                    else
+                    {
+                        if (string.IsNullOrEmpty(category.ImportDebtCOA))
+                        {
+                            category.ImportDebtCOA = "9999.00";
+                        }
+                        if (string.IsNullOrEmpty(category.LocalDebtCOA))
+                        {
+                            category.LocalDebtCOA = "9999.00";
+                        }
+                        if (string.IsNullOrEmpty(category.PurchasingCOA))
+                        {
+                            category.PurchasingCOA = "9999.00";
+                        }
+                        if (string.IsNullOrEmpty(category.StockCOA))
+                        {
+                            category.StockCOA = "9999.00";
+                        }
+                    }
+
+                    double.TryParse(externalPurchaseOrder.IncomeTaxRate, out var incomeTaxRate);
+                    var grandTotal = Convert.ToDecimal(unitReceiptNoteItem.ReceiptQuantity * unitReceiptNoteItem.PricePerDealUnit * (double)currencyRate);
+                    if (externalPurchaseOrder.UseIncomeTax)
+                    {
+                        int.TryParse(externalPurchaseOrder.IncomeTaxId, out var incomeTaxId);
+                        var incomeTax = incomeTaxes.FirstOrDefault(f => f.Id.Equals(incomeTaxId));
+
+                        if (incomeTax == null || string.IsNullOrWhiteSpace(incomeTax.COACodeCredit))
+                        {
+                            incomeTax = new IncomeTaxCOAResult()
+                            {
+                                COACodeCredit = "9999.00"
+                            };
+                        }
+
+                        var incomeTaxTotal = (decimal)incomeTaxRate / 100 * grandTotal;
+
+                        journalDebitItems.Add(new JournalTransactionItem()
+                        {
+                            COA = new COA()
+                            {
+                                Code = unitReceiptNote.SupplierIsImport ? $"{category.ImportDebtCOA}.{division.COACode}.{unit.COACode}" : $"{category.LocalDebtCOA}.{division.COACode}.{unit.COACode}"
+                            },
+                            Debit = incomeTaxTotal
+                        });
+
+                        journalCreditItems.Add(new JournalTransactionItem()
+                        {
+                            COA = new COA()
+                            {
+                                Code = $"{incomeTax.COACodeCredit}.{division.COACode}.{unit.COACode}"
+                            },
+                            Credit = incomeTaxTotal
+                        });
+                    }
+
+
+                    if (unitReceiptNote.SupplierIsImport && ((decimal)externalPOPriceTotal * currencyRate) > 100000000)
+                    {
+                        //Purchasing Journal Item
+                        journalDebitItems.Add(new JournalTransactionItem()
+                        {
+                            COA = new COA()
+                            {
+                                Code = $"{category.PurchasingCOA}.{division.COACode}.{unit.COACode}"
+                            },
+                            Debit = grandTotal,
+                            Remark = $"- {unitReceiptNoteItem.ProductName}"
+                        });
+
+                        //Debt Journal Item
+                        journalCreditItems.Add(new JournalTransactionItem()
+                        {
+                            COA = new COA()
+                            {
+                                Code = $"{category.ImportDebtCOA}.{division.COACode}.{unit.COACode}"
+                            },
+                            Credit = grandTotal,
+                            Remark = $"- {unitReceiptNoteItem.ProductName}"
+                        });
+
+                        //Stock Journal Item
+                        journalDebitItems.Add(new JournalTransactionItem()
+                        {
+                            COA = new COA()
+                            {
+                                Code = $"{category.StockCOA}.{division.COACode}.{unit.COACode}"
+                            },
+                            Debit = grandTotal,
+                            Remark = $"- {unitReceiptNoteItem.ProductName}"
+                        });
+
+                        //Purchasing Journal Item
+                        journalCreditItems.Add(new JournalTransactionItem()
+                        {
+                            COA = new COA()
+                            {
+                                Code = $"{category.PurchasingCOA}.{division.COACode}.{unit.COACode}"
+                            },
+                            Credit = grandTotal,
+                            Remark = $"- {unitReceiptNoteItem.ProductName}"
+                        });
+                    }
+                    else
+                    {
+                        //Purchasing Journal Item
+                        journalDebitItems.Add(new JournalTransactionItem()
+                        {
+                            COA = new COA()
+                            {
+                                Code = $"{category.PurchasingCOA}.{division.COACode}.{unit.COACode}"
+                            },
+                            Debit = grandTotal,
+                            Remark = $"- {unitReceiptNoteItem.ProductName}"
+                        });
+
+                        if (SpecialCategoryCode.Contains(category.Code))
+                        {
+                            //Stock Journal Item
+                            journalDebitItems.Add(new JournalTransactionItem()
+                            {
+                                COA = new COA()
+                                {
+                                    Code = $"{category.StockCOA}.{division.COACode}.{unit.COACode}"
+                                },
+                                Debit = grandTotal,
+                                Remark = $"- {unitReceiptNoteItem.ProductName}"
+                            });
+                        }
+
+
+                        //Debt Journal Item
+                        journalCreditItems.Add(new JournalTransactionItem()
+                        {
+                            COA = new COA()
+                            {
+                                Code = unitReceiptNote.SupplierIsImport ? $"{category.ImportDebtCOA}.{division.COACode}.{unit.COACode}" : $"{category.LocalDebtCOA}.{division.COACode}.{unit.COACode}"
+                            },
+                            Credit = grandTotal,
+                            Remark = $"- {unitReceiptNoteItem.ProductName}"
+                        });
+
+                        if (SpecialCategoryCode.Contains(category.Code))
+                        {
+                            //Purchasing Journal Item
+                            journalCreditItems.Add(new JournalTransactionItem()
+                            {
+                                COA = new COA()
+                                {
+                                    Code = $"{category.PurchasingCOA}.{division.COACode}.{unit.COACode}"
+                                },
+                                Credit = grandTotal,
+                                Remark = $"- {unitReceiptNoteItem.ProductName}"
+                            });
+                        }
+                    }
+                }
+
+                journalDebitItems = journalDebitItems.GroupBy(grouping => grouping.COA.Code).Select(s => new JournalTransactionItem()
+                {
+                    COA = new COA()
+                    {
+                        Code = s.Key
+                    },
+                    Debit = s.Sum(sum => Math.Round(sum.Debit.GetValueOrDefault(), 4)),
+                    Credit = 0,
+                    Remark = string.Join("\n", s.Select(grouped => grouped.Remark).ToList())
+                }).ToList();
+                journalTransactionToPost.Items.AddRange(journalDebitItems);
+
+                journalCreditItems = journalCreditItems.GroupBy(grouping => grouping.COA.Code).Select(s => new JournalTransactionItem()
+                {
+                    COA = new COA()
+                    {
+                        Code = s.Key
+                    },
+                    Debit = 0,
+                    Credit = s.Sum(sum => Math.Round(sum.Credit.GetValueOrDefault(), 4)),
+                    Remark = string.Join("\n", s.Select(grouped => grouped.Remark).ToList())
+                }).ToList();
+                journalTransactionToPost.Items.AddRange(journalCreditItems);
+
+                if (journalTransactionToPost.Items.Any(item => item.COA.Code.Split(".").FirstOrDefault().Equals("9999")))
+                    journalTransactionToPost.Status = "DRAFT";
+
+                var journalTransactionUri = "journal-transactions";
+                var httpClient = (IHttpClientService)serviceProvider.GetService(typeof(IHttpClientService));
+                var response = await httpClient.PostAsync($"{APIEndpoint.Finance}{journalTransactionUri}", new StringContent(JsonConvert.SerializeObject(journalTransactionToPost).ToString(), Encoding.UTF8, General.JsonMediaType));
+
+                response.EnsureSuccessStatusCode();
+            }
+        }
+
+        //private async Task ReverseJournalTransaction(string referenceNo)
+        //{
+        //    string journalTransactionUri = $"journal-transactions/reverse-transactions/{referenceNo}";
+        //    var httpClient = (IHttpClientService)serviceProvider.GetService(typeof(IHttpClientService));
+        //    var response = await httpClient.PostAsync($"{APIEndpoint.Finance}{journalTransactionUri}", new StringContent(JsonConvert.SerializeObject(new object()).ToString(), Encoding.UTF8, General.JsonMediaType));
+
+        //    response.EnsureSuccessStatusCode();
+        //}
 
         public UnitReceiptNote ReadByURNNo(string uRNNo)
         {

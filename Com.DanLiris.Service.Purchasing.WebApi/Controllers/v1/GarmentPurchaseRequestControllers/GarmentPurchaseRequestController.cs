@@ -396,7 +396,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentPurchaseR
                     }
                 }
 
-                var data = facade.ReadByTags(tags, shipmentFrom, shipmentTo);
+                var data = facade.ReadByTagsOptimized(tags, shipmentFrom, shipmentTo);
                 var newData = mapper.Map<List<GarmentInternalPurchaseOrderViewModel>>(data);
 
                 var info = new Dictionary<string, object>

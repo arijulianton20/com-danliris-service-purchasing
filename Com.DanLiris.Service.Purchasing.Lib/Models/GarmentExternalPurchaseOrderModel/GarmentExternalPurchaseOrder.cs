@@ -8,13 +8,13 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Models.GarmentExternalPurchaseOrde
 {
     public class GarmentExternalPurchaseOrder : BaseModel
     {
-        [MaxLength(255)]
+        [MaxLength(20)]
         public string EPONo { get; set; }
         [MaxLength(255)]
         public string SupplierName { get; set; }
         [MaxLength(255)]
         public int SupplierId { get; set; }
-        [MaxLength(255)]
+        [MaxLength(25)]
         public string SupplierCode { get; set; }
         public bool SupplierImport { get; set; }
 
@@ -29,7 +29,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Models.GarmentExternalPurchaseOrde
         public int PaymentDueDays { get; set; }
         public int CurrencyId { get; set; }
         public double CurrencyRate { get; set; }
-        [MaxLength(256)]
+        [MaxLength(20)]
         public string CurrencyCode { get; set; }
         public bool IsIncomeTax { get; set; }
 

@@ -11,6 +11,7 @@ using System.Data;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -47,14 +48,17 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
         //    }
         //}
 
-        private List<GarmentSupplierViewModel> GetSuppliers(HashSet<long> productIds)
+        private List<GarmentSupplierViewModel> GetSuppliers(string codes)
         {
-            var param = string.Join('&', productIds.Select(id => $"garmentSupplierList[]={id}"));
+            var param = new StringContent(JsonConvert.SerializeObject(codes), Encoding.UTF8, "application/json");
             IHttpClientService httpClient = (IHttpClientService)this.serviceProvider.GetService(typeof(IHttpClientService));
             if (httpClient != null)
             {
-                var response = httpClient.GetAsync($"{APIEndpoint.Core}master/garment-suppliers/byId?{param}").Result.Content.ReadAsStringAsync();
-                Dictionary<string, object> result = JsonConvert.DeserializeObject<Dictionary<string, object>>(response.Result);
+                var garmentSupplierUri = APIEndpoint.Core + $"master/garment-suppliers/byCodes";
+
+                var httpResponse = httpClient.SendAsync(HttpMethod.Get, garmentSupplierUri, param).Result.Content.ReadAsStringAsync();
+                //var response = httpClient.GetAsync($"{APIEndpoint.Core}master/garment-suppliers/byId?{param}").Result.Content.ReadAsStringAsync();
+                Dictionary<string, object> result = JsonConvert.DeserializeObject<Dictionary<string, object>>(httpResponse.Result);
                 List<GarmentSupplierViewModel> viewModel = JsonConvert.DeserializeObject<List<GarmentSupplierViewModel>>(result.GetValueOrDefault("data").ToString());
                 return viewModel;
             }
@@ -63,21 +67,6 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
                 List<GarmentSupplierViewModel> viewModel = null;
                 return viewModel;
             }
-            //var param = string.Join('&', productIds.Select(id => $"garmentSupplierList[]={id}"));
-            //var httpClient = (IHttpClientService)serviceProvider.GetService(typeof(IHttpClientService));
-            //var response = await httpClient.GetAsync($"{APIEndpoint.Core}master/garment-suppliers/byId?{param}");
-            //var content = await response.Content.ReadAsStringAsync();
-
-            //Dictionary<string, object> result = JsonConvert.DeserializeObject<Dictionary<string, object>>(content) ?? new Dictionary<string, object>();
-            //if (response.IsSuccessStatusCode)
-            //{
-            //    List<SupplierViewModel> data = JsonConvert.DeserializeObject<List<SupplierViewModel>>(result.GetValueOrDefault("data").ToString());
-            //    return data;
-            //}
-            //else
-            //{
-            //    throw new Exception(string.Concat("Failed Get Supplier : ", (string)result.GetValueOrDefault("error") ?? "- ", ". Message : ", (string)result.GetValueOrDefault("message") ?? "- ", ". Status : ", response.StatusCode, "."));
-            //}
         }
 
         public List<GarmentBC23ReportViewModel> GetQuery(DateTime? dateFrom, DateTime? dateTo)
@@ -105,8 +94,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
                         };
 
             //var codes = string.Join(",", Query.Select(x => x.SupplierCode).Distinct());
-            HashSet<long> supplierIds = Query.Select(m => m.SupplierId).Distinct().ToHashSet();
-            var suppliers = GetSuppliers(supplierIds);
+            //HashSet<long> supplierIds = Query.Select(m => m.SupplierId).Distinct().ToHashSet();
+            var code1 = string.Join(",", Query.Select(x => x.SupplierCode).ToList());
+            var suppliers = GetSuppliers(code1);
 
             foreach(var i in Query)
             {

@@ -401,6 +401,40 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentBeacukaiFacade
 
         }
 
+        public List<object> ReadBCByPOSerialNumber(string Keyword = null, string Filter = "{}")
+        {
+            //var Query = this.dbSet.Where(entity => entity.IsPosted && !entity.IsClosed && !entity.IsCanceled).Select(entity => new { entity.Id});
+
+            Dictionary<string, string> FilterDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Filter);
+
+            string POSerialNumber = (FilterDictionary["POSerialNumber"] ?? "").Trim();
+            //IQueryable<GarmentExternalPurchaseOrderItem> QueryItem = dbContext.GarmentExternalPurchaseOrderItems.Where(entity=>entity.RONo==RONo ); //CreatedUtc > DateTime(2018, 12, 31)
+
+            var DODetails = dbContext.GarmentDeliveryOrderDetails.Where(o => o.POSerialNumber == POSerialNumber).Select(a => a.GarmentDOItemId);
+
+            var QueryData = (from dod in DODetails
+                            join doi in dbContext.GarmentDeliveryOrderItems on dod equals doi.Id
+                            join DO in dbContext.GarmentDeliveryOrders on doi.GarmentDOId equals DO.Id
+                            join bci in dbContext.GarmentBeacukaiItems on DO.Id equals bci.GarmentDOId
+                            join bc in dbContext.GarmentBeacukais on bci.BeacukaiId equals bc.Id
+                            select new 
+                            {
+                                bc.Id
+                            });
+            var Ids = QueryData.Select(a => a.Id).Distinct().ToList();
+            var data = this.dbSet.Where(o => Ids.Contains(o.Id))
+                .Select(bc => new { bc.Id, bc.BeacukaiNo, bc.BeacukaiDate, bc.CustomsType});
+
+            List<object> ListData = new List<object>();
+            foreach(var item in QueryData)
+            {
+                var custom = data.FirstOrDefault(f => f.Id.Equals(item.Id));
+
+                ListData.Add(new { custom.BeacukaiNo, custom.BeacukaiDate, custom.CustomsType, POSerialNumber });
+            }
+            return ListData.Distinct().ToList();
+        }
+
         //     public async Task<List<ImportValueViewModel>> ReadImportValue(string keyword)
         //     {
         //var query = dbContext.ImportValues.AsQueryable();

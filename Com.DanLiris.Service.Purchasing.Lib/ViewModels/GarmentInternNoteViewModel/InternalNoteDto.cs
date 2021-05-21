@@ -9,34 +9,34 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentInternNoteViewMo
     public class InternalNoteDto
     {
 
-        public InternalNoteDto(GarmentInternNote internalNote, List<GarmentInvoice> internalNoteInvoices)
+        public InternalNoteDto(int internalNoteId, string internalNoteNo, DateTimeOffset internalNoteDate, DateTimeOffset internalNoteDueDate, int supplierId, string supplierName, string supplierCode, int currencyId, string currencyCode, double currencyRate, List<InternalNoteInvoiceDto> internalNoteInvoices)
         {
-            Id = (int)internalNote.Id;
-            DocumentNo = internalNote.INNo;
-            Date = internalNote.INDate;
-            DueDate = internalNote.Items.FirstOrDefault().Details.FirstOrDefault().PaymentDueDate;
-            Supplier = new SupplierDto(internalNote.SupplierId, internalNote.SupplierName, internalNote.SupplierCode);
-            DPP = internalNoteInvoices.Sum(internalNoteInvoice => internalNoteInvoice.TotalAmount);
+            Id = internalNoteId;
+            DocumentNo = internalNoteNo;
+            Date = internalNoteDate;
+            DueDate = internalNoteDueDate;
+            Supplier = new SupplierDto(supplierId, supplierName, supplierCode);
+            DPP = internalNoteInvoices.Sum(internalNoteInvoice => internalNoteInvoice.Invoice.Amount);
 
             TotalAmount = internalNoteInvoices.Sum(element =>
             {
-                var total = element.TotalAmount;
+                var total = element.Invoice.TotalAmount;
 
-                if (element.UseVat && element.IsPayVat)
-                    total += element.TotalAmount * 0.1;
+                if (element.Invoice.UseVAT && element.Invoice.IsPayVAT)
+                    total += element.Invoice.TotalAmount * 0.1;
 
-                if (element.UseIncomeTax && element.IsPayTax)
-                    total -= element.TotalAmount * (element.IncomeTaxRate / 100);
+                if (element.Invoice.UseIncomeTax && element.Invoice.IsPayTax)
+                    total -= element.Invoice.TotalAmount * (element.Invoice.IncomeTaxRate / 100);
 
-                return total;
+                return total + element.Invoice.CorrectionAmount;
             });
 
             VATAmount = internalNoteInvoices.Sum(element =>
             {
                 var total = 0.0;
 
-                if (element.UseVat && element.IsPayVat)
-                    total += element.TotalAmount * 0.1;
+                if (element.Invoice.UseVAT && element.Invoice.IsPayVAT)
+                    total += element.Invoice.TotalAmount * 0.1;
 
                 return total;
             });
@@ -45,59 +45,14 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentInternNoteViewMo
             {
                 var total = 0.0;
 
-                if (element.UseIncomeTax && element.IsPayTax)
-                    total += element.TotalAmount * (element.IncomeTaxRate / 100);
+                if (element.Invoice.UseIncomeTax && element.Invoice.IsPayTax)
+                    total += element.Invoice.TotalAmount * (element.Invoice.IncomeTaxRate / 100);
 
                 return total;
             });
 
-            Currency = new CurrencyDto(internalNote.CurrencyId, internalNote.CurrencyCode, internalNote.CurrencyRate);
-            Items = internalNoteInvoices.Select(internalNoteInvoice => new InternalNoteInvoiceDto(internalNoteInvoice)).ToList();
-        }
-        public InternalNoteDto(GarmentInternNote internalNote, List<GarmentInvoiceInternNoteViewModel> internalNoteInvoices)
-        {
-            Id = (int)internalNote.Id;
-            DocumentNo = internalNote.INNo;
-            Date = internalNote.INDate;
-            DueDate = internalNote.Items.FirstOrDefault().Details.FirstOrDefault().PaymentDueDate;
-            Supplier = new SupplierDto(internalNote.SupplierId, internalNote.SupplierName, internalNote.SupplierCode);
-            DPP = internalNoteInvoices.Sum(internalNoteInvoice => internalNoteInvoice.GarmentInvoices.TotalAmount);
-
-            TotalAmount = internalNoteInvoices.Sum(element =>
-            {
-                var total = element.GarmentInvoices.TotalAmount;
-
-                if (element.GarmentInvoices.UseVat && element.GarmentInvoices.IsPayVat)
-                    total += element.GarmentInvoices.TotalAmount * 0.1;
-
-                if (element.GarmentInvoices.UseIncomeTax && element.GarmentInvoices.IsPayTax)
-                    total -= element.GarmentInvoices.TotalAmount * (element.GarmentInvoices.IncomeTaxRate / 100);
-
-                return total;
-            });
-
-            VATAmount = internalNoteInvoices.Sum(element =>
-            {
-                var total = 0.0;
-
-                if (element.GarmentInvoices.UseVat && element.GarmentInvoices.IsPayVat)
-                    total += element.GarmentInvoices.TotalAmount * 0.1;
-
-                return total;
-            });
-
-            IncomeTaxAmount = internalNoteInvoices.Sum(element =>
-            {
-                var total = 0.0;
-
-                if (element.GarmentInvoices.UseIncomeTax && element.GarmentInvoices.IsPayTax)
-                    total += element.GarmentInvoices.TotalAmount * (element.GarmentInvoices.IncomeTaxRate / 100);
-
-                return total;
-            });
-
-            Currency = new CurrencyDto(internalNote.CurrencyId, internalNote.CurrencyCode, internalNote.CurrencyRate);
-            Items = internalNoteInvoices.Select(internalNoteInvoice => new InternalNoteInvoiceDto(internalNoteInvoice)).ToList();
+            Currency = new CurrencyDto(currencyId, currencyCode, currencyRate);
+            Items = internalNoteInvoices;
         }
 
         public int Id { get; set; }

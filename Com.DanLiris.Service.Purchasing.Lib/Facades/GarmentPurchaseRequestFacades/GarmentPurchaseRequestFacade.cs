@@ -474,7 +474,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentPurchaseRequestFaca
                             )
                         .ToList(),
                 })
-                .Where(m => m.Items.Count > 0);
+                .Where(m => m.Items.Count() > 0);
 
             var IPOModels = new List<GarmentInternalPurchaseOrder>();
 
@@ -1601,6 +1601,379 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentPurchaseRequestFaca
 
         }
 
+        /// <summary>
+        /// optimezed for GetMonitoringPurchaseByUserReportQuery 
+        /// </summary>
+        /// <param name="epono"></param>
+        /// <param name="unit"></param>
+        /// <param name="roNo"></param>
+        /// <param name="article"></param>
+        /// <param name="poSerialNumber"></param>
+        /// <param name="username"></param>
+        /// <param name="doNo"></param>
+        /// <param name="ipoStatus"></param>
+        /// <param name="supplier"></param>
+        /// <param name="status"></param>
+        /// <param name="dateFrom"></param>
+        /// <param name="dateTo"></param>
+        /// <param name="dateFromEx"></param>
+        /// <param name="dateToEx"></param>
+        /// <param name="offset"></param>
+        /// <param name="page"></param>
+        /// <param name="size"></param>
+        /// <returns></returns>
+        private List<MonitoringPurchaseAllUserViewModel> GetMonitoringPurchaseByUserReportQueryOptimized(string epono, string unit, string roNo, string article, string poSerialNumber, string username, string doNo, string ipoStatus, string supplier, string status, DateTime? dateFrom, DateTime? dateTo, DateTimeOffset? dateFromEx, DateTimeOffset? dateToEx, int offset, int page, int size)
+        {
+
+
+            DateTime d1 = dateFrom == null ? new DateTime(1970, 1, 1) : (DateTime)dateFrom;
+            DateTime d2 = dateTo == null ? DateTime.Now : (DateTime)dateTo;
+            DateTimeOffset d3 = dateFromEx == null ? new DateTime(1970, 1, 1) : (DateTimeOffset)dateFromEx;
+            DateTimeOffset d4 = dateToEx == null ? DateTimeOffset.Now : (DateTimeOffset)dateToEx;
+            offset = 7;
+
+            List<MonitoringPurchaseAllUserViewModel> listEPO = new List<MonitoringPurchaseAllUserViewModel>();
+
+            #region join query
+            var Query = (from
+                          a in dbContext.GarmentPurchaseRequests
+                         join b in dbContext.GarmentPurchaseRequestItems on a.Id equals b.GarmentPRId
+                         //internalPO
+                         join l in dbContext.GarmentInternalPurchaseOrderItems on b.Id equals l.GPRItemId into ll
+                         from ipoitem in ll.DefaultIfEmpty()
+                         join c in dbContext.GarmentInternalPurchaseOrders on ipoitem.GPOId equals c.Id into d
+                         from ipo in d.DefaultIfEmpty()
+
+                             //eksternalpo
+                         join e in dbContext.GarmentExternalPurchaseOrderItems on ipo.Id equals e.POId into f
+                         from epo in f.DefaultIfEmpty()
+
+                         join g in dbContext.GarmentExternalPurchaseOrders on epo.GarmentEPOId equals g.Id into gg
+                         from epos in gg.DefaultIfEmpty()
+                             //do
+                         join h in dbContext.GarmentDeliveryOrderDetails on epo.Id equals h.EPOItemId into ii
+                         from dodetail in ii.DefaultIfEmpty()
+
+                         join j in dbContext.GarmentDeliveryOrderItems on dodetail.GarmentDOItemId equals j.Id into hh
+                         from doitem in hh.DefaultIfEmpty()
+
+                         join k in dbContext.GarmentDeliveryOrders on doitem.GarmentDOId equals k.Id into kk
+                         from dos in kk.DefaultIfEmpty()
+
+
+                             //bc
+                         join bcs in dbContext.GarmentBeacukaiItems on dos.Id equals bcs.GarmentDOId into bb
+                         from beacukai in bb.DefaultIfEmpty()
+                         join m in dbContext.GarmentBeacukais on beacukai.BeacukaiId equals m.Id into n
+                         from bc in n.DefaultIfEmpty()
+                             //urn
+                         join q in dbContext.GarmentUnitReceiptNoteItems on dodetail.Id equals q.DODetailId into qq
+                         from unititem in qq.DefaultIfEmpty()
+
+                         join o in dbContext.GarmentUnitReceiptNotes on unititem.URNId equals o.Id into p
+                         from receipt in p.DefaultIfEmpty()
+
+                             //inv
+                         join invd in dbContext.GarmentInvoiceDetails on dodetail.Id equals invd.DODetailId into rr
+                         from invoicedetail in rr.DefaultIfEmpty()
+                         join inv in dbContext.GarmentInvoiceItems on invoicedetail.InvoiceItemId equals inv.Id into r
+                         from invoiceitem in r.DefaultIfEmpty()
+                         join s in dbContext.GarmentInvoices on invoiceitem.InvoiceId equals s.Id into ss
+                         from inv in ss.DefaultIfEmpty()
+                             //intern
+                         join w in dbContext.GarmentInternNoteDetails on invoicedetail.Id equals w.InvoiceDetailId into ww
+                         from internotedetail in ww.DefaultIfEmpty()
+                         join t in dbContext.GarmentInternNoteItems on internotedetail.GarmentItemINId equals t.Id into u
+                         from intern in u.DefaultIfEmpty()
+                         join v in dbContext.GarmentInternNotes on intern.GarmentINId equals v.Id into vv
+                         from internnote in vv.DefaultIfEmpty()
+
+                             //    //corr
+                             //join y in dbContext.GarmentCorrectionNoteItems on dodetail.Id equals y.DODetailId into oo
+                             //from corrItem in oo.DefaultIfEmpty()
+
+                             //join x in dbContext.GarmentCorrectionNotes on corrItem.GCorrectionId equals x.Id into cor
+                             //from correction in cor.DefaultIfEmpty()
+
+                         where
+                         ipoitem.IsDeleted == false && ipo.IsDeleted == false && epo.IsDeleted == false && epos.IsDeleted == false && intern.IsDeleted == false && internnote.IsDeleted == false && internotedetail.IsDeleted == false
+                         && inv.IsDeleted == false && invoiceitem.IsDeleted == false && receipt.IsDeleted == false && unititem.IsDeleted == false && bc.IsDeleted == false
+                          && a.IsDeleted == false && b.IsDeleted == false && ipo.IsDeleted == false && ipoitem.IsDeleted == false
+
+
+                         && (unit == null || (unit != null && unit != "" && a.UnitId == unit))
+                         && (article == null || (article != null && article != "" && a.Article == article))
+                         && (roNo == null || (roNo != null && roNo != "" && a.RONo == roNo))
+                         && (a.Date.Date >= d1 && a.Date.Date <= d2)
+                          //&& (epos.OrderDate >= d3 && epos.OrderDate <= d4)
+                          //&& ((d1 != new DateTime(1970, 1, 1)) ? (a.Date.Date >= d1 && a.Date.Date <= d2) : true)
+
+                          && ((d3 != new DateTime(1970, 1, 1)) ? (epos.OrderDate >= d3 && epos.OrderDate <= d4) : true)
+
+                          && (poSerialNumber == null || (poSerialNumber != null && poSerialNumber != "" && b.PO_SerialNumber == poSerialNumber))
+                          && b.IsUsed == (ipoStatus != "BELUM" && (ipoStatus == "SUDAH" || b.IsUsed))
+
+                          && (username == null || (username != null && username != "" && ipo.CreatedBy == username))
+                          && (status == null || (status != null && status != "" && ipoitem.Status == status))
+
+                          && (epono == null || (epono != null && epono != "" && epos.EPONo == epono))
+                          && (supplier == null || (supplier != null && supplier != "" && epos.SupplierId.ToString() == supplier))
+
+                          && (doNo == null || (doNo != null && doNo != "" && dos.DONo == doNo))
+                          && (receipt != null ? receipt.URNType == "PEMBELIAN" : true)
+
+                         //orderby a.Date descending
+
+                         select new SelectedId
+                         {
+                             PRDate = a.Date,
+                             PRId = a.Id,
+                             PRItemId = b.Id,
+                             POId = ipo == null ? 0 : ipo.Id,
+                             POItemId = ipoitem == null ? 0 : ipoitem.Id,
+                             EPOId = epos == null ? 0 : epos.Id,
+                             EPOItemId = epo == null ? 0 : epo.Id,
+                             DOId = dos == null ? 0 : dos.Id,
+                             DOItemId = doitem == null ? 0 : doitem.Id,
+                             DODetailId = dodetail == null ? 0 : dodetail.Id,
+                             BCId = bc == null ? 0 : bc.Id,
+                             BCItemId = beacukai == null ? 0 : beacukai.Id,
+                             URNId = receipt == null ? 0 : receipt.Id,
+                             URNItemId = unititem == null ? 0 : unititem.Id,
+                             INVId = inv == null ? 0 : inv.Id,
+                             INVItemId = invoiceitem == null ? 0 : invoiceitem.Id,
+                             INVDetailId = invoicedetail == null ? 0 : invoicedetail.Id,
+                             INId = internnote == null ? 0 : internnote.Id,
+                             INItemId = intern == null ? 0 : intern.Id,
+                             INDetailId = internotedetail == null ? 0 : internotedetail.Id
+                         });
+            #endregion
+
+            TotalCountReport = Query.Distinct().OrderByDescending(o => o.PRDate).Count();
+            var queryResult = Query.Distinct().OrderByDescending(o => o.PRDate).Skip((page - 1) * size).Take(size).ToList();
+
+            var purchaseRequestIds = queryResult.Select(s => s.PRId).Distinct().ToList();
+            var purchaseRequests = dbContext.GarmentPurchaseRequests.Include(s=> s.Items).Where(w => purchaseRequestIds.Contains(w.Id)).Select(s => new { s.Id, s.PRNo, s.Date, s.UnitName, s.BuyerCode, s.BuyerName, s.RONo, s.Article, s.ShipmentDate, s.IsUsed }).ToList();
+            var purchaseRequestItemIds = queryResult.Select(s => s.PRItemId).Distinct().ToList();
+            var purchaseRequestItems = dbContext.GarmentPurchaseRequestItems.Where(w => purchaseRequestItemIds.Contains(w.Id)).Select(s => new { s.Id, s.PO_SerialNumber, s.ProductCode, s.ProductName, s.ProductRemark, s.BudgetPrice, s.IsUsed }).ToList();
+
+            var purchaseOrderInternalIds = queryResult.Select(s => s.POId).Distinct().ToList();
+            var purchaseOrderInternals = dbContext.GarmentInternalPurchaseOrders.Where(w => purchaseOrderInternalIds.Contains(w.Id)).Select(s => new { s.Id, s.CreatedUtc, s.CreatedBy }).ToList();
+            var purchaseOrderInternalItemIds = queryResult.Select(s => s.POItemId).Distinct().ToList();
+            var purchaseOrderInternalItems = dbContext.GarmentInternalPurchaseOrderItems.Where(w => purchaseOrderInternalItemIds.Contains(w.Id)).Select(s => new { s.Id, s.Status }).ToList();
+
+            var purchaseOrderExternalIds = queryResult.Select(s => s.EPOId).Distinct().ToList();
+            var purchaseOrderExternals = dbContext.GarmentExternalPurchaseOrders.Where(w => purchaseOrderExternalIds.Contains(w.Id)).Select(s => new { s.Id, s.EPONo, s.OrderDate, s.DeliveryDate, s.SupplierCode, s.SupplierName, s.CurrencyCode, s.CurrencyRate, s.IncomeTaxRate, s.IsIncomeTax, s.IsUseVat, s.PaymentMethod, s.PaymentType, s.PaymentDueDays, s.SupplierImport }).ToList();
+            var purchaseOrderExternalItemIds = queryResult.Select(s => s.EPOItemId).Distinct().ToList();
+            var purchaseOrderExternalItems = dbContext.GarmentExternalPurchaseOrderItems.Where(w => purchaseOrderExternalItemIds.Contains(w.Id)).Select(s => new { s.Id, s.Remark, s.DealQuantity, s.DealUomUnit, s.PricePerDealUnit, s.DefaultQuantity }).ToList();
+
+            var deliveryOrderIds = queryResult.Select(s => s.DOId).Distinct().ToList();
+            var deliveryOrders = dbContext.GarmentDeliveryOrders.Where(w => deliveryOrderIds.Contains(w.Id)).Select(s => new { s.Id, s.DONo, s.DODate, s.ArrivalDate, s.BillNo, s.PaymentBill }).ToList();
+            //var deliveryOrderItemIds = queryResult.Select(s => s.DOItemId).Distinct().ToList();
+            //var deliveryOrderItems = dbContext.GarmentDeliveryOrderItems.Where(w => deliveryOrderItemIds.Contains(w.Id)).Select(s => new { s.Id}).ToList();
+            var deliveryOrderDetailIds = queryResult.Select(s => s.DODetailId).Distinct().ToList();
+            var deliveryOrderDetails = dbContext.GarmentDeliveryOrderDetails.Where(w => deliveryOrderDetailIds.Contains(w.Id)).Select(s => new { s.Id, s.DOQuantity, s.UomUnit, s.DealQuantity, s.PricePerDealUnit }).ToList();
+
+            var customIds = queryResult.Select(s => s.BCId).Distinct().ToList();
+            var customs = dbContext.GarmentBeacukais.Where(w => customIds.Contains(w.Id)).Select(s => new { s.Id, s.BeacukaiNo, s.BeacukaiDate }).ToList();
+            //var customItemIds = queryResult.Select(s => s.BCItemId).Distinct().ToList();
+            //var customItems = dbContext.GarmentBeacukaiItems.Where(w => customItemIds.Contains(w.Id)).Select(s => new { s.Id}).ToList();
+
+            var unitReceiptNoteIds = queryResult.Select(s => s.URNId).Distinct().ToList();
+            var unitReceiptNotes = dbContext.GarmentUnitReceiptNotes.Where(w => unitReceiptNoteIds.Contains(w.Id)).Select(s => new { s.Id, s.URNNo, s.ReceiptDate }).ToList();
+            var unitReceiptNoteItemIds = queryResult.Select(s => s.URNItemId).Distinct().ToList();
+            var unitReceiptNoteItems = dbContext.GarmentUnitReceiptNoteItems.Where(w => unitReceiptNoteItemIds.Contains(w.Id)).Select(s => new { s.Id, s.ReceiptQuantity, s.UomUnit }).ToList();
+
+            var invoiceIds = queryResult.Select(s => s.INVId).Distinct().ToList();
+            var invoices = dbContext.GarmentInvoices.Where(w => invoiceIds.Contains(w.Id)).Select(s => new { s.Id, s.InvoiceNo, s.InvoiceDate, s.IncomeTaxDate, s.IncomeTaxNo, s.IncomeTaxName, s.IncomeTaxRate, s.IsPayTax, s.VatDate, s.VatNo }).ToList();
+            //var invoiceItemIds = queryResult.Select(s => s.INVItemId).Distinct().ToList();
+            //var invoiceItems = dbContext.GarmentInvoiceItems.Where(w => invoiceItemIds.Contains(w.Id)).Select(s => new { s.Id}).ToList();
+            //var invoiceDetailIds = queryResult.Select(s => s.INVDetailId).Distinct().ToList();
+            //var invoiceDetails = dbContext.GarmentInvoiceDetails.Where(w => invoiceDetailIds.Contains(w.Id)).Select(s => new { s.Id}).ToList();
+
+            var internNoteIds = queryResult.Select(s => s.INId).Distinct().ToList();
+            var internNotes = dbContext.GarmentInternNotes.Where(w => internNoteIds.Contains(w.Id)).Select(s => new { s.Id, s.INNo, s.INDate }).ToList();
+            //var internNoteItemIds = queryResult.Select(s => s.INItemId).Distinct().ToList();
+            //var internNoteItems = dbContext.GarmentInternNoteItems.Where(w => internNoteItemIds.Contains(w.Id)).Select(s => new { s.Id}).ToList();
+            var internNoteDetailIds = queryResult.Select(s => s.INDetailId).Distinct().ToList();
+            var internNoteDetails = dbContext.GarmentInternNoteDetails.Where(w => internNoteDetailIds.Contains(w.Id)).Select(s => new { s.Id, s.Quantity, s.PricePerDealUnit, s.PaymentDueDate }).ToList();
+
+            var corrections = dbContext.GarmentCorrectionNotes.Where(w => deliveryOrderIds.Contains(w.DOId)).Select(s => new { s.Id, s.DOId, s.CorrectionNo, s.CorrectionType, s.CorrectionDate }).ToList();
+            var correctionIds = corrections.Select(s => s.Id).ToList();
+            var correctionItems = dbContext.GarmentCorrectionNoteItems.Where(w => correctionIds.Contains(w.GCorrectionId)).Select(s => new { s.GCorrectionId, s.DODetailId, s.PriceTotalAfter, s.PriceTotalBefore, s.Quantity }).ToList();
+
+            int i = ((page - 1) * size) + 1;
+            foreach (var item in queryResult)
+            {
+                var purchaseRequest = purchaseRequests.FirstOrDefault(f => f.Id.Equals(item.PRId));
+                var purchaseRequestItem = purchaseRequestItems.FirstOrDefault(f => f.Id.Equals(item.PRItemId));
+
+                var purchaseOrderInternal = purchaseOrderInternals.FirstOrDefault(f => f.Id.Equals(item.POId));
+                var purchaseOrderInternalItem = purchaseOrderInternalItems.FirstOrDefault(f => f.Id.Equals(item.POItemId));
+
+                var purchaseOrderExternal = purchaseOrderExternals.FirstOrDefault(f => f.Id.Equals(item.EPOId));
+                var purchaseOrderExternalItem = purchaseOrderExternalItems.FirstOrDefault(f => f.Id.Equals(item.EPOItemId));
+
+                var deliveryOrder = deliveryOrders.FirstOrDefault(f => f.Id.Equals(item.DOId));
+                //var deliveryOrderItem = deliveryOrderItems.FirstOrDefault(f => f.Id.Equals(item.DOItemId));
+                var deliveryOrderDetail = deliveryOrderDetails.FirstOrDefault(f => f.Id.Equals(item.DODetailId));
+
+                var custom = customs.FirstOrDefault(f => f.Id.Equals(item.BCId));
+                //var customItem = customItems.FirstOrDefault(f => f.Id.Equals(item.BCItemId));
+
+                var unitReceiptNote = unitReceiptNotes.FirstOrDefault(f => f.Id.Equals(item.URNId));
+                var unitReceiptNoteItem = unitReceiptNoteItems.FirstOrDefault(f => f.Id.Equals(item.URNItemId));
+
+                var invoice = invoices.FirstOrDefault(f => f.Id.Equals(item.INVId));
+                //var invoiceItem = invoiceItems.FirstOrDefault(f => f.Id.Equals(item.INVItemId));
+                //var invoiceDetail = invoiceDetails.FirstOrDefault(f => f.Id.Equals(item.INVDetailId));
+
+                var internNote = internNotes.FirstOrDefault(f => f.Id.Equals(item.INId));
+                //var internNoteItem = internNoteItems.FirstOrDefault(f => f.Id.Equals(item.INItemId));
+                var internNoteDetail = internNoteDetails.FirstOrDefault(f => f.Id.Equals(item.INDetailId));
+
+                var selectedCorrections = corrections.Where(w => w.DOId.Equals(item.DOId)).ToList();
+                var selectedCorrectionIds = selectedCorrections.Select(s => s.Id).ToList();
+                var selectedCorrectionItems = correctionItems.Where(w => selectedCorrectionIds.Contains(w.GCorrectionId)).ToList();
+
+                var correctionNoList = new List<string>();
+                var correctionDateList = new List<string>();
+                var correctionRemarkList = new List<string>();
+                var correctionNominalList = new List<string>();
+                int j = 1;
+                foreach (var selectedCorrection in selectedCorrections)
+                {
+
+                    var selectedCorrectionItem = selectedCorrectionItems.FirstOrDefault(f => f.GCorrectionId.Equals(selectedCorrection.Id) && f.DODetailId.Equals(item.DODetailId));
+                    if (selectedCorrectionItem != null)
+                    {
+                        correctionNoList.Add($"{j}. {selectedCorrection.CorrectionNo}");
+                        correctionRemarkList.Add($"{j}. {selectedCorrection.CorrectionType}");
+                        correctionDateList.Add($"{j}. {selectedCorrection.CorrectionDate.ToString("dd MMMM yyyy", CultureInfo.InvariantCulture)}");
+
+                        switch (selectedCorrection.CorrectionType)
+                        {
+                            case "Harga Total":
+                                correctionNominalList.Add($"{j}. {string.Format("{0:N2}", selectedCorrectionItem.PriceTotalAfter - selectedCorrectionItem.PriceTotalBefore)}");
+                                break;
+                            case "Harga Satuan":
+                                correctionNominalList.Add($"{j}. {string.Format("{0:N2}", (selectedCorrectionItem.PriceTotalAfter - selectedCorrectionItem.PriceTotalBefore) * selectedCorrectionItem.Quantity)}");
+                                break;
+                            case "Jumlah":
+                                correctionNominalList.Add($"{j}. {string.Format("{0:N2}", selectedCorrectionItem.PriceTotalAfter)}");
+                                break;
+                            default:
+                                break;
+                        }
+                        j++;
+                    }
+                }
+
+                listEPO.Add(
+                    new MonitoringPurchaseAllUserViewModel
+                    {
+                        index = i,
+                        poextNo = purchaseOrderExternal?.EPONo,
+                        poExtDate = purchaseOrderExternal == null ? "" : purchaseOrderExternal.OrderDate.AddHours(offset).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture),
+                        deliveryDate = purchaseOrderExternal == null ? "" : purchaseOrderExternal.DeliveryDate.AddHours(offset).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture),
+                        supplierCode = purchaseOrderExternal == null ? "" : purchaseOrderExternal.SupplierCode,
+                        supplierName = purchaseOrderExternal == null ? "" : purchaseOrderExternal.SupplierName,
+                        prNo = purchaseRequest.PRNo,
+                        poSerialNumber = purchaseRequestItem.PO_SerialNumber,
+                        prDate = purchaseRequest.Date.AddHours(offset).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture),
+                        PrDate = purchaseRequest.Date,
+                        unitName = purchaseRequest.UnitName,
+                        buyerCode = purchaseRequest.BuyerCode,
+                        buyerName = purchaseRequest.BuyerName,
+                        ro = purchaseRequest.RONo,
+                        article = purchaseRequest.Article,
+                        shipmentDate = purchaseRequest.ShipmentDate.AddHours(offset).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture),
+                        productCode = purchaseRequestItem.ProductCode,
+                        productName = purchaseRequestItem.ProductName,
+                        prProductRemark = purchaseRequestItem.ProductRemark,
+                        poProductRemark = purchaseOrderExternalItem == null ? "" : purchaseOrderExternalItem.Remark,
+                        poDefaultQty = purchaseOrderExternalItem == null ? 0 : purchaseOrderExternalItem.DefaultQuantity,
+                        poDealQty = purchaseOrderExternalItem == null ? 0 : purchaseOrderExternalItem.DealQuantity,
+                        poDealUomUnit = purchaseOrderExternalItem == null ? "" : purchaseOrderExternalItem.DealUomUnit,
+                        prBudgetPrice = purchaseRequestItem.BudgetPrice,
+                        poPricePerDealUnit = purchaseOrderExternalItem == null ? 0 : purchaseOrderExternalItem.PricePerDealUnit,
+                        totalNominalPO = purchaseOrderExternalItem == null ? "" : string.Format("{0:N2}", purchaseOrderExternalItem.DealQuantity * purchaseOrderExternalItem.PricePerDealUnit),
+                        TotalNominalPO = purchaseOrderExternalItem == null ? 0 : purchaseOrderExternalItem.DealQuantity * purchaseOrderExternalItem.PricePerDealUnit,
+                        poCurrencyCode = purchaseOrderExternal == null ? "" : purchaseOrderExternal.CurrencyCode,
+                        poCurrencyRate = purchaseOrderExternal == null ? 0 : purchaseOrderExternal.CurrencyRate,
+                        totalNominalRp = purchaseOrderExternalItem == null && purchaseOrderExternal == null ? "" : string.Format("{0:N2}", purchaseOrderExternalItem.DealQuantity * purchaseOrderExternalItem.PricePerDealUnit * purchaseOrderExternal.CurrencyRate),
+                        TotalNominalRp = purchaseOrderExternal == null && purchaseOrderExternalItem == null ? 0 : purchaseOrderExternalItem.DealQuantity * purchaseOrderExternalItem.PricePerDealUnit * purchaseOrderExternal.CurrencyRate,
+                        incomeTaxRate = purchaseOrderExternal == null ? "" : purchaseOrderExternal.IncomeTaxRate?.ToString(),
+                        paymentMethod = purchaseOrderExternal == null ? "" : purchaseOrderExternal.PaymentMethod?.ToString(),
+                        paymentType = purchaseOrderExternal == null ? "" : purchaseOrderExternal.PaymentType?.ToString(),
+                        paymentDueDays = purchaseOrderExternal == null ? 0 : purchaseOrderExternal.PaymentDueDays,
+                        ipoDate = purchaseOrderInternal == null ? "" : purchaseOrderInternal.CreatedUtc.ToString("dd MMMM yyyy", CultureInfo.InvariantCulture),
+                        username = purchaseOrderInternal == null ? "" : purchaseOrderInternal.CreatedBy,
+                        useIncomeTax = purchaseOrderExternal == null ? "" : purchaseOrderExternal.IsIncomeTax ? "YA" : "TIDAK",
+                        useVat = purchaseOrderExternal == null ? "" : purchaseOrderExternal.IsUseVat ? "YA" : "TIDAK",
+                        useInternalPO = purchaseRequestItem.IsUsed ? "YA" : "TIDAK",
+                        status = purchaseOrderInternalItem == null ? "" : purchaseOrderInternalItem.Status,
+                        doNo = deliveryOrder == null ? "" : deliveryOrder.DONo,
+                        doDate = deliveryOrder == null ? "" : deliveryOrder.DODate.AddHours(offset).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture),
+                        arrivalDate = deliveryOrder == null ? "" : deliveryOrder.ArrivalDate.AddHours(offset).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture),
+                        doQty = deliveryOrderDetail == null ? 0 : deliveryOrderDetail.DOQuantity,
+                        doUomUnit = deliveryOrderDetail == null ? "" : deliveryOrderDetail.UomUnit,
+                        remainingDOQty = deliveryOrderDetail == null ? 0 : deliveryOrderDetail.DealQuantity - deliveryOrderDetail.DOQuantity,
+                        bcNo = custom == null ? "" : custom.BeacukaiNo,
+                        bcDate = custom == null ? "" : custom.BeacukaiDate.AddHours(offset).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture),
+                        receiptNo = unitReceiptNote == null ? "" : unitReceiptNote.URNNo,
+                        receiptDate = unitReceiptNote == null ? "" : unitReceiptNote.ReceiptDate.AddHours(offset).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture),
+                        receiptQty = unitReceiptNoteItem == null ? "" : string.Format("{0:N2}", unitReceiptNoteItem.ReceiptQuantity),
+                        ReceiptQty = unitReceiptNoteItem == null ? 0 : unitReceiptNoteItem.ReceiptQuantity,
+                        receiptUomUnit = unitReceiptNoteItem == null ? "" : unitReceiptNoteItem.UomUnit,
+                        invoiceNo = invoice == null ? "" : invoice.InvoiceNo,
+                        invoiceDate = invoice == null ? "" : invoice.InvoiceDate.AddHours(offset).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture),
+                        incomeTaxDate = invoice == null ? "" : invoice.IncomeTaxDate.AddHours(offset).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture),
+                        incomeTaxNo = invoice == null ? "" : invoice.IncomeTaxNo,
+                        incomeTaxType = invoice == null ? "" : invoice.IncomeTaxName,
+                        incomeTaxtRate = invoice == null ? "" : invoice.IncomeTaxRate.ToString(),
+                        incomeTaxtValue = invoice != null && invoice.IsPayTax ? string.Format("{0:N2}", deliveryOrderDetail.DOQuantity * deliveryOrderDetail.PricePerDealUnit * invoice.IncomeTaxRate / 100) : "",
+                        vatNo = invoice == null ? "" : invoice.VatNo,
+                        vatDate = invoice == null ? "" : invoice.VatDate.AddHours(offset).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture),
+                        vatValue = invoice != null && invoice.IsPayTax ? string.Format("{0:N2}", deliveryOrderDetail.DOQuantity * deliveryOrderDetail.PricePerDealUnit * 0.1) : "",
+                        internNo = internNote == null ? "" : internNote.INNo,
+                        internDate = internNote == null ? "" : internNote.INDate.AddHours(offset).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture),
+                        internTotal = internNoteDetail == null ? "" : string.Format("{0:N2}", internNoteDetail.Quantity * internNoteDetail.PricePerDealUnit),
+                        InternTotal = internNoteDetail == null ? 0 : internNoteDetail.Quantity * internNoteDetail.PricePerDealUnit,
+                        maturityDate = internNoteDetail == null ? "" : internNoteDetail.PaymentDueDate.AddHours(offset).ToString("dd MMMM yyyy", CultureInfo.InvariantCulture),
+                        dodetailId = deliveryOrderDetail == null ? 0 : deliveryOrderDetail.Id,
+                        correctionNoteNo = string.Join("\n", correctionNoList),
+                        correctionDate = string.Join("\n", correctionDateList),
+                        correctionRemark = string.Join("\n", correctionRemarkList),
+                        valueCorrection = string.Join("\n", correctionNominalList),
+                        Bon = deliveryOrder == null ? "" : deliveryOrder.BillNo,
+                        BonSmall = deliveryOrder == null ? "" : deliveryOrder.PaymentBill,
+                        SupplierImport = purchaseOrderExternal == null ? "" : purchaseOrderExternal.SupplierImport == true ? "IMPORT" : "LOCAL"
+                    });
+                i++;
+            }
+            //foreach (var corrections in qry.Distinct())
+            //{
+            //    foreach (MonitoringPurchaseAllUserViewModel data in Query.ToList())
+            //    {
+            //        if (corrections.Key == data.dodetailId)
+            //        {
+            //            data.correctionNoteNo = qry[data.dodetailId];
+            //            data.correctionRemark = qryType[data.dodetailId];
+            //            data.valueCorrection = (qryQty[data.dodetailId]);
+            //            data.correctionDate = qryDate[data.dodetailId];
+            //            listData.Add(data);
+            //            break;
+            //        }
+            //    }
+            //}
+
+            //var op = qry;
+            return listEPO;
+            //return listEPO.AsQueryable();
+
+        }
+
 
         public Tuple<List<MonitoringPurchaseAllUserViewModel>, int> GetMonitoringPurchaseByUserReport(string epono, string unit, string roNo, string article, string poSerialNumber, string username, string doNo, string ipoStatus, string supplier, string status, DateTime? dateFrom, DateTime? dateTo, DateTime? dateFromEx, DateTime? dateToEx, int page, int size, string Order, int offset)
         {
@@ -1735,6 +2108,124 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentPurchaseRequestFaca
             {
                 throw new Exception(string.Concat("Error from '", GarmentPreSalesContractUri, "' : ", (string)result.GetValueOrDefault("error") ?? "- ", ". Message : ", (string)result.GetValueOrDefault("message") ?? "- ", ". Status : ", response.StatusCode, "."));
             }
+        }
+
+        public List<GarmentInternalPurchaseOrder> ReadByTagsOptimized(string tags, DateTimeOffset shipmentDateFrom, DateTimeOffset shipmentDateTo)
+        {
+            IQueryable<GarmentPurchaseRequest> Models = this.dbSet.AsNoTracking().AsQueryable();
+
+            if (shipmentDateFrom != DateTimeOffset.MinValue && shipmentDateTo != DateTimeOffset.MinValue)
+            {
+                Models = Models.Where(m => m.ShipmentDate >= shipmentDateFrom && m.ShipmentDate <= shipmentDateTo);
+            }
+
+            string[] stringKeywords = new string[3];
+
+            if (tags != null)
+            {
+                List<string> Keywords = new List<string>();
+
+                if (tags.Contains("#"))
+                {
+                    Keywords = tags.Split("#").ToList();
+                    Keywords.RemoveAt(0);
+                    Keywords = Keywords.Take(stringKeywords.Length).ToList();
+                }
+                else
+                {
+                    Keywords.Add(tags);
+                }
+
+                for (int n = 0; n < Keywords.Count; n++)
+                {
+                    stringKeywords[n] = Keywords[n].Trim().ToLower();
+                }
+            }
+
+            Models = Models
+                .Where(m =>
+                    (string.IsNullOrWhiteSpace(stringKeywords[0]) || m.UnitName.ToLower().Contains(stringKeywords[0])) &&
+                    (string.IsNullOrWhiteSpace(stringKeywords[1]) || m.BuyerName.ToLower().Contains(stringKeywords[1])) &&
+                    m.IsUsed == false &&
+                    m.IsValidated == true
+                    )
+                .Select(m => new GarmentPurchaseRequest
+                {
+                    Id = m.Id,
+                    Date = m.Date,
+                    PRNo = m.PRNo,
+                    RONo = m.RONo,
+                    BuyerId = m.BuyerId,
+                    BuyerCode = m.BuyerCode,
+                    BuyerName = m.BuyerName,
+                    Article = m.Article,
+                    ExpectedDeliveryDate = m.ExpectedDeliveryDate,
+                    ShipmentDate = m.ShipmentDate,
+                    UnitId = m.UnitId,
+                    UnitCode = m.UnitCode,
+                    UnitName = m.UnitName,
+                    Items = m.Items
+                        .Where(i =>
+                            i.IsUsed == false &&
+                            (string.IsNullOrWhiteSpace(stringKeywords[2]) || i.CategoryName.ToLower().Contains(stringKeywords[2]))
+                            ).ToList(),
+                });
+
+
+            var IPOModels = new List<GarmentInternalPurchaseOrder>();
+
+            var data = Models.ToList();
+
+            foreach (var model in data)
+            {
+                if (model.Items.Count() > 0)
+                {
+                    foreach (var item in model.Items)
+                    {
+                        var IPOModel = new GarmentInternalPurchaseOrder
+                        {
+                            PRId = model.Id,
+                            PRDate = model.Date,
+                            PRNo = model.PRNo,
+                            RONo = model.RONo,
+                            BuyerId = model.BuyerId,
+                            BuyerCode = model.BuyerCode,
+                            BuyerName = model.BuyerName,
+                            Article = model.Article,
+                            ExpectedDeliveryDate = model.ExpectedDeliveryDate,
+                            ShipmentDate = model.ShipmentDate,
+                            UnitId = model.UnitId,
+                            UnitCode = model.UnitCode,
+                            UnitName = model.UnitName,
+                            //IsPosted = false,
+                            //IsClosed = false,
+                            //Remark = "",
+                            Items = new List<GarmentInternalPurchaseOrderItem>
+                            {
+                                new GarmentInternalPurchaseOrderItem
+                                {
+                                    GPRItemId = item.Id,
+                                    PO_SerialNumber = item.PO_SerialNumber,
+                                    ProductId = item.ProductId,
+                                    ProductCode = item.ProductCode,
+                                    ProductName = item.ProductName,
+                                    Quantity = item.Quantity,
+                                    BudgetPrice = item.BudgetPrice,
+                                    UomId = item.UomId,
+                                    UomUnit = item.UomUnit,
+                                    CategoryId = item.CategoryId,
+                                    CategoryName = item.CategoryName,
+                                    ProductRemark = item.ProductRemark,
+                                    //Status = "PO Internal belum diorder"
+                                }
+                            }
+                        };
+                        IPOModels.Add(IPOModel);
+                    }
+                }
+            }
+
+            return IPOModels;
         }
     }
 

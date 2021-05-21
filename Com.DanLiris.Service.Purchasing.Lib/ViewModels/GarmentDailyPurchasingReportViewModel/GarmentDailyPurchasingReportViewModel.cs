@@ -27,5 +27,6 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentDailyPurchasingR
         public double Amount4 { get; set; }
         public double Amount5 { get; set; }
         public double Amount6 { get; set; }
+        public double Amount7 { get; set; }
     }
 }

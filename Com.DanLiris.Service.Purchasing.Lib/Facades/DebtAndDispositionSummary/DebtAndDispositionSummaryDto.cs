@@ -23,16 +23,20 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.DebtAndDispositionSummary
         public double DispositionPrice { get; set; }
         public double DispositionQuantity { get; set; }
         public DateTimeOffset DueDate { get; set; }
-        public double Total { get;  set; }
+        public double Total { get; set; }
         public double DispositionTotal { get; set; }
         public double DebtTotal { get; set; }
-        public string IncomeTaxBy { get; internal set; }
-        public bool UseIncomeTax { get; internal set; }
-        public string IncomeTaxRate { get; internal set; }
-        public bool UseVat { get; internal set; }
-        public int CategoryLayoutIndex { get; internal set; }
-        public string AccountingUnitName { get; internal set; }
-        public string AccountingUnitId { get; internal set; }
-
+        public string IncomeTaxBy { get; set; }
+        public bool UseIncomeTax { get; set; }
+        public string IncomeTaxRate { get; set; }
+        public bool UseVat { get; set; }
+        public int CategoryLayoutIndex { get; set; }
+        public string AccountingUnitName { get; set; }
+        public string AccountingUnitId { get; set; }
+        public DateTimeOffset UPODate { get; set; }
+        public string UPONo { get; set; }
+        public string URNNo { get; set; }
+        public string InvoiceNo { get; set; }
+        public string SupplierName { get; set; }
     }
 }

@@ -141,44 +141,44 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades
             return new UnitPaymentOrderDataUtil(unitReceiptNoteDataUtil, facade);
         }
 
-        [Fact]
-        public async Task Should_Success_GetReport()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
-            var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
+        //[Fact]
+        //public async Task Should_Success_GetReport()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
+        //    var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
 
-            var reportService = new UnitPaymentOrderExpeditionReportService(dbContext);
-            var dateTo = DateTime.UtcNow.AddDays(1);
-            var dateFrom = dateTo.AddDays(-30);
-            var results = await reportService.GetReport(modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, modelLocalSupplier.Position, dateFrom, dateTo, "{'Date': 'desc'}", 1, 25);
+        //    var reportService = new UnitPaymentOrderExpeditionReportService(dbContext);
+        //    var dateTo = DateTime.UtcNow.AddDays(1);
+        //    var dateFrom = dateTo.AddDays(-30);
+        //    var results = await reportService.GetReport(modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, modelLocalSupplier.Position, dateFrom, dateTo, "{'Date': 'desc'}", 1, 25);
 
 
 
-            Assert.NotNull(results);
-        }
+        //    Assert.NotNull(results);
+        //}
 
-        [Fact]
-        public async Task Should_Success_GetReport_Excel()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
-            var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
+        //[Fact]
+        //public async Task Should_Success_GetReport_Excel()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
+        //    var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
 
-            var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
-            var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
-            await sendToVerificationDataUtil.GetTestData(purchasingDocumentExpedition);
+        //    var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
+        //    var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
+        //    await sendToVerificationDataUtil.GetTestData(purchasingDocumentExpedition);
 
-            var reportService = new UnitPaymentOrderExpeditionReportService(dbContext);
-            var dateTo = modelLocalSupplier.Date;
-            var dateFrom = modelLocalSupplier.Date;
-            var results = await reportService.GetExcel(modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, modelLocalSupplier.Position, dateFrom, dateTo, "{'Date': 'desc'}");
+        //    var reportService = new UnitPaymentOrderExpeditionReportService(dbContext);
+        //    var dateTo = modelLocalSupplier.Date;
+        //    var dateFrom = modelLocalSupplier.Date;
+        //    var results = await reportService.GetExcel(modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, modelLocalSupplier.Position, dateFrom, dateTo, "{'Date': 'desc'}");
 
-            Assert.NotNull(results);
-        }
+        //    Assert.NotNull(results);
+        //}
 
         [Fact]
         public void Should_Success_InstantiateReport()

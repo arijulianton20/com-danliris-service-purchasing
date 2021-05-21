@@ -16,5 +16,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Services.GarmentDebtBalance
         Task<int> EmptyInvoice(int deliveryOrderId);
         Task<int> EmptyInternalNote(int deliveryOrderId);
         Task<int> EmptyBankExpenditureNote(int deliveryOrderId);
+
+        List<DispositionDto> GetDispositions(string keyword);
     }
 }

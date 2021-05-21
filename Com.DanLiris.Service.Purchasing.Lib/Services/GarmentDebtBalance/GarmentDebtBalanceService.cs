@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -13,10 +14,12 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Services.GarmentDebtBalance
     public class GarmentDebtBalanceService : IGarmentDebtBalanceService
     {
         private readonly IServiceProvider _serviceProvider;
+        private readonly PurchasingDbContext _dbContext;
 
         public GarmentDebtBalanceService(IServiceProvider serviceProvider)
         {
             _serviceProvider = serviceProvider;
+            _dbContext = serviceProvider.GetService<PurchasingDbContext>();
         }
 
         public async Task<int> CreateFromCustoms(CustomsFormDto form)
@@ -53,6 +56,73 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Services.GarmentDebtBalance
             var response = await httpClient.PutAsync($"{APIEndpoint.Finance}{uri}{deliveryOrderId}", new StringContent(JsonConvert.SerializeObject(new { }).ToString(), Encoding.UTF8, General.JsonMediaType));
 
             return (int)response.StatusCode;
+        }
+
+        public List<DispositionDto> GetDispositions(string keyword)
+        {
+            var result = new List<DispositionDto>();
+
+            if (!string.IsNullOrWhiteSpace(keyword))
+            {
+                var dispositions = _dbContext.GarmentDispositionPurchases.Where(entity => entity.DispositionNo.Contains(keyword)).Select(entity => new { entity.Id, entity.DispositionNo }).ToList();
+
+                if (dispositions.Count > 0)
+                {
+                    var dispositionIds = dispositions.Select(element => element.Id).ToList();
+                    var dispositionItems = _dbContext.GarmentDispositionPurchaseItems.Where(entity => dispositionIds.Contains(entity.GarmentDispositionPurchaseId)).Select(entity => new { entity.Id, entity.GarmentDispositionPurchaseId, entity.EPOId }).ToList();
+                    var epoIds = dispositionItems.Select(element => (long)element.EPOId).ToList();
+
+                    var deliveryOrderItems = _dbContext.GarmentDeliveryOrderItems.Where(entity => epoIds.Contains(entity.EPOId)).Select(element => new { element.Id, element.GarmentDOId, element.EPOId }).ToList();
+                    var deliveryOrderItemIds = deliveryOrderItems.Select(element => element.Id).ToList();
+                    var deliveryOrderIds = deliveryOrderItems.Select(element => element.GarmentDOId).ToList();
+                    var deliveryOrders = _dbContext.GarmentDeliveryOrders.Where(entity => deliveryOrderIds.Contains(entity.Id)).Select(entity => new { entity.Id, entity.DONo, entity.BillNo, entity.PaymentBill, entity.SupplierCode, entity.SupplierName, entity.DOCurrencyCode, entity.DOCurrencyRate, entity.TotalAmount }).ToList();
+                    var deliveryOrderDetails = _dbContext.GarmentDeliveryOrderDetails.Where(entity => deliveryOrderItemIds.Contains(entity.GarmentDOItemId)).Select(entity => new { entity.Id, entity.GarmentDOItemId }).ToList();
+                    var deliveryOrderDetailIds = deliveryOrderDetails.Select(element => element.Id).ToList();
+                    var customsDocumentItems = _dbContext.GarmentBeacukaiItems.Where(entity => deliveryOrderIds.Contains(entity.GarmentDOId)).Select(entity => new { entity.Id, entity.GarmentDOId }).ToList();
+                    var internalNoteDetails = _dbContext.GarmentInternNoteDetails.Where(entity => deliveryOrderIds.Contains(entity.DOId)).Select(entity => new { entity.Id, entity.GarmentItemINId, entity.DOId }).ToList();
+                    var internalNoteItemIds = internalNoteDetails.Select(element => element.GarmentItemINId).ToList();
+                    var internalNoteItems = _dbContext.GarmentInternNoteItems.Where(entity => internalNoteItemIds.Contains(entity.Id)).Select(entity => new { entity.Id, entity.GarmentINId }).ToList();
+                    var internalNoteIds = internalNoteItems.Select(element => element.GarmentINId).ToList();
+                    var internalNotes = _dbContext.GarmentInternNotes.Where(entity => internalNoteIds.Contains(entity.Id)).Select(entity => new { entity.Id, entity.INNo }).ToList();
+
+                    foreach (var disposition in dispositions)
+                    {
+                        var dto = new DispositionDto(disposition.Id, disposition.DispositionNo, new List<MemoDetail>());
+
+                        var dispositionEPOIds = dispositionItems.Where(element => element.GarmentDispositionPurchaseId == disposition.Id).Select(element => (long)element.EPOId).ToList();
+                        var dispositionDOIds = deliveryOrderItems.Where(element => dispositionEPOIds.Contains(element.EPOId)).Select(element => element.GarmentDOId).ToList();
+                        var dispositionDeliveryOrders = deliveryOrders.Where(element => dispositionDOIds.Contains(element.Id)).ToList();
+
+                        foreach (var dispositionDeliveryOrder in dispositionDeliveryOrders)
+                        {
+                            var purchasingAmount = dispositionDeliveryOrder.TotalAmount;
+
+                            var currencyRate = dispositionDeliveryOrder.DOCurrencyRate.GetValueOrDefault();
+                            if (currencyRate <= 0 )
+                            {
+                                currencyRate = 1;
+                            }
+
+                            if (customsDocumentItems.Any(element => element.GarmentDOId == dispositionDeliveryOrder.Id))
+                            {
+                                var internalNoteNo = "";
+                                var internalNoteDetail = internalNoteDetails.FirstOrDefault(element => element.DOId == dispositionDeliveryOrder.Id);
+                                if (internalNoteDetail != null)
+                                {
+                                    var internalNoteItem = internalNoteItems.FirstOrDefault(element => element.Id == internalNoteDetail.GarmentItemINId);
+                                    var internalNote = internalNotes.FirstOrDefault(element => element.Id == internalNoteItem.GarmentINId);
+                                    internalNoteNo = internalNote.INNo;
+
+                                }
+                                dto.MemoDetails.Add(new MemoDetail((int)dispositionDeliveryOrder.Id, dispositionDeliveryOrder.DONo, dispositionDeliveryOrder.SupplierCode, dispositionDeliveryOrder.SupplierName, internalNoteNo, dispositionDeliveryOrder.BillNo, dispositionDeliveryOrder.PaymentBill, dispositionDeliveryOrder.DOCurrencyCode, currencyRate, dispositionDeliveryOrder.TotalAmount));
+                            }
+                        }
+                        result.Add(dto);
+                    }
+                }
+            }
+
+            return result.Where(element => element.MemoDetails.Count > 0).ToList();
         }
 
         public async Task<int> RemoveCustoms(int deliveryOrderId)

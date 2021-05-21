@@ -235,6 +235,38 @@ namespace Com.DanLiris.Service.Purchasing.Lib
                 .IsUnique()
                 .HasFilter("[IsDeleted]=(0) AND [CreatedUtc]>CONVERT([datetime2],'2020-02-01 00:00:00.0000000')");
             #endregion
+
+            #region indexes
+            modelBuilder.Entity<GarmentInternNote>()
+                .HasIndex(i => new { i.INDate, i.CurrencyId, i.CurrencyCode, i.SupplierId });
+
+            modelBuilder.Entity<GarmentInvoice>()
+                .HasIndex(i => new { i.CurrencyId, i.IncomeTaxId, i.SupplierId, i.InvoiceDate, i.IncomeTaxDate });
+
+            modelBuilder.Entity<GarmentInvoiceItem>()
+                .HasIndex(i => new { i.ArrivalDate, i.DeliveryOrderId, i.DeliveryOrderNo, i.InvoiceId });
+
+            modelBuilder.Entity<GarmentInvoiceDetail>()
+                .HasIndex(i => new { i.EPOId, i.IPOId, i.PRItemId, i.DODetailId, i.ProductId, i.UomId });
+
+            modelBuilder.Entity<GarmentDeliveryOrder>()
+                .HasIndex(i => new { i.ArrivalDate, i.CustomsId, i.DOCurrencyId, i.DODate, i.IncomeTaxId, i.SupplierId });
+
+            modelBuilder.Entity<GarmentDeliveryOrderItem>()
+                .HasIndex(i => new { i.CurrencyId, i.EPOId, i.GarmentDOId });
+
+            modelBuilder.Entity<GarmentDeliveryOrderDetail>()
+                .HasIndex(i => new { i.POId, i.PRId, i.ProductId });
+
+            modelBuilder.Entity<GarmentExternalPurchaseOrder>()
+                .HasIndex(i => new { i.CurrencyId, i.IncomeTaxId, i.SupplierId, i.UENId });
+
+            modelBuilder.Entity<GarmentExternalPurchaseOrderItem>()
+                .HasIndex(i => new { i.POId, i.PRId });
+
+            modelBuilder.Entity<GarmentInternalPurchaseOrderItem>()
+               .HasIndex(i => new { i.CategoryId, i.GPOId, i.ProductId });
+            #endregion
             #region BalanceStock
             //modelBuilder.Entity<BalanceStock>()
             //    .HasIndex(i => i.BalanceStockId)

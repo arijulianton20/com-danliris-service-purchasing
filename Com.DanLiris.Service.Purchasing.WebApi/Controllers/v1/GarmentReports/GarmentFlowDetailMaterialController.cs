@@ -29,7 +29,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentReports
         {
             this.serviceProvider = serviceProvider;
             this.facade = facade;
-            this.identityService = (IdentityService)serviceProvider.GetService(typeof(IdentityService));
+            identityService = (IdentityService)serviceProvider.GetService(typeof(IdentityService));
 
             mapper = (IMapper)serviceProvider.GetService(typeof(IMapper));
         }
@@ -37,13 +37,19 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentReports
         [HttpGet]
         public IActionResult GetReport(string category, string productcode, string unit, DateTimeOffset? dateFrom, DateTimeOffset? dateTo,  int size = 25, int page = 1, string Order = "{}")
         {
+
             if (dateTo == null)
                 dateTo = DateTimeOffset.UtcNow;
 
             if (dateFrom == null)
                 dateFrom = DateTimeOffset.MinValue;
-             int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
+
+            int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
             string accept = Request.Headers["Accept"];
+
+            identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+            identityService.TimezoneOffset = int.Parse(Request.Headers["x-timezone-offset"].First());
+            identityService.Token = Request.Headers["Authorization"].First().Replace("Bearer ", "");
 
             try
             {
@@ -77,6 +83,10 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentReports
 
             if (dateFrom == null)
                 dateFrom = DateTimeOffset.MinValue;
+
+            identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+            identityService.TimezoneOffset = int.Parse(Request.Headers["x-timezone-offset"].First());
+            identityService.Token = Request.Headers["Authorization"].First().Replace("Bearer ", "");
 
             try
             {

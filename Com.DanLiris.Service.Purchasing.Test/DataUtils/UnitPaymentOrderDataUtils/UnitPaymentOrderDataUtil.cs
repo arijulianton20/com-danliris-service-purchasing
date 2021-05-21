@@ -100,14 +100,14 @@ namespace Com.DanLiris.Service.Purchasing.Test.DataUtils.UnitPaymentOrderDataUti
                 TotalIncomeTaxAmount = 0,
                 TotalVatAmount = 0,
 
-                UseIncomeTax = false,
+                UseIncomeTax = true,
                 IncomeTaxId = null,
                 IncomeTaxName = null,
                 IncomeTaxRate = 0,
                 IncomeTaxNo = null,
                 IncomeTaxDate = null,
 
-                UseVat = false,
+                UseVat = true,
                 VatNo = null,
                 VatDate = new DateTimeOffset(),
                 Position = 1,

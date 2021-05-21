@@ -461,7 +461,12 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Report
                 //var unitPaymentOrder = unitPaymentOrders.FirstOrDefault(f => f.URNId.Equals(urnItem.URNId));
                 //var epoItem = epoItems.FirstOrDefault(f => f.epoDetailIds.Contains(urnItem.EPODetailId));
                 //var epoDetail = epoItem.Details.FirstOrDefault(f => f.Id.Equals(urnItem.EPODetailId));
-                var currency = currencies.FirstOrDefault(f => f.Code == item.CurrencyCode);
+                var selectedCurrencies = currencies.Where(element => element.Code == item.CurrencyCode).ToList();
+                var nearestDate = item.ReceiptDate + selectedCurrencies.Min(x => (x.Date - item.ReceiptDate).Duration());
+                var currency = selectedCurrencies.FirstOrDefault(element => element.Date.Date == nearestDate.Date);
+
+                if (currency == null)
+                    currency = currencies.FirstOrDefault(element => element.Code == currency.Code);
 
                 int.TryParse(item.UnitId, out var unitId);
                 var unit = units.FirstOrDefault(element => element.Id == unitId);
@@ -692,7 +697,12 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Report
                 //var unitPaymentOrder = unitPaymentOrders.FirstOrDefault(f => f.URNId.Equals(urnItem.URNId));
                 //var epoItem = epoItems.FirstOrDefault(f => f.epoDetailIds.Contains(urnItem.EPODetailId));
                 //var epoDetail = epoItem.Details.FirstOrDefault(f => f.Id.Equals(urnItem.EPODetailId));
-                var currency = currencies.FirstOrDefault(f => f.Code == item.CurrencyCode);
+                //var selectedCurrencies = currencies.Where(element => element.Code == item.CurrencyCode).ToList();
+                //var currency = selectedCurrencies.OrderBy(entity => (entity.Date - item.ReceiptDate).Duration()).FirstOrDefault();
+                var currency = currencies.Where(entity => entity.Date <= item.ReceiptDate && entity.Code == item.CurrencyCode).OrderByDescending(entity => entity.Date).FirstOrDefault();
+
+                if (currency == null)
+                    currency = currencies.FirstOrDefault(element => element.Code == item.CurrencyCode);
 
                 int.TryParse(item.UnitId, out var unitId);
                 var unit = units.FirstOrDefault(element => element.Id == unitId);

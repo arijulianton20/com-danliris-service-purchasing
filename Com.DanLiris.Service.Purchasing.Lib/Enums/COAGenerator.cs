@@ -332,6 +332,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Enums
         public DateTimeOffset? Date { get; set; }
         public string ReferenceNo { get; set; }
         public List<JournalTransactionItem> Items { get; set; }
+        public string Remark { get; set; }
     }
 
     public class JournalTransactionItem

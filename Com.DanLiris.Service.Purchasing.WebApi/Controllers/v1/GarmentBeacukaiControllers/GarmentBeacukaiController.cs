@@ -200,7 +200,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentBeacukaiC
 		public async Task<IActionResult> Put(int id, [FromBody]GarmentBeacukaiViewModel ViewModel)
 		{
 			try
-		{
+		    {
 				identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
 				identityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");
 
@@ -233,5 +233,28 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentBeacukaiC
 			}
 		}
 
-	}
+        [HttpGet("by-poserialnumber")]
+        public IActionResult UnitDOByRO(string keyword = null, string Filter = "{}")
+        {
+            try
+            {
+                identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
+
+                var result = facade.ReadBCByPOSerialNumber(keyword, Filter);
+
+                Dictionary<string, object> Result =
+                       new ResultFormatter(ApiVersion, General.OK_STATUS_CODE, General.OK_MESSAGE)
+                       .Ok(result);
+                return Ok(Result);
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
+
+    }
 }

@@ -75,10 +75,20 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Utilities.Currencies
 
         public async Task<List<Currency>> GetCurrencyByCurrencyCodeDateList(IEnumerable<Tuple<string, DateTimeOffset>> currencyTuples)
         {
+            currencyTuples = currencyTuples.Distinct();
             var tasks = currencyTuples.Select(s => GetCurrencyByCurrencyCodeDate(s.Item1, s.Item2));
+
+
+            //var result = new List<Currency>();
+            //foreach (var currencyTuple in currencyTuples)
+            //{
+            //    var currency = await GetCurrencyByCurrencyCodeDate(currencyTuple.Item1, currencyTuple.Item2);
+            //    result.Add(currency);
+            //}
 
             var result = await Task.WhenAll(tasks);
 
+            //return result;
             return result.ToList();
         }
 

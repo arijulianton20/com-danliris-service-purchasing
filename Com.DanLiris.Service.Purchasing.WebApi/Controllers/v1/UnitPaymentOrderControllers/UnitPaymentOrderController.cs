@@ -605,5 +605,65 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.UnitPaymentOrder
             }
         }
         #endregion
+
+        #region MonitoringTax
+        [HttpGet("monitoringtax")]
+        public IActionResult GetReportTax(string supplierId, string taxno, DateTime? dateFrom, DateTime? dateTo, DateTime? taxdateFrom, DateTime? taxdateTo, int page, int size, string Order = "{}")
+        {
+            int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
+            string accept = Request.Headers["Accept"];
+
+            try
+            {
+
+                var data = facade.GetReportTax(supplierId, taxno, dateFrom, dateTo, taxdateFrom, taxdateTo, page, size, Order, offset);
+
+                return Ok(new
+                {
+                    apiVersion = ApiVersion,
+                    data = data.Item1,
+                    info = new { total = data.Item2 },
+                    message = General.OK_MESSAGE,
+                    statusCode = General.OK_STATUS_CODE
+                });
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
+
+        [HttpGet("monitoringtax/download")]
+        public IActionResult GetXlsTax(string supplierId, string taxno, DateTime? dateFrom, DateTime? dateTo, DateTime? taxdateFrom, DateTime? taxdateTo)
+        {
+
+            try
+            {
+                byte[] xlsInBytes;
+                int offset = Convert.ToInt32(Request.Headers["x-timezone-offset"]);
+                DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : Convert.ToDateTime(dateFrom);
+                DateTime DateTo = dateTo == null ? DateTime.Now : Convert.ToDateTime(dateTo);
+
+                var xls = facade.GenerateExcelTax(supplierId, taxno, dateFrom, dateTo, taxdateFrom, taxdateTo, offset);
+
+                string filename = String.Format("Monitoring PPN dan PPH - {0}.xlsx", DateTime.UtcNow.ToString("ddMMyyyy"));
+
+                xlsInBytes = xls.ToArray();
+                var file = File(xlsInBytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", filename);
+                return file;
+
+            }
+            catch (Exception e)
+            {
+                Dictionary<string, object> Result =
+                    new ResultFormatter(ApiVersion, General.INTERNAL_ERROR_STATUS_CODE, e.Message)
+                    .Fail();
+                return StatusCode(General.INTERNAL_ERROR_STATUS_CODE, Result);
+            }
+        }
+        #endregion
     }
 }

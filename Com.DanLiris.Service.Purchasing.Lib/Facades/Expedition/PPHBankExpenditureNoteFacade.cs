@@ -34,6 +34,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Expedition
         private readonly IServiceProvider _serviceProvider;
         //private readonly IdentityService identityService;
         private readonly IMemoryCacheManager _cacheManager;
+        private readonly IdentityService identityService;
 
         public PPHBankExpenditureNoteFacade(PurchasingDbContext dbContext, IBankDocumentNumberGenerator bankDocumentNumberGenerator, IServiceProvider serviceProvider)
         {
@@ -44,6 +45,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Expedition
             _serviceProvider = serviceProvider;
             //identityService = (IdentityService)serviceProvider.GetService(typeof(IdentityService));
             _cacheManager = (IMemoryCacheManager)serviceProvider.GetService(typeof(IMemoryCacheManager));
+            this.identityService = (IdentityService)serviceProvider.GetService(typeof(IdentityService));
+
         }
 
         public List<object> GetUnitPaymentOrder(DateTimeOffset? dateFrom, DateTimeOffset? dateTo, string incomeTaxName, double incomeTaxRate, string currency)
@@ -407,13 +410,13 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Expedition
         public async Task<int> Create(PPHBankExpenditureNote model, string username)
         {
             int Created = 0;
-
+            var timeOffset = new TimeSpan(identityService.TimezoneOffset, 0, 0);
             using (var transaction = this.dbContext.Database.BeginTransaction())
             {
                 try
                 {
                     EntityExtension.FlagForCreate(model, username, UserAgent);
-                    model.No = await bankDocumentNumberGenerator.GenerateDocumentNumber("K", model.BankCode, username);
+                    model.No = await bankDocumentNumberGenerator.GenerateDocumentNumber("K", model.BankCode, username,model.Date.ToOffset(timeOffset).Date);
                     model.CurrencyRate = 1;
                     if (model.Currency != "IDR")
                     {
@@ -568,7 +571,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.Expedition
                 Nominal = model.TotalIncomeTax,
                 CurrencyRate= model.CurrencyRate.GetValueOrDefault(),
                 ReferenceNo = model.No,
-                ReferenceType = "Bayar Hutang",
+                ReferenceType = "Bayar PPh",
                 //Remark = model.Currency != "IDR" ? $"Pembayaran atas {model.BankCurrencyCode} dengan nominal {string.Format("{0:n}", model.GrandTotal)} dan kurs {model.CurrencyCode}" : "",
                 SourceType = "Operasional",
                 Status = "OUT",

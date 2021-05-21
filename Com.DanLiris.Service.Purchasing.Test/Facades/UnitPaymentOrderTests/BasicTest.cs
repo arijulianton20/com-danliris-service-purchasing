@@ -19,8 +19,10 @@ using Com.DanLiris.Service.Purchasing.Test.DataUtils.UnitReceiptNoteDataUtils;
 using Com.DanLiris.Service.Purchasing.Test.Helpers;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Moq;
 using System;
 using System.Collections.Generic;
@@ -84,6 +86,13 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.UnitPaymentOrderTests
 
             //var memoryCacheService = serviceProviders.GetService<IMemoryCacheManager>();
             //memoryCacheService.Set(MemoryCacheConstant.Categories, new List<CategoryCOAResult>() { new CategoryCOAResult() { _id = 1 } });
+
+            var opts = Options.Create(new MemoryDistributedCacheOptions());
+            var cache = new MemoryDistributedCache(opts);
+
+            serviceProvider
+                .Setup(x => x.GetService(typeof(IDistributedCache)))
+                .Returns(cache);
 
             var memoryCacheManager = new MemoryCacheManager(memoryCache);
             memoryCacheManager.Set(MemoryCacheConstant.Categories, new List<CategoryCOAResult>() { new CategoryCOAResult() { Id = 1 } });
@@ -153,9 +162,9 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.UnitPaymentOrderTests
         {
             UnitPaymentOrderFacade facade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, _dbContext(GetCurrentMethod()));
             var model = await _dataUtil(facade, GetCurrentMethod()).GetNewData();
-            foreach(var i in model.Items)
+            foreach (var i in model.Items)
             {
-                foreach(var d in i.Details)
+                foreach (var d in i.Details)
                 {
                     d.EPONo = "EPONo";
                 }
@@ -337,6 +346,44 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.UnitPaymentOrderTests
             var ResponseImportSupplier = await facade.Create(modelImportSupplier, USERNAME, true);
             Assert.NotEqual(0, ResponseImportSupplier);
         }
+
+        #region Monitoring Tax All 
+        [Fact]
+        public async Task Should_Success_Get_Tax_Report_All()
+        {
+            UnitPaymentOrderFacade facade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, _dbContext(GetCurrentMethod()));
+            var model = await _dataUtil(facade, GetCurrentMethod()).GetTestData();
+            var Response = facade.GetReportTax(model.SupplierId, null, DateTime.MinValue, DateTime.MaxValue, DateTime.MinValue, DateTime.MaxValue, 1, 25, "{}", 7);
+            Assert.NotEmpty(Response.Item1);
+        }
+
+        [Fact]
+        public async Task Should_Success_Get_Tax_Report_All_Null_Parameter()
+        {
+            UnitPaymentOrderFacade facade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, _dbContext(GetCurrentMethod()));
+            var model = await _dataUtil(facade, GetCurrentMethod()).GetTestData();
+            var Response = facade.GetReportTax("", "", DateTime.MinValue, DateTime.MaxValue, DateTime.MinValue, DateTime.MaxValue, 1, 25, "{}", 7);
+            Assert.NotEmpty(Response.Item1);
+        }
+
+        [Fact]
+        public async Task Should_Success_Get_Tex_Generate_Data_Excel()
+        {
+            UnitPaymentOrderFacade facade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, _dbContext(GetCurrentMethod()));
+            var model = await _dataUtil(facade, GetCurrentMethod()).GetTestData();
+            var Response = facade.GenerateExcelTax(model.SupplierId, null, DateTime.MinValue, DateTime.MaxValue, DateTime.MinValue, DateTime.MaxValue, 7);
+            Assert.IsType<System.IO.MemoryStream>(Response);
+        }
+
+        [Fact]
+        public async Task Should_Success_Get_Tax_Generate_Data_Excel_Null_Parameter()
+        {
+            UnitPaymentOrderFacade facade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, _dbContext(GetCurrentMethod()));
+            var model = await _dataUtil(facade, GetCurrentMethod()).GetTestData();
+            var Response = facade.GenerateExcelTax("", "", DateTime.MinValue, DateTime.MaxValue, DateTime.MinValue, DateTime.MaxValue, 7);
+            Assert.IsType<System.IO.MemoryStream>(Response);
+        }
+        #endregion
 
     }
 }

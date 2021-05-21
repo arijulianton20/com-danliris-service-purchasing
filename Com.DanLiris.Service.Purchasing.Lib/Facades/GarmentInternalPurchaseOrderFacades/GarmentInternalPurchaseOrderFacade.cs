@@ -344,17 +344,17 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentInternalPurchaseOrd
         }
 		public List<GarmentInternalPurchaseOrder> ReadName(string Keyword = null, string Filter = "{}")
 		{
-			IQueryable<GarmentInternalPurchaseOrder> Query = this.dbSet;
+			//IQueryable<GarmentInternalPurchaseOrder> Query = this.dbSet;
 
-			List<string> searchAttributes = new List<string>()
-			{
-				"CreatedBy",
-			};
+			//List<string> searchAttributes = new List<string>()
+			//{
+			//	"CreatedBy",
+			//};
 
-			Query = QueryHelper<GarmentInternalPurchaseOrder>.ConfigureSearch(Query, searchAttributes, Keyword); // kalo search setelah Select dengan .Where setelahnya maka case sensitive, kalo tanpa .Where tidak masalah
+			//Query = QueryHelper<GarmentInternalPurchaseOrder>.ConfigureSearch(Query, searchAttributes, Keyword); // kalo search setelah Select dengan .Where setelahnya maka case sensitive, kalo tanpa .Where tidak masalah
 
-			Query = Query
-				.Where(m =>m.IsDeleted == false && m.CreatedBy.Contains(Keyword))
+			var Query = this.dbSet
+				.Where(x => !x.IsDeleted && x.CreatedBy.Contains(Keyword))
 				.Select(s => new GarmentInternalPurchaseOrder
 				{
 					CreatedBy = s.CreatedBy

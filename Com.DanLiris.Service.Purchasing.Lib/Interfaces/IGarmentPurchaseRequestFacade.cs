@@ -35,5 +35,6 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Interfaces
         Task<int> PRApprove(long id, string username);
         Task<int> PRUnApprove(long id, string username);
         Task<int> Patch(long id, JsonPatchDocument<GarmentPurchaseRequest> jsonPatch, string user);
+        List<GarmentInternalPurchaseOrder> ReadByTagsOptimized(string tags, DateTimeOffset shipmentDateFrom, DateTimeOffset shipmentDateTo);
     }
 }

@@ -26,6 +26,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentDispositionPurch
         public string ProformaNo { get; set; }
         public double DPP { get; set; }
         public double IncomeTaxValue { get; set; }
+        public double VatValueView { get; set; }
+        public double IncomeTaxValueView { get; set; }
         public double VatValue { get; set; }
         public double MiscAmount { get; set; }
         public double Amount { get; set; }
@@ -43,5 +45,15 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentDispositionPurch
         public string DeletedBy { get; set; }
         public string DeletedAgent { get; set; }
 
+        public void FixingVatAndIncomeTax()
+        {
+            IncomeTaxValue = IncomeTaxValueView;
+            VatValue = VatValueView;
+        }
+        public void FixingVatAndIncomeTaxView()
+        {
+            IncomeTaxValueView = IncomeTaxValue;
+            VatValueView = VatValue;
+        }
     }
 }

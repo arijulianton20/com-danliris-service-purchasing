@@ -1166,7 +1166,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades
                 Description = "Surat Perintah Bayar",
                 ReferenceNo = model.UPONo,
                 Status = "POSTED",
-                Items = new List<JournalTransactionItem>()
+                Items = new List<JournalTransactionItem>(),
+                Remark = $"{model.SupplierCode} - {model.SupplierName}"
             };
 
             var journalDebitItems = new List<JournalTransactionItem>();
@@ -1177,9 +1178,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades
                 MissingMemberHandling = MissingMemberHandling.Ignore
             };
 
-            var divisions = JsonConvert.DeserializeObject<List<IdCOAResult>>(_jsonDivisions, jsonSerializerSettings);
-            var units = JsonConvert.DeserializeObject<List<IdCOAResult>>(_jsonUnits, jsonSerializerSettings);
-            var categories = JsonConvert.DeserializeObject<List<CategoryCOAResult>>(_jsonCategories, jsonSerializerSettings);
+            var divisions = JsonConvert.DeserializeObject<List<IdCOAResult>>(_jsonDivisions ?? "[]", jsonSerializerSettings);
+            var units = JsonConvert.DeserializeObject<List<IdCOAResult>>(_jsonUnits ?? "[]", jsonSerializerSettings);
+            var categories = JsonConvert.DeserializeObject<List<CategoryCOAResult>>(_jsonCategories ?? "[]", jsonSerializerSettings);
 
             //journal
             var inVATCOA = "1509.00";
@@ -1217,15 +1218,18 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades
                     };
                 }
 
-                foreach (var urnItem in unitReceiptNote.Items)
+                var urnItemIds = item.Details.Select(element => element.URNItemId).ToList();
+                var unitReceiptNoteItems = unitReceiptNote.Items.Where(element => urnItemIds.Contains(element.Id)).ToList();
+                foreach (var detail in item.Details)
                 {
-                    var purchaseRequest = purchaseRequests.FirstOrDefault(entity => entity.Id == urnItem.PRId);
+                    var urnItem = unitReceiptNoteItems.FirstOrDefault(element => element.Id == detail.URNItemId);
+                    var purchaseRequest = purchaseRequests.FirstOrDefault(entity => entity.Id == detail.PRId);
                     var externalPurchaseOrder = externalPurchaseOrders.FirstOrDefault(entity => entity.Id == urnItem.EPOId);
 
                     var currency = await _currencyProvider.GetCurrencyByCurrencyCode(externalPurchaseOrder.CurrencyCode);
                     var currencyRate = currency != null ? (decimal)currency.Rate.GetValueOrDefault() : (decimal)externalPurchaseOrder.CurrencyRate;
 
-                    var grandTotal = Convert.ToDouble(urnItem.ReceiptQuantity * urnItem.PricePerDealUnit * (double)currencyRate);
+                    var grandTotal = Convert.ToDouble(detail.ReceiptQuantity * detail.PricePerDealUnit * (double)currencyRate);
 
                     int.TryParse(purchaseRequest.CategoryId, out var categoryId);
                     var category = categories.FirstOrDefault(entity => entity.Id == categoryId);
@@ -1275,7 +1279,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades
                         {
                             Code = $"{inVATCOA}.{division.COACode}.{unit.COACode}"
                         },
-                        Debit = (decimal)totalVAT
+                        Debit = (decimal)totalVAT,
+                        Remark = model.VatNo
                     });
                 }
             }
@@ -1401,5 +1406,98 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades
 
             return Tuple.Create(Data, TotalData, OrderDictionary);
         }
+        //
+        #region MonitoringPPN_&_PPH
+        public IQueryable<ViewModels.UnitPaymentOrderViewModel.UnitPaymentOrderTaxReportViewModel> GetReportQueryTax(string supplierId, string taxno, DateTime? dateFrom, DateTime? dateTo, DateTime? taxdateFrom, DateTime? taxdateTo, int offset)
+        {
+            DateTime DateFrom = dateFrom == null ? new DateTime(1970, 1, 1) : (DateTime)dateFrom;
+            DateTime DateTo = dateTo == null ? DateTime.Now : (DateTime)dateTo;
+
+            DateTime taxDateFrom = taxdateFrom == null ? new DateTime(1970, 1, 1) : (DateTime)taxdateFrom;
+            DateTime taxDateTo = taxdateTo == null ? DateTime.Now : (DateTime)taxdateTo;
+
+            var Query = (from a in dbContext.UnitPaymentOrders
+                         join b in dbContext.UnitPaymentOrderItems on a.Id equals b.UPOId
+                         join c in dbContext.UnitPaymentOrderDetails on b.Id equals c.UPOItemId
+                         where a.IsDeleted == false
+                               && b.IsDeleted == false
+                               && c.IsDeleted == false
+                               && (a.UseIncomeTax == true || a.UseVat == true)
+                               && a.SupplierId == (string.IsNullOrWhiteSpace(supplierId) ? a.SupplierId : supplierId)
+                               && a.VatNo == (string.IsNullOrWhiteSpace(taxno) ? a.VatNo : taxno)
+                               && a.Date.AddHours(offset).Date >= DateFrom.Date
+                               && a.Date.AddHours(offset).Date <= DateTo.Date
+                               && a.VatDate.AddHours(offset).Date >= taxDateFrom.Date
+                               && a.VatDate.AddHours(offset).Date <= taxDateTo.Date
+
+                         group new { Total = c.PriceTotal } by new { a.UPONo, a.Date, a.VatNo, a.VatDate, a.SupplierCode, a.SupplierName, a.UseIncomeTax, a.UseVat, a.IncomeTaxRate } into G
+
+
+                         select new ViewModels.UnitPaymentOrderViewModel.UnitPaymentOrderTaxReportViewModel
+                         {
+                             tglspb = G.Key.Date,
+                             nospb = G.Key.UPONo,
+                             tglppn = G.Key.VatDate,
+                             noppn = G.Key.VatNo,
+                             supplier = G.Key.SupplierCode + " - " + G.Key.SupplierName,
+                             amountspb = Math.Round(G.Sum(c => c.Total), 2),
+                             amountppn = G.Key.UseVat == false ? 0 : Math.Round((G.Sum(c => c.Total) / 10), 2),
+                             amountpph = G.Key.UseIncomeTax == false ? 0 : Math.Round((G.Sum(c => c.Total) * (G.Key.IncomeTaxRate / 100)), 2),
+                         });
+            return Query;
+        }
+
+        public Tuple<List<ViewModels.UnitPaymentOrderViewModel.UnitPaymentOrderTaxReportViewModel>, int> GetReportTax(string supplierId, string taxno, DateTime? dateFrom, DateTime? dateTo, DateTime? taxdateFrom, DateTime? taxdateTo, int page, int size, string Order, int offset)
+        {
+            var Query = GetReportQueryTax(supplierId, taxno, dateFrom, dateTo, taxdateFrom, taxdateTo, offset);
+
+            Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
+            if (OrderDictionary.Count.Equals(0))
+            {
+                Query = Query.OrderByDescending(b => b.nospb);
+            }
+
+            Pageable<ViewModels.UnitPaymentOrderViewModel.UnitPaymentOrderTaxReportViewModel> pageable = new Pageable<ViewModels.UnitPaymentOrderViewModel.UnitPaymentOrderTaxReportViewModel>(Query, page - 1, size);
+            List<ViewModels.UnitPaymentOrderViewModel.UnitPaymentOrderTaxReportViewModel> Data = pageable.Data.ToList<ViewModels.UnitPaymentOrderViewModel.UnitPaymentOrderTaxReportViewModel>();
+            int TotalData = pageable.TotalCount;
+
+            return Tuple.Create(Data, TotalData);
+        }
+
+        public MemoryStream GenerateExcelTax(string supplierId, string taxno, DateTime? dateFrom, DateTime? dateTo, DateTime? taxdateFrom, DateTime? taxdateTo, int offset)
+        {
+            var Query = GetReportQueryTax(supplierId, taxno, dateFrom, dateTo, taxdateFrom, taxdateTo, offset);
+            Query = Query.OrderByDescending(b => b.tglspb);
+            DataTable result = new DataTable();
+
+            result.Columns.Add(new DataColumn() { ColumnName = "No", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Tgl Faktur Pajak", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "No Seri pajak", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Nama Supplier", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "No SPB", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Tgl SPB", DataType = typeof(string) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Nilai DPP", DataType = typeof(Double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Nilai PPN", DataType = typeof(Double) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Nilai PPH", DataType = typeof(Double) });
+
+
+            if (Query.ToArray().Count() == 0)
+                result.Rows.Add("", "", "", "", "", "", 0, 0, 0); // to allow column name to be generated properly for empty data as template
+            else
+            {
+                int index = 0;
+                foreach (var item in Query)
+                {
+                    index++;
+                    string tglspb = item.tglspb == null ? "-" : item.tglspb.GetValueOrDefault().ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd-MM-yyyy", new CultureInfo("id-ID"));
+                    string tglpjk = item.tglppn == null ? "-" : item.tglppn.GetValueOrDefault().ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd-MM-yyyy", new CultureInfo("id-ID"));
+
+                    result.Rows.Add(index, tglpjk, item.noppn, item.supplier, item.nospb, tglspb, item.amountspb, item.amountppn, item.amountpph);
+                }
+            }
+
+            return Excel.CreateExcel(new List<KeyValuePair<DataTable, string>>() { new KeyValuePair<DataTable, string>(result, "Territory") }, true);
+        }
+        #endregion
     }
 }

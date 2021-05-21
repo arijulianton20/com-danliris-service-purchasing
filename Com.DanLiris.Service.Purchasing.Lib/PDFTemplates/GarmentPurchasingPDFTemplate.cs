@@ -148,6 +148,21 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
             cellLeftNoBorder.Phrase = new Phrase("", normal_font);
             tableIdentity.AddCell(cellLeftNoBorder);
 
+            //calculate vat and incomeTax 
+            double vat = 0;
+            double incomeTax = 0;
+            foreach(var item in viewModel.Items)
+            {
+                if (item.IsPayVat)
+                {
+                    vat += item.VatValue;
+                }
+
+                if (item.IsPayIncomeTax)
+                {
+                    vat += item.IncomeTaxValue;
+                }
+            }
 
             cellLeftNoBorder.Colspan = 0;
             cellLeftNoBorder.Phrase = new Phrase("Biaya", normal_font);
@@ -173,7 +188,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
             cellLeftNoBorder.Phrase = new Phrase(":", normal_font);
             tableIdentity.AddCell(cellLeftNoBorder);
             cellLeftNoBorder.Colspan = 3;
-            cellLeftNoBorder.Phrase = new Phrase(viewModel.CurrencyCode + "  " + $"{(viewModel.DPP + viewModel.VatValue).ToString("N", new CultureInfo("id-ID")) }", normal_font);
+            cellLeftNoBorder.Phrase = new Phrase(viewModel.CurrencyCode + "  " + $"{(viewModel.DPP + vat).ToString("N", new CultureInfo("id-ID")) }", normal_font);
             tableIdentity.AddCell(cellLeftNoBorder);
 
             cellLeftNoBorder.Colspan = 0;
@@ -213,7 +228,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
             cellLeftNoBorder.Phrase = new Phrase(":", normal_font);
             tableIdentity.AddCell(cellLeftNoBorder);
             cellLeftNoBorder.Colspan = 2;
-            cellLeftNoBorder.Phrase = new Phrase(viewModel.CurrencyCode + "  " + $"{(viewModel.DPP+ viewModel.VatValue - viewModel.IncomeTaxValue).ToString("N", new CultureInfo("id-ID")) }", normal_font);
+            cellLeftNoBorder.Phrase = new Phrase(viewModel.CurrencyCode + "  " + $"{(viewModel.DPP+ vat - incomeTax).ToString("N", new CultureInfo("id-ID")) }", normal_font);
             tableIdentity.AddCell(cellLeftNoBorder);
             cellLeftNoBorder.Phrase = new Phrase("", normal_font);
             tableIdentity.AddCell(cellLeftNoBorder);
@@ -250,7 +265,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
             cellSuppMid.Phrase = new Phrase(":", normal_font);
             tableIdentity.AddCell(cellSuppMid);
             cellSuppRight.Colspan = 2;
-            cellSuppRight.Phrase = new Phrase(viewModel.CurrencyCode + "  " + $"{((viewModel.DPP + viewModel.VatValue - viewModel.IncomeTaxValue)+viewModel.MiscAmount).ToString("N", new CultureInfo("id-ID"))}", normal_font);
+            cellSuppRight.Phrase = new Phrase(viewModel.CurrencyCode + "  " + $"{((viewModel.DPP + vat - incomeTax)+viewModel.MiscAmount).ToString("N", new CultureInfo("id-ID"))}", normal_font);
             tableIdentity.AddCell(cellSuppRight);
             cellLeftNoBorder.Colspan = 0;
             cellLeftNoBorder.Phrase = new Phrase("", normal_font);
@@ -444,12 +459,12 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
             cellLeftNoBorder.Phrase = new Phrase(viewModel.PaymentDueDate.ToOffset(new TimeSpan(clientTimeZoneOffset, 0, 0)).ToString("dd MMMM yyyy", new CultureInfo("id-ID")), normal_font);
             tableNote.AddCell(cellLeftNoBorder);
 
-            cellLeftNoBorder.Phrase = new Phrase("Bank", normal_font);
-            tableNote.AddCell(cellLeftNoBorder);
-            cellLeftNoBorder.Phrase = new Phrase(":", normal_font);
-            tableNote.AddCell(cellLeftNoBorder);
-            cellLeftNoBorder.Phrase = new Phrase(viewModel.Bank, normal_font);
-            tableNote.AddCell(cellLeftNoBorder);
+            //cellLeftNoBorder.Phrase = new Phrase("Bank", normal_font);
+            //tableNote.AddCell(cellLeftNoBorder);
+            //cellLeftNoBorder.Phrase = new Phrase(":", normal_font);
+            //tableNote.AddCell(cellLeftNoBorder);
+            //cellLeftNoBorder.Phrase = new Phrase(viewModel.Bank, normal_font);
+            //tableNote.AddCell(cellLeftNoBorder);
 
             cellLeftNoBorder.Phrase = new Phrase("Keterangan", normal_font);
             tableNote.AddCell(cellLeftNoBorder);
@@ -466,7 +481,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
             cellLeftNoBorder.Phrase = new Phrase(":", normal_font);
             tableNote.AddCell(cellLeftNoBorder);
             //cellLeftNoBorder.Phrase = new Phrase($"{viewModel.CurrencyCode}" + " " + $"{(totalPurchase + ppnPurchase).ToString("N", new CultureInfo("id-ID"))}", normal_font);
-            cellLeftNoBorder.Phrase = new Phrase($"{viewModel.CurrencyCode}" + " " + $"{((viewModel.DPP + viewModel.VatValue)- viewModel.IncomeTaxValue).ToString("N", new CultureInfo("id-ID"))}", normal_font);
+            cellLeftNoBorder.Phrase = new Phrase($"{viewModel.CurrencyCode}" + " " + $"{((viewModel.DPP + vat)- incomeTax).ToString("N", new CultureInfo("id-ID"))}", normal_font);
 
             tableNote.AddCell(cellLeftNoBorder);
 
@@ -492,7 +507,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.PDFTemplates
             {
                 var sumPerUnit = perUnit.Value.Sum(t => 
                 (t.PaidPrice) + 
-                (viewModel.Items.Where(a => a.Id == t.GarmentDispositionPurchaseItemId).FirstOrDefault().IsUseVat? t.PaidPrice * 0.1:0) - 
+                (viewModel.Items.Where(a => a.Id == t.GarmentDispositionPurchaseItemId).FirstOrDefault().IsPayVat? t.PaidPrice * 0.1:0) - 
                 (t.PaidPrice * (viewModel.Items.Where(a => a.Id == t.GarmentDispositionPurchaseItemId).FirstOrDefault()?.IncomeTaxRate / 100)))?.ToString("N", new CultureInfo("id-ID"));
                 cellLeftNoBorder.Phrase = new Phrase($"- {perUnit.Key.UnitName} = {sumPerUnit}", bold_font3); 
                 tableBeban.AddCell(cellLeftNoBorder);

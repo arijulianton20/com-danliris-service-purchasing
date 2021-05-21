@@ -9,14 +9,9 @@ namespace Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentInternNoteViewMo
 {
     public class GarmentInternalNoteDto
     {
-        public GarmentInternalNoteDto(GarmentInternNote internalNote, List<GarmentInvoice> internalNoteInvoices)
+        public GarmentInternalNoteDto(int internalNoteId, string internalNoteNo, DateTimeOffset internalNoteDate, DateTimeOffset internalNoteDueDate, int supplierId, string supplierName, string supplierCode, int currencyId, string currencyCode, double currencyRate, List<InternalNoteInvoiceDto> internalNoteInvoices)
         {
-            InternalNote = new InternalNoteDto(internalNote, internalNoteInvoices);
-        }
-
-        public GarmentInternalNoteDto(GarmentInternNote internalNote, List<GarmentInvoiceInternNoteViewModel> internalNoteInvoices)
-        {
-            InternalNote = new InternalNoteDto(internalNote, internalNoteInvoices);
+            InternalNote = new InternalNoteDto(internalNoteId, internalNoteNo, internalNoteDate, internalNoteDueDate, supplierId, supplierName, supplierCode, currencyId, currencyCode, currencyRate, internalNoteInvoices);
         }
 
         public InternalNoteDto InternalNote { get; set; }

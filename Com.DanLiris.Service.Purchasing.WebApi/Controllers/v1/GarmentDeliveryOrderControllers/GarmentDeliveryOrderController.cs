@@ -105,27 +105,48 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentDeliveryO
 
                 var Data = facade.Read(page, size, order, keyword, filter);
 
-                var viewModel = mapper.Map<List<GarmentDeliveryOrderViewModel>>(Data.Item1);
+                //var viewModel = mapper.Map<List<GarmentDeliveryOrderViewModel>>(Data.Item1);
 
-                List<object> listData = new List<object>();
-                listData.AddRange(
-                    viewModel.AsQueryable().Select(s => new
+                //List<object> listData = new List<object>();
+                //listData.AddRange(
+                //    viewModel.AsQueryable().Select(s => new
+                //    {
+                //        s.Id,
+                //        s.doNo,
+                //        s.doDate,
+                //        s.arrivalDate,
+                //        s.billNo,
+                //        s.paymentBill,
+                //        supplier = new { s.supplier.Name },
+                //        items = s.items.Select(i => new { i.purchaseOrderExternal, i.fulfillments }),
+                //        s.CreatedBy,
+                //        s.isClosed,
+                //        s.isCustoms,
+                //        s.isInvoice,
+                //        s.LastModifiedUtc
+                //    }).ToList()
+                //);
+
+                var listData = Data.Item1.Select(x => new
+                {
+                    x.Id,
+                    doNo = x.DONo,
+                    doDate = x.DODate,
+                    arrivalDate = x.ArrivalDate,
+                    billNo = x.BillNo,
+                    paymentBill = x.PaymentBill,
+                    supplier = new { Name = x.SupplierName },
+                    items = x.Items.Select(i => new
                     {
-                        s.Id,
-                        s.doNo,
-                        s.doDate,
-                        s.arrivalDate,
-                        s.billNo,
-                        s.paymentBill,
-                        supplier = new { s.supplier.Name },
-                        items = s.items.Select(i => new { i.purchaseOrderExternal, i.fulfillments }),
-                        s.CreatedBy,
-                        s.isClosed,
-                        s.isCustoms,
-                        s.isInvoice,
-                        s.LastModifiedUtc
-                    }).ToList()
-                );
+                        purchaseOrderExternal = new { Id = i.EPOId, no = i.EPONo },
+                        fulfillments = new List<object>()
+                    }),
+                    x.CreatedBy,
+                    isClosed = x.IsClosed,
+                    isCustoms = x.IsCustoms,
+                    isInvoice = x.IsInvoice,
+                    x.LastModifiedUtc
+                }).ToList();
 
                 var info = new Dictionary<string, object>
                     {
@@ -207,7 +228,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentDeliveryO
         }
 
         [HttpPost]
-        public async Task<IActionResult> Post([FromBody]GarmentDeliveryOrderViewModel ViewModel)
+        public async Task<IActionResult> Post([FromBody] GarmentDeliveryOrderViewModel ViewModel)
         {
             try
             {
@@ -248,7 +269,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentDeliveryO
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put(int id, [FromBody]GarmentDeliveryOrderViewModel ViewModel)
+        public async Task<IActionResult> Put(int id, [FromBody] GarmentDeliveryOrderViewModel ViewModel)
         {
             try
             {
@@ -299,7 +320,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.GarmentDeliveryO
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete([FromRoute]int id)
+        public async Task<IActionResult> Delete([FromRoute] int id)
         {
             identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
 

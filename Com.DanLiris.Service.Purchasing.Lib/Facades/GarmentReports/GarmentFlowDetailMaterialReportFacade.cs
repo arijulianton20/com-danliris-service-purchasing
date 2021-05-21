@@ -2,6 +2,7 @@
 using Com.DanLiris.Service.Purchasing.Lib.Interfaces;
 using Com.DanLiris.Service.Purchasing.Lib.Models.GarmentUnitExpenditureNoteModel;
 using Com.DanLiris.Service.Purchasing.Lib.ViewModels.GarmentReports;
+using Com.DanLiris.Service.Purchasing.Lib.ViewModels.NewIntegrationViewModel;
 using Com.Moonlay.NetCore.Lib;
 using Microsoft.EntityFrameworkCore;
 using Newtonsoft.Json;
@@ -31,29 +32,59 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
             this.dbSet = dbContext.Set<GarmentUnitExpenditureNote>();
         }
 
+        private List<GarmentCategoryViewModel> GetProductCodes(int page, int size, string order, string filter)
+        {
+            //var param = new StringContent(JsonConvert.SerializeObject(codes), Encoding.UTF8, "application/json");
+            IHttpClientService httpClient = (IHttpClientService)this.serviceProvider.GetService(typeof(IHttpClientService));
+            if (httpClient != null)
+            {
+                var garmentSupplierUri = APIEndpoint.Core + $"master/garment-categories";
+                string queryUri = "?page=" + page + "&size=" + size + "&order=" + order + "&filter=" + filter;
+                string uri = garmentSupplierUri + queryUri;
+                var response = httpClient.GetAsync($"{uri}").Result.Content.ReadAsStringAsync();
+                Dictionary<string, object> result = JsonConvert.DeserializeObject<Dictionary<string, object>>(response.Result);
+                List<GarmentCategoryViewModel> viewModel = JsonConvert.DeserializeObject<List<GarmentCategoryViewModel>>(result.GetValueOrDefault("data").ToString());
+                return viewModel;
+            }
+            else
+            {
+                List<GarmentCategoryViewModel> viewModel = null;
+                return viewModel;
+            }
+        }
 
         public IQueryable<GarmentFlowDetailMaterialViewModel> GetQuery(string category, string productcode, string unit, DateTimeOffset? DateFrom, DateTimeOffset? DateTo, int offset)
         {
             //DateTimeOffset dateFrom = DateFrom == null ? new DateTime(1970, 1, 1) : (DateTimeOffset)DateFrom;
             //DateTimeOffset dateTo = DateTo == null ? new DateTime(2100, 1, 1) : (DateTimeOffset)DateTo;
 
+            var categories = GetProductCodes(1, int.MaxValue, "{}", "{}");
+
+            var categories1 = category == "BB" ? categories.Where(x => x.CodeRequirement == "BB").Select(x => x.Name).ToArray() : category == "BP" ? categories.Where(x => x.CodeRequirement == "BP").Select(x => x.Name).ToArray() : categories.Where(x => x.CodeRequirement == "BE").Select(x => x.Name).ToArray();
+
             var Query = (from a in dbContext.GarmentUnitExpenditureNoteItems 
                          join b in dbContext.GarmentUnitExpenditureNotes on a.UENId equals b.Id
-                         join c in dbContext.GarmentExternalPurchaseOrderItems on a.EPOItemId equals c.Id
+
                          join e in dbContext.GarmentUnitDeliveryOrderItems on a.UnitDOItemId equals e.Id
                          join d in dbContext.GarmentUnitDeliveryOrders on e.UnitDOId equals d.Id
-                         join f in dbContext.GarmentDeliveryOrderDetails on a.DODetailId equals f.Id
+                         join g in dbContext.GarmentUnitReceiptNoteItems on a.URNItemId equals g.Id
+                         join c in dbContext.GarmentExternalPurchaseOrderItems.IgnoreQueryFilters() on g.EPOItemId equals c.Id
+                         //join c in dbContext.GarmentExternalPurchaseOrderItems.IgnoreQueryFilters() on g.EPOItemId equals c.Id
+                         //join f in categories on a.ProductCode equals f.Code
                          where
-                         f.CodeRequirment == (string.IsNullOrWhiteSpace(category) ? f.CodeRequirment : category)
+                         a.IsDeleted == false && b.IsDeleted == false &&
+                         categories1.Contains(a.ProductName) &&
+                         //f.CodeRequirement == (string.IsNullOrWhiteSpace(category) ? f.CodeRequirement : category)
+                         //(string.IsNullOrWhiteSpace(category) ? a.ProductCode == a.ProductCode : categories1.Contains(a.ProductCode))
                          //&& f.ProductCode.Substring(0, 3) == (string.IsNullOrWhiteSpace(productcode) ? f.ProductCode.Substring(0, 3) : productcode)
-                         && a.CreatedUtc.Date >= DateFrom
-                         && a.CreatedUtc.Date <= DateTo
+                         b.CreatedUtc.Date >= DateFrom
+                         && b.CreatedUtc.Date <= DateTo
                          && b.UnitSenderCode == (string.IsNullOrWhiteSpace(unit) ? b.UnitSenderCode : unit)
 
                          orderby a.CreatedUtc descending
                          select new GarmentFlowDetailMaterialViewModel {
                              ProductCode = a.ProductCode,
-                             ProductName = a.ProductName,
+                             ProductName = e.ProductName == "" ? a.ProductName : e.ProductName,
                              POSerialNumber = a.POSerialNumber,
                              ProductRemark = a.ProductRemark,
                              RONo = a.RONo,
@@ -66,10 +97,12 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
                              ExpenditureDate = b.ExpenditureDate,
                              Quantity = a.Quantity,
                              UomUnit = a.UomUnit,
-                             Total = a.Quantity * a.PricePerDealUnit* a.DOCurrencyRate,
-                             UnitDestination = b.ExpenditureType == "TRANSFER" ? b.UnitRequestName : b.ExpenditureType == "EXTERNAL" ? "RETUR" : b.ExpenditureType
+                             Total = (a.BasicPrice / (a.Conversion == 0 ? 1 : a.Conversion)) * Convert.ToDecimal(a.Quantity),
+                             UnitDestination = (b.ExpenditureType == "TRANSFER" || b.ExpenditureType == "GUDANG LAIN") ? b.UnitRequestName : b.ExpenditureType == "EXTERNAL" ? "RETUR" : b.ExpenditureType
 
                          });
+
+            //Query = string.IsNullOrWhiteSpace(category) ? Query : Query.Where(x => categories1.Contains(x.ProductName)).Select(x => x);
 
 
             return Query.AsQueryable();
@@ -92,6 +125,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
             return Tuple.Create(Query.ToList(), Query.Count());
         }
 
+
         public MemoryStream GenerateExcel(string category, string productcode, string categoryname, string unit, string unitname, DateTimeOffset? dateFrom, DateTimeOffset? dateTo, int offset)
         {
             var Query = GetQuery(category, productcode, unit, dateFrom, dateTo, offset);
@@ -100,7 +134,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
             //No	Unit	Budget	Kategori	Tanggal PR	Nomor PR	Kode Barang	Nama Barang	Jumlah	Satuan	Tanggal Diminta Datang	Status	Tanggal Diminta Datang Eksternal
 
             double ExpendQtyTotal = 0;
-            double ExpendPriceTotal = 0;
+            decimal ExpendPriceTotal = 0;
 
             result.Columns.Add(new DataColumn() { ColumnName = "No", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Kode Barang", DataType = typeof(String) });
@@ -112,26 +146,26 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
             result.Columns.Add(new DataColumn() { ColumnName = "Kode Buyer", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Untuk RO", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Untuk Artikel", DataType = typeof(String) });
-            result.Columns.Add(new DataColumn() { ColumnName = "Tujuan", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "No.Bukti", DataType = typeof(String) });
+            result.Columns.Add(new DataColumn() { ColumnName = "Tujuan", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Tanggal", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Quantity", DataType = typeof(Double) });
             result.Columns.Add(new DataColumn() { ColumnName = "Satuan", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Jumlah", DataType = typeof(Double) });
             if (Query.ToArray().Count() == 0)
-                result.Rows.Add("", "", "", "", "", "", "", "", "", "", "", "", 0, "", 0); // to allow column name to be generated properly for empty data as template
+                result.Rows.Add("", "", "", "", "", "", "", "", "", "", "", "","", 0, "", 0); // to allow column name to be generated properly for empty data as template
             else
             {
                 int index = 0;
                 foreach (var item in Query)
                 {
                     ExpendQtyTotal += item.Quantity;
-                    ExpendPriceTotal += item.Total.Value;
+                    ExpendPriceTotal += item.Total;
                     index++;
                     string tanggal = item.ExpenditureDate.Value.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
                     result.Rows.Add(index, item.ProductCode, item.ProductName, item.POSerialNumber, item.ProductRemark, item.RONo,
-                        item.Article, item.BuyerCode, item.RONoDO, item.ArticleDO, item.UnitDestination, item.UENNo, tanggal, NumberFormat(item.Quantity),
-                        item.UomUnit, NumberFormat(item.Total));
+                        item.Article, item.BuyerCode, item.RONoDO, item.ArticleDO, item.UENNo, item.UnitDestination, tanggal, NumberFormat(item.Quantity),
+                        item.UomUnit, NumberFormat((double)item.Total));
                 }
             }
             ExcelPackage package = new ExcelPackage();
@@ -171,7 +205,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
             sheet.Cells[$"A{6 + a}:M{6 + a}"].Style.VerticalAlignment = ExcelVerticalAlignment.Center;
             sheet.Cells[$"N{6 + a}"].Value = NumberFormat(ExpendQtyTotal);
             sheet.Cells[$"N{6 + a}"].Style.Border.BorderAround(ExcelBorderStyle.Medium);
-            sheet.Cells[$"P{6 + a}"].Value = NumberFormat(ExpendPriceTotal);
+            sheet.Cells[$"P{6 + a}"].Value = NumberFormat((double)ExpendPriceTotal);
             sheet.Cells[$"P{6 + a}"].Style.Border.BorderAround(ExcelBorderStyle.Medium);
             sheet.Cells[$"O{6 + a}"].Style.Border.BorderAround(ExcelBorderStyle.Medium);
             //sheet.Cells[$"{6 + a}"].Style.Border.BorderAround(ExcelBorderStyle.Medium);
@@ -190,7 +224,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
             //No	Unit	Budget	Kategori	Tanggal PR	Nomor PR	Kode Barang	Nama Barang	Jumlah	Satuan	Tanggal Diminta Datang	Status	Tanggal Diminta Datang Eksternal
 
             double ExpendQtyTotal = 0;
-            double ExpendPriceTotal = 0;
+            decimal ExpendPriceTotal = 0;
 
             result.Columns.Add(new DataColumn() { ColumnName = "No", DataType = typeof(String) });
             result.Columns.Add(new DataColumn() { ColumnName = "Kode Barang", DataType = typeof(String) });
@@ -215,7 +249,7 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.GarmentReports
                 foreach (var item in Query)
                 {
                     ExpendQtyTotal += item.Quantity;
-                    ExpendPriceTotal += item.Total.Value;
+                    ExpendPriceTotal += item.Total;
                     index++;
                     string tanggal = item.ExpenditureDate.Value.ToOffset(new TimeSpan(offset, 0, 0)).ToString("dd MMM yyyy", new CultureInfo("id-ID"));
                     result.Rows.Add(index, item.ProductCode, item.ProductName, item.POSerialNumber, item.ProductRemark, item.RONo,

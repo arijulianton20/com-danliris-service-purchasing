@@ -128,205 +128,205 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.UnitPaymentOrderPaidStatu
             return dbContext;
         }
 
-        [Fact]
-        public async Task Should_Success_GetReport_SPB()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
-            var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
+        //[Fact]
+        //public async Task Should_Success_GetReport_SPB()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
+        //    var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
 
-            var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
-            var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
-            PurchasingDocumentExpedition model = purchasingDocumentExpedition;
-            await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
+        //    var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
+        //    var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
+        //    PurchasingDocumentExpedition model = purchasingDocumentExpedition;
+        //    await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
 
-            var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
-            var dateTo = modelLocalSupplier.Date;
-            var dateFrom = modelLocalSupplier.Date;
-            var dateToDue = modelLocalSupplier.DueDate;
-            var dateFromDue = modelLocalSupplier.DueDate;
-            var results = facade.GetReport(25, 1, "{}", null, null, null, null, null, null, null, null, null, null, 0);
-            // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
+        //    var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
+        //    var dateTo = modelLocalSupplier.Date;
+        //    var dateFrom = modelLocalSupplier.Date;
+        //    var dateToDue = modelLocalSupplier.DueDate;
+        //    var dateFromDue = modelLocalSupplier.DueDate;
+        //    var results = facade.GetReport(25, 1, "{}", null, null, null, null, null, null, null, null, null, null, 0);
+        //    // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
 
-            Assert.NotNull(results);
-        }
+        //    Assert.NotNull(results);
+        //}
 
-        [Fact]
-        public async Task Should_Success_GetReport_SPB_local()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
-            var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
+        //[Fact]
+        //public async Task Should_Success_GetReport_SPB_local()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
+        //    var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
 
-            var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
-            var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
-            PurchasingDocumentExpedition model = purchasingDocumentExpedition;
-            await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
+        //    var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
+        //    var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
+        //    PurchasingDocumentExpedition model = purchasingDocumentExpedition;
+        //    await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
 
-            var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
-            var dateTo = modelLocalSupplier.Date;
-            var dateFrom = modelLocalSupplier.Date;
-            var dateToDue = modelLocalSupplier.DueDate;
-            var dateFromDue = modelLocalSupplier.DueDate;
-            var results = facade.GetReport(25, 1, "{}", null, null, null, "LOCAL", null, null, null, null, null, null, 0);
-            // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
+        //    var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
+        //    var dateTo = modelLocalSupplier.Date;
+        //    var dateFrom = modelLocalSupplier.Date;
+        //    var dateToDue = modelLocalSupplier.DueDate;
+        //    var dateFromDue = modelLocalSupplier.DueDate;
+        //    var results = facade.GetReport(25, 1, "{}", null, null, null, "LOCAL", null, null, null, null, null, null, 0);
+        //    // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
 
-            Assert.NotNull(results);
-        }
+        //    Assert.NotNull(results);
+        //}
 
 
-        [Fact]
-        public async Task Should_Success_GetReport_SPB_import()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
-            var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
+        //[Fact]
+        //public async Task Should_Success_GetReport_SPB_import()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
+        //    var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
 
-            var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
-            var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
-            PurchasingDocumentExpedition model = purchasingDocumentExpedition;
-            await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
+        //    var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
+        //    var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
+        //    PurchasingDocumentExpedition model = purchasingDocumentExpedition;
+        //    await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
 
-            var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
-            var dateTo = modelLocalSupplier.Date;
-            var dateFrom = modelLocalSupplier.Date;
-            var dateToDue = modelLocalSupplier.DueDate;
-            var dateFromDue = modelLocalSupplier.DueDate;
-            var results = facade.GetReport(25, 1, "{}", null, null, null, "IMPORT", null, null, null, null, null, null, 0);
-            // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
+        //    var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
+        //    var dateTo = modelLocalSupplier.Date;
+        //    var dateFrom = modelLocalSupplier.Date;
+        //    var dateToDue = modelLocalSupplier.DueDate;
+        //    var dateFromDue = modelLocalSupplier.DueDate;
+        //    var results = facade.GetReport(25, 1, "{}", null, null, null, "IMPORT", null, null, null, null, null, null, 0);
+        //    // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
 
-            Assert.NotNull(results);
-        }
-        [Fact]
-        public async Task Should_Success_GetReport_SPB_With_Params()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
-            var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
+        //    Assert.NotNull(results);
+        //}
+        //[Fact]
+        //public async Task Should_Success_GetReport_SPB_With_Params()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
+        //    var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
 
-            var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
-            var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
-            PurchasingDocumentExpedition model = purchasingDocumentExpedition;
-            await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
+        //    var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
+        //    var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
+        //    PurchasingDocumentExpedition model = purchasingDocumentExpedition;
+        //    await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
 
-            var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
-            var dateTo = modelLocalSupplier.Date;
-            var dateFrom = modelLocalSupplier.Date;
-            var dateToDue = modelLocalSupplier.DueDate;
-            var dateFromDue = modelLocalSupplier.DueDate;
-            var results = facade.GetReport(25, 1, "{}", modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, "", "", "", dateFromDue, dateToDue, dateFrom, dateTo, 1);
-            // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
+        //    var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
+        //    var dateTo = modelLocalSupplier.Date;
+        //    var dateFrom = modelLocalSupplier.Date;
+        //    var dateToDue = modelLocalSupplier.DueDate;
+        //    var dateFromDue = modelLocalSupplier.DueDate;
+        //    var results = facade.GetReport(25, 1, "{}", modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, "", "", "", dateFromDue, dateToDue, dateFrom, dateTo, 1);
+        //    // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
 
-            Assert.NotEmpty(results.Data);
-        }
+        //    Assert.NotEmpty(results.Data);
+        //}
 
-        [Fact]
-        public async Task Should_Success_GetReport_SPB_LUNAS()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
-            var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
+        //[Fact]
+        //public async Task Should_Success_GetReport_SPB_LUNAS()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
+        //    var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
 
-            var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
-            var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
-            PurchasingDocumentExpedition model = purchasingDocumentExpedition;
-            await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
+        //    var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
+        //    var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
+        //    PurchasingDocumentExpedition model = purchasingDocumentExpedition;
+        //    await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
 
-            var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
-            var dateTo = modelLocalSupplier.Date;
-            var dateFrom = modelLocalSupplier.Date;
-            var dateToDue = modelLocalSupplier.DueDate;
-            var dateFromDue = modelLocalSupplier.DueDate;
-            var results = facade.GetReport(25, 1, "{}", modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, "", "", "LUNAS", dateFromDue, dateToDue, dateFrom, dateTo, 1);
-            // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
+        //    var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
+        //    var dateTo = modelLocalSupplier.Date;
+        //    var dateFrom = modelLocalSupplier.Date;
+        //    var dateToDue = modelLocalSupplier.DueDate;
+        //    var dateFromDue = modelLocalSupplier.DueDate;
+        //    var results = facade.GetReport(25, 1, "{}", modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, "", "", "LUNAS", dateFromDue, dateToDue, dateFrom, dateTo, 1);
+        //    // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
 
-            Assert.NotNull(results.Data);
-        }
+        //    Assert.NotNull(results.Data);
+        //}
 
-        [Fact]
-        public async Task Should_Success_GetReport_SPB_DPP_PPN()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
-            var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
+        //[Fact]
+        //public async Task Should_Success_GetReport_SPB_DPP_PPN()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
+        //    var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
 
-            var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
-            var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
-            PurchasingDocumentExpedition model = purchasingDocumentExpedition;
-            await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
+        //    var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
+        //    var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
+        //    PurchasingDocumentExpedition model = purchasingDocumentExpedition;
+        //    await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
 
-            var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
-            var dateTo = modelLocalSupplier.Date;
-            var dateFrom = modelLocalSupplier.Date;
-            var dateToDue = modelLocalSupplier.DueDate;
-            var dateFromDue = modelLocalSupplier.DueDate;
-            var results = facade.GetReport(25, 1, "{}", modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, "", "", "SUDAH BAYAR DPP+PPN", dateFromDue, dateToDue, dateFrom, dateTo, 1);
-            // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
+        //    var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
+        //    var dateTo = modelLocalSupplier.Date;
+        //    var dateFrom = modelLocalSupplier.Date;
+        //    var dateToDue = modelLocalSupplier.DueDate;
+        //    var dateFromDue = modelLocalSupplier.DueDate;
+        //    var results = facade.GetReport(25, 1, "{}", modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, "", "", "SUDAH BAYAR DPP+PPN", dateFromDue, dateToDue, dateFrom, dateTo, 1);
+        //    // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
 
-            Assert.NotNull(results.Data);
-        }
+        //    Assert.NotNull(results.Data);
+        //}
 
-        [Fact]
-        public async Task Should_Success_GetReport_SPB_PPH()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
-            var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
+        //[Fact]
+        //public async Task Should_Success_GetReport_SPB_PPH()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
+        //    var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
 
-            var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
-            var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
-            PurchasingDocumentExpedition model = purchasingDocumentExpedition;
-            await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
+        //    var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
+        //    var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
+        //    PurchasingDocumentExpedition model = purchasingDocumentExpedition;
+        //    await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
 
-            var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
-            var dateTo = modelLocalSupplier.Date;
-            var dateFrom = modelLocalSupplier.Date;
-            var dateToDue = modelLocalSupplier.DueDate;
-            var dateFromDue = modelLocalSupplier.DueDate;
-            var results = facade.GetReport(25, 1, "{}", modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, "", "", "SUDAH BAYAR PPH", dateFromDue, dateToDue, dateFrom, dateTo, 1);
-            // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
+        //    var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
+        //    var dateTo = modelLocalSupplier.Date;
+        //    var dateFrom = modelLocalSupplier.Date;
+        //    var dateToDue = modelLocalSupplier.DueDate;
+        //    var dateFromDue = modelLocalSupplier.DueDate;
+        //    var results = facade.GetReport(25, 1, "{}", modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, "", "", "SUDAH BAYAR PPH", dateFromDue, dateToDue, dateFrom, dateTo, 1);
+        //    // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
 
-            Assert.NotNull(results.Data);
-        }
+        //    Assert.NotNull(results.Data);
+        //}
 
-        [Fact]
-        public async Task Should_Success_GetReport_BELUM_BAYAR()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
-            var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
+        //[Fact]
+        //public async Task Should_Success_GetReport_BELUM_BAYAR()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    var unitPaymentOrderFacade = new UnitPaymentOrderFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var modelLocalSupplier = await _dataUtil(unitPaymentOrderFacade, dbContext, GetCurrentMethod()).GetNewData();
+        //    var responseLocalSupplier = await unitPaymentOrderFacade.Create(modelLocalSupplier, USERNAME, false);
 
-            var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
-            var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
-            PurchasingDocumentExpedition model = purchasingDocumentExpedition;
-            await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
+        //    var purchasingDocumentExpeditionFacade = new PurchasingDocumentExpeditionFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var sendToVerificationDataUtil = new SendToVerificationDataUtil(purchasingDocumentExpeditionFacade);
+        //    var purchasingDocumentExpedition = sendToVerificationDataUtil.GetNewData(modelLocalSupplier);
+        //    PurchasingDocumentExpedition model = purchasingDocumentExpedition;
+        //    await purchasingDocumentExpeditionFacade.SendToVerification(new List<PurchasingDocumentExpedition>() { model }, "Unit Test");
 
-            var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
-            var dateTo = modelLocalSupplier.Date;
-            var dateFrom = modelLocalSupplier.Date;
-            var dateToDue = modelLocalSupplier.DueDate;
-            var dateFromDue = modelLocalSupplier.DueDate;
-            var results = facade.GetReport(25, 1, "{}", modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, "", "", "BELUM BAYAR", dateFromDue, dateToDue, dateFrom, dateTo, 1);
-            // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
+        //    var facade = new UnitPaymentOrderPaidStatusReportFacade(dbContext);
+        //    var dateTo = modelLocalSupplier.Date;
+        //    var dateFrom = modelLocalSupplier.Date;
+        //    var dateToDue = modelLocalSupplier.DueDate;
+        //    var dateFromDue = modelLocalSupplier.DueDate;
+        //    var results = facade.GetReport(25, 1, "{}", modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, "", "", "BELUM BAYAR", dateFromDue, dateToDue, dateFrom, dateTo, 1);
+        //    // var results = await facade.GetReport(25,1,"{}",modelLocalSupplier.UPONo, modelLocalSupplier.SupplierCode, modelLocalSupplier.DivisionCode, null, dateFromDue, dateToDue, dateFrom, dateTo, 1);
 
-            Assert.NotNull(results.Data);
-        }
+        //    Assert.NotNull(results.Data);
+        //}
 
 
 

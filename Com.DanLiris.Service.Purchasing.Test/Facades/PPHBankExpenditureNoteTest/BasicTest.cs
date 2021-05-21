@@ -88,37 +88,37 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.PPHBankExpenditureNoteTes
             return new PPHBankExpenditureNoteDataUtil(facade, pdaDataUtil);
         }
 
-        [Fact]
-        public async Task Should_Success_Get_Data()
-        {
-            var numberGeneratorMock = new Mock<IBankDocumentNumberGenerator>();
+        //[Fact]
+        //public async Task Should_Success_Get_Data()
+        //{
+        //    var numberGeneratorMock = new Mock<IBankDocumentNumberGenerator>();
 
-            var serviceProvider = new Mock<IServiceProvider>();
+        //    var serviceProvider = new Mock<IServiceProvider>();
 
-            serviceProvider
-                .Setup(x => x.GetService(typeof(IHttpClientService)))
-                .Returns(new HttpClientTestService());
+        //    serviceProvider
+        //        .Setup(x => x.GetService(typeof(IHttpClientService)))
+        //        .Returns(new HttpClientTestService());
 
-            var services = new ServiceCollection();
-            services.AddMemoryCache();
-            var serviceProviders = services.BuildServiceProvider();
-            var memoryCache = serviceProviders.GetService<IMemoryCache>();
-            var mockMemoryCache = new Mock<IMemoryCacheManager>();
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.Divisions, It.IsAny<Func<ICacheEntry, List<IdCOAResult>>>()))
-                .Returns(new List<IdCOAResult>());
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.BankAccounts, It.IsAny<Func<ICacheEntry, List<BankAccountCOAResult>>>()))
-               .Returns(new List<BankAccountCOAResult>());
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.IncomeTaxes, It.IsAny<Func<ICacheEntry, List<IncomeTaxCOAResult>>>()))
-               .Returns(new List<IncomeTaxCOAResult>());
-            serviceProvider
-                .Setup(x => x.GetService(typeof(IMemoryCacheManager)))
-                .Returns(mockMemoryCache.Object);
+        //    var services = new ServiceCollection();
+        //    services.AddMemoryCache();
+        //    var serviceProviders = services.BuildServiceProvider();
+        //    var memoryCache = serviceProviders.GetService<IMemoryCache>();
+        //    var mockMemoryCache = new Mock<IMemoryCacheManager>();
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.Divisions, It.IsAny<Func<ICacheEntry, List<IdCOAResult>>>()))
+        //        .Returns(new List<IdCOAResult>());
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.BankAccounts, It.IsAny<Func<ICacheEntry, List<BankAccountCOAResult>>>()))
+        //       .Returns(new List<BankAccountCOAResult>());
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.IncomeTaxes, It.IsAny<Func<ICacheEntry, List<IncomeTaxCOAResult>>>()))
+        //       .Returns(new List<IncomeTaxCOAResult>());
+        //    serviceProvider
+        //        .Setup(x => x.GetService(typeof(IMemoryCacheManager)))
+        //        .Returns(mockMemoryCache.Object);
 
-            PPHBankExpenditureNoteFacade facade = new PPHBankExpenditureNoteFacade(_dbContext(GetCurrentMethod()), numberGeneratorMock.Object, serviceProvider.Object);
-            await _dataUtil(facade, GetCurrentMethod()).GetTestData();
-            ReadResponse<object> Response = facade.Read();
-            Assert.NotEmpty(Response.Data);
-        }
+        //    PPHBankExpenditureNoteFacade facade = new PPHBankExpenditureNoteFacade(_dbContext(GetCurrentMethod()), numberGeneratorMock.Object, serviceProvider.Object);
+        //    await _dataUtil(facade, GetCurrentMethod()).GetTestData();
+        //    ReadResponse<object> Response = facade.Read();
+        //    Assert.NotEmpty(Response.Data);
+        //}
 
         [Fact]
         public async Task Should_Success_Get_Unit_Payment_Order()
@@ -188,37 +188,37 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.PPHBankExpenditureNoteTes
             Assert.NotEmpty(Response);
         }
 
-        [Fact]
-        public async Task Should_Success_Get_Data_By_Id()
-        {
-            var numberGeneratorMock = new Mock<IBankDocumentNumberGenerator>();
+        //[Fact]
+        //public async Task Should_Success_Get_Data_By_Id()
+        //{
+        //    var numberGeneratorMock = new Mock<IBankDocumentNumberGenerator>();
 
-            var serviceProvider = new Mock<IServiceProvider>();
+        //    var serviceProvider = new Mock<IServiceProvider>();
 
-            serviceProvider
-                .Setup(x => x.GetService(typeof(IHttpClientService)))
-                .Returns(new HttpClientTestService());
+        //    serviceProvider
+        //        .Setup(x => x.GetService(typeof(IHttpClientService)))
+        //        .Returns(new HttpClientTestService());
 
-            var services = new ServiceCollection();
-            services.AddMemoryCache();
-            var serviceProviders = services.BuildServiceProvider();
-            var memoryCache = serviceProviders.GetService<IMemoryCache>();
-            var mockMemoryCache = new Mock<IMemoryCacheManager>();
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.Divisions, It.IsAny<Func<ICacheEntry, List<IdCOAResult>>>()))
-                .Returns(new List<IdCOAResult>());
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.BankAccounts, It.IsAny<Func<ICacheEntry, List<BankAccountCOAResult>>>()))
-               .Returns(new List<BankAccountCOAResult>());
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.IncomeTaxes, It.IsAny<Func<ICacheEntry, List<IncomeTaxCOAResult>>>()))
-               .Returns(new List<IncomeTaxCOAResult>());
-            serviceProvider
-                .Setup(x => x.GetService(typeof(IMemoryCacheManager)))
-                .Returns(mockMemoryCache.Object);
+        //    var services = new ServiceCollection();
+        //    services.AddMemoryCache();
+        //    var serviceProviders = services.BuildServiceProvider();
+        //    var memoryCache = serviceProviders.GetService<IMemoryCache>();
+        //    var mockMemoryCache = new Mock<IMemoryCacheManager>();
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.Divisions, It.IsAny<Func<ICacheEntry, List<IdCOAResult>>>()))
+        //        .Returns(new List<IdCOAResult>());
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.BankAccounts, It.IsAny<Func<ICacheEntry, List<BankAccountCOAResult>>>()))
+        //       .Returns(new List<BankAccountCOAResult>());
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.IncomeTaxes, It.IsAny<Func<ICacheEntry, List<IncomeTaxCOAResult>>>()))
+        //       .Returns(new List<IncomeTaxCOAResult>());
+        //    serviceProvider
+        //        .Setup(x => x.GetService(typeof(IMemoryCacheManager)))
+        //        .Returns(mockMemoryCache.Object);
 
-            PPHBankExpenditureNoteFacade facade = new PPHBankExpenditureNoteFacade(_dbContext(GetCurrentMethod()), numberGeneratorMock.Object, serviceProvider.Object);
-            PPHBankExpenditureNote model = await _dataUtil(facade, GetCurrentMethod()).GetTestData();
-            var Response = facade.ReadById((int)model.Id);
-            Assert.NotNull(Response);
-        }
+        //    PPHBankExpenditureNoteFacade facade = new PPHBankExpenditureNoteFacade(_dbContext(GetCurrentMethod()), numberGeneratorMock.Object, serviceProvider.Object);
+        //    PPHBankExpenditureNote model = await _dataUtil(facade, GetCurrentMethod()).GetTestData();
+        //    var Response = facade.ReadById((int)model.Id);
+        //    Assert.NotNull(Response);
+        //}
 
         [Fact]
         public async Task Should_success_Posting_data()
@@ -255,106 +255,106 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.PPHBankExpenditureNoteTes
             Assert.NotNull(Response);
         }
 
-        [Fact]
-        public async Task Should_Success_Create_Data()
-        {
-            var numberGeneratorMock = new Mock<IBankDocumentNumberGenerator>();
-            numberGeneratorMock.Setup(s => s.GenerateDocumentNumber(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync("test-code");
+        //[Fact]
+        //public async Task Should_Success_Create_Data()
+        //{
+        //    var numberGeneratorMock = new Mock<IBankDocumentNumberGenerator>();
+        //    numberGeneratorMock.Setup(s => s.GenerateDocumentNumber(It.IsAny<string>(), It.IsAny<string>(), It.IsAny<string>())).ReturnsAsync("test-code");
 
-            var serviceProvider = new Mock<IServiceProvider>();
+        //    var serviceProvider = new Mock<IServiceProvider>();
 
-            serviceProvider
-                .Setup(x => x.GetService(typeof(IHttpClientService)))
-                .Returns(new HttpClientTestService());
+        //    serviceProvider
+        //        .Setup(x => x.GetService(typeof(IHttpClientService)))
+        //        .Returns(new HttpClientTestService());
 
-            var services = new ServiceCollection();
-            services.AddMemoryCache();
-            var serviceProviders = services.BuildServiceProvider();
-            var memoryCache = serviceProviders.GetService<IMemoryCache>();
-            var mockMemoryCache = new Mock<IMemoryCacheManager>();
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.Divisions, It.IsAny<Func<ICacheEntry, List<IdCOAResult>>>()))
-                .Returns(new List<IdCOAResult>());
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.BankAccounts, It.IsAny<Func<ICacheEntry, List<BankAccountCOAResult>>>()))
-               .Returns(new List<BankAccountCOAResult>());
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.IncomeTaxes, It.IsAny<Func<ICacheEntry, List<IncomeTaxCOAResult>>>()))
-               .Returns(new List<IncomeTaxCOAResult>());
-            serviceProvider
-                .Setup(x => x.GetService(typeof(IMemoryCacheManager)))
-                .Returns(mockMemoryCache.Object);
+        //    var services = new ServiceCollection();
+        //    services.AddMemoryCache();
+        //    var serviceProviders = services.BuildServiceProvider();
+        //    var memoryCache = serviceProviders.GetService<IMemoryCache>();
+        //    var mockMemoryCache = new Mock<IMemoryCacheManager>();
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.Divisions, It.IsAny<Func<ICacheEntry, List<IdCOAResult>>>()))
+        //        .Returns(new List<IdCOAResult>());
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.BankAccounts, It.IsAny<Func<ICacheEntry, List<BankAccountCOAResult>>>()))
+        //       .Returns(new List<BankAccountCOAResult>());
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.IncomeTaxes, It.IsAny<Func<ICacheEntry, List<IncomeTaxCOAResult>>>()))
+        //       .Returns(new List<IncomeTaxCOAResult>());
+        //    serviceProvider
+        //        .Setup(x => x.GetService(typeof(IMemoryCacheManager)))
+        //        .Returns(mockMemoryCache.Object);
 
-            PPHBankExpenditureNoteFacade facade = new PPHBankExpenditureNoteFacade(_dbContext(GetCurrentMethod()), numberGeneratorMock.Object, serviceProvider.Object);
-            PPHBankExpenditureNote model = await _dataUtil(facade, GetCurrentMethod()).GetNewData();
-            var Response = await facade.Create(model, "Unit Test");
-            Assert.NotEqual(0, Response);
-        }
+        //    PPHBankExpenditureNoteFacade facade = new PPHBankExpenditureNoteFacade(_dbContext(GetCurrentMethod()), numberGeneratorMock.Object, serviceProvider.Object);
+        //    PPHBankExpenditureNote model = await _dataUtil(facade, GetCurrentMethod()).GetNewData();
+        //    var Response = await facade.Create(model, "Unit Test");
+        //    Assert.NotEqual(0, Response);
+        //}
 
-        [Fact]
-        public async Task Should_Success_Update_Data()
-        {
-            var numberGeneratorMock = new Mock<IBankDocumentNumberGenerator>();
+        //[Fact]
+        //public async Task Should_Success_Update_Data()
+        //{
+        //    var numberGeneratorMock = new Mock<IBankDocumentNumberGenerator>();
 
-            var serviceProvider = new Mock<IServiceProvider>();
+        //    var serviceProvider = new Mock<IServiceProvider>();
 
-            serviceProvider
-                .Setup(x => x.GetService(typeof(IHttpClientService)))
-                .Returns(new HttpClientTestService());
+        //    serviceProvider
+        //        .Setup(x => x.GetService(typeof(IHttpClientService)))
+        //        .Returns(new HttpClientTestService());
 
-            var services = new ServiceCollection();
-            services.AddMemoryCache();
-            var serviceProviders = services.BuildServiceProvider();
-            var memoryCache = serviceProviders.GetService<IMemoryCache>();
-            var mockMemoryCache = new Mock<IMemoryCacheManager>();
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.Divisions, It.IsAny<Func<ICacheEntry, List<IdCOAResult>>>()))
-                .Returns(new List<IdCOAResult>());
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.BankAccounts, It.IsAny<Func<ICacheEntry, List<BankAccountCOAResult>>>()))
-               .Returns(new List<BankAccountCOAResult>());
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.IncomeTaxes, It.IsAny<Func<ICacheEntry, List<IncomeTaxCOAResult>>>()))
-               .Returns(new List<IncomeTaxCOAResult>());
-            serviceProvider
-                .Setup(x => x.GetService(typeof(IMemoryCacheManager)))
-                .Returns(mockMemoryCache.Object);
+        //    var services = new ServiceCollection();
+        //    services.AddMemoryCache();
+        //    var serviceProviders = services.BuildServiceProvider();
+        //    var memoryCache = serviceProviders.GetService<IMemoryCache>();
+        //    var mockMemoryCache = new Mock<IMemoryCacheManager>();
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.Divisions, It.IsAny<Func<ICacheEntry, List<IdCOAResult>>>()))
+        //        .Returns(new List<IdCOAResult>());
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.BankAccounts, It.IsAny<Func<ICacheEntry, List<BankAccountCOAResult>>>()))
+        //       .Returns(new List<BankAccountCOAResult>());
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.IncomeTaxes, It.IsAny<Func<ICacheEntry, List<IncomeTaxCOAResult>>>()))
+        //       .Returns(new List<IncomeTaxCOAResult>());
+        //    serviceProvider
+        //        .Setup(x => x.GetService(typeof(IMemoryCacheManager)))
+        //        .Returns(mockMemoryCache.Object);
 
-            PPHBankExpenditureNoteFacade facade = new PPHBankExpenditureNoteFacade(_dbContext(GetCurrentMethod()), numberGeneratorMock.Object, serviceProvider.Object);
-            PPHBankExpenditureNote model = await _dataUtil(facade, GetCurrentMethod()).GetTestData();
+        //    PPHBankExpenditureNoteFacade facade = new PPHBankExpenditureNoteFacade(_dbContext(GetCurrentMethod()), numberGeneratorMock.Object, serviceProvider.Object);
+        //    PPHBankExpenditureNote model = await _dataUtil(facade, GetCurrentMethod()).GetTestData();
 
-            PPHBankExpenditureNoteItem modelItem = await _dataUtil(facade, GetCurrentMethod()).GetItemNewData();
-            model.Items.Clear();
-            model.Items.Add(modelItem);
-            var Response = await facade.Update((int)model.Id, model, "Unit Test");
-            Assert.NotEqual(0, Response);
-        }
+        //    PPHBankExpenditureNoteItem modelItem = await _dataUtil(facade, GetCurrentMethod()).GetItemNewData();
+        //    model.Items.Clear();
+        //    model.Items.Add(modelItem);
+        //    var Response = await facade.Update((int)model.Id, model, "Unit Test");
+        //    Assert.NotEqual(0, Response);
+        //}
 
-        [Fact]
-        public async Task Should_Success_Delete_Data()
-        {
-            var numberGeneratorMock = new Mock<IBankDocumentNumberGenerator>();
+        //[Fact]
+        //public async Task Should_Success_Delete_Data()
+        //{
+        //    var numberGeneratorMock = new Mock<IBankDocumentNumberGenerator>();
 
-            var serviceProvider = new Mock<IServiceProvider>();
+        //    var serviceProvider = new Mock<IServiceProvider>();
 
-            serviceProvider
-                .Setup(x => x.GetService(typeof(IHttpClientService)))
-                .Returns(new HttpClientTestService());
+        //    serviceProvider
+        //        .Setup(x => x.GetService(typeof(IHttpClientService)))
+        //        .Returns(new HttpClientTestService());
 
-            var services = new ServiceCollection();
-            services.AddMemoryCache();
-            var serviceProviders = services.BuildServiceProvider();
-            var memoryCache = serviceProviders.GetService<IMemoryCache>();
-            var mockMemoryCache = new Mock<IMemoryCacheManager>();
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.Divisions, It.IsAny<Func<ICacheEntry, List<IdCOAResult>>>()))
-                .Returns(new List<IdCOAResult>());
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.BankAccounts, It.IsAny<Func<ICacheEntry, List<BankAccountCOAResult>>>()))
-               .Returns(new List<BankAccountCOAResult>());
-            mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.IncomeTaxes, It.IsAny<Func<ICacheEntry, List<IncomeTaxCOAResult>>>()))
-               .Returns(new List<IncomeTaxCOAResult>());
-            serviceProvider
-                .Setup(x => x.GetService(typeof(IMemoryCacheManager)))
-                .Returns(mockMemoryCache.Object);
+        //    var services = new ServiceCollection();
+        //    services.AddMemoryCache();
+        //    var serviceProviders = services.BuildServiceProvider();
+        //    var memoryCache = serviceProviders.GetService<IMemoryCache>();
+        //    var mockMemoryCache = new Mock<IMemoryCacheManager>();
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.Divisions, It.IsAny<Func<ICacheEntry, List<IdCOAResult>>>()))
+        //        .Returns(new List<IdCOAResult>());
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.BankAccounts, It.IsAny<Func<ICacheEntry, List<BankAccountCOAResult>>>()))
+        //       .Returns(new List<BankAccountCOAResult>());
+        //    mockMemoryCache.Setup(x => x.Get(MemoryCacheConstant.IncomeTaxes, It.IsAny<Func<ICacheEntry, List<IncomeTaxCOAResult>>>()))
+        //       .Returns(new List<IncomeTaxCOAResult>());
+        //    serviceProvider
+        //        .Setup(x => x.GetService(typeof(IMemoryCacheManager)))
+        //        .Returns(mockMemoryCache.Object);
 
-            PPHBankExpenditureNoteFacade facade = new PPHBankExpenditureNoteFacade(_dbContext(GetCurrentMethod()), numberGeneratorMock.Object, serviceProvider.Object);
-            PPHBankExpenditureNote Data = await _dataUtil(facade, GetCurrentMethod()).GetTestData();
-            int AffectedRows = await facade.Delete(Data.Id, "Test");
-            Assert.True(AffectedRows > 0);
-        }
+        //    PPHBankExpenditureNoteFacade facade = new PPHBankExpenditureNoteFacade(_dbContext(GetCurrentMethod()), numberGeneratorMock.Object, serviceProvider.Object);
+        //    PPHBankExpenditureNote Data = await _dataUtil(facade, GetCurrentMethod()).GetTestData();
+        //    int AffectedRows = await facade.Delete(Data.Id, "Test");
+        //    Assert.True(AffectedRows > 0);
+        //}
 
         [Fact]
         public void Should_Success_Validate_Data()

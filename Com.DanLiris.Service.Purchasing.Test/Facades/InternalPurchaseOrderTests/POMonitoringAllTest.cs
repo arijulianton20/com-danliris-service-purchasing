@@ -227,53 +227,53 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.InternalPurchaseOrderTest
             Assert.NotNull(Response);
         }
 
-        [Fact]
-        public async Task Should_Success_Get_Report_Data2()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            PurchaseOrderMonitoringAllFacade monitoringFacade = new PurchaseOrderMonitoringAllFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            UnitPaymentPriceCorrectionNoteFacade facade = new UnitPaymentPriceCorrectionNoteFacade(GetServiceProvider(GetCurrentMethod()).Object, _dbContext(GetCurrentMethod()));
-            var modelLocalSupplier = await _dataUtil(facade, GetCurrentMethod()).GetNewData();
-            var ResponseLocalSupplier = await facade.Create(modelLocalSupplier, false, USERNAME, 7);
-            var prNo = "";
-            foreach (var item in modelLocalSupplier.Items)
-            {
-                prNo = item.PRNo;
-            }
+        //[Fact]
+        //public async Task Should_Success_Get_Report_Data2()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    PurchaseOrderMonitoringAllFacade monitoringFacade = new PurchaseOrderMonitoringAllFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    UnitPaymentPriceCorrectionNoteFacade facade = new UnitPaymentPriceCorrectionNoteFacade(GetServiceProvider(GetCurrentMethod()).Object, _dbContext(GetCurrentMethod()));
+        //    var modelLocalSupplier = await _dataUtil(facade, GetCurrentMethod()).GetNewData();
+        //    var ResponseLocalSupplier = await facade.Create(modelLocalSupplier, false, USERNAME, 7);
+        //    var prNo = "";
+        //    foreach (var item in modelLocalSupplier.Items)
+        //    {
+        //        prNo = item.PRNo;
+        //    }
 
-            var Response = monitoringFacade.GetReport(prNo, null, null, null, null, null, null, modelLocalSupplier.CreatedBy, null, null, null, null, null, 1, 25, "{}", 7, "");
-            Assert.NotNull(Response);
-        }
+        //    var Response = monitoringFacade.GetReport(prNo, null, null, null, null, null, null, modelLocalSupplier.CreatedBy, null, null, null, null, null, 1, 25, "{}", 7, "");
+        //    Assert.NotNull(Response);
+        //}
 
-        [Fact]
-        public async Task Should_Success_Get_Report_Data_All_Null_Parameter()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            PurchaseOrderMonitoringAllFacade monitoringFacade = new PurchaseOrderMonitoringAllFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //[Fact]
+        //public async Task Should_Success_Get_Report_Data_All_Null_Parameter()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    PurchaseOrderMonitoringAllFacade monitoringFacade = new PurchaseOrderMonitoringAllFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
 
-            UnitPaymentPriceCorrectionNoteFacade facade = new UnitPaymentPriceCorrectionNoteFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var modelLocalSupplier = await _dataUtil(facade, GetCurrentMethod()).GetNewData();
-            var ResponseLocalSupplier = await facade.Create(modelLocalSupplier, false, USERNAME, 7);
-            var today = DateTime.Now;
-            var tomorrow = today.AddDays(1);
-            var Response = monitoringFacade.GetReport(null, null, null, null, null, null, null, null, null, null, null, null, tomorrow.ToShortDateString(), 1, 25, "{}", 7, "");
+        //    UnitPaymentPriceCorrectionNoteFacade facade = new UnitPaymentPriceCorrectionNoteFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var modelLocalSupplier = await _dataUtil(facade, GetCurrentMethod()).GetNewData();
+        //    var ResponseLocalSupplier = await facade.Create(modelLocalSupplier, false, USERNAME, 7);
+        //    var today = DateTime.Now;
+        //    var tomorrow = today.AddDays(1);
+        //    var Response = monitoringFacade.GetReport(null, null, null, null, null, null, null, null, null, null, null, null, tomorrow.ToShortDateString(), 1, 25, "{}", 7, "");
 
-            Assert.NotNull(Response);
-        }
+        //    Assert.NotNull(Response);
+        //}
 
-        [Fact]
-        public async Task Should_Success_Get_Report_Data_Null_Parameter()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            PurchaseOrderMonitoringAllFacade facade = new PurchaseOrderMonitoringAllFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
-            UnitPaymentPriceCorrectionNoteFacade facadeUPO = new UnitPaymentPriceCorrectionNoteFacade(GetServiceProvider(GetCurrentMethod()).Object, _dbContext(GetCurrentMethod()));
-            var modelLocalSupplier = await _dataUtil(facadeUPO, GetCurrentMethod()).GetNewData();
-            var ResponseLocalSupplier = await facadeUPO.Create(modelLocalSupplier, false, USERNAME, 7);
-            //var exter = await externalPurchaseOrderDataUtil.GetTestData("Unit test");
-            var Response = facade.GetReport("", "0", null, null, null, null, null, null, null, null, null, null, null, 1, 25, "{}", 7, null);
-            Assert.NotEqual(Response.Item2, -1);
-            //Assert.NotNull(Response.Item1);
-        }
+        //[Fact]
+        //public async Task Should_Success_Get_Report_Data_Null_Parameter()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    PurchaseOrderMonitoringAllFacade facade = new PurchaseOrderMonitoringAllFacade(GetServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    UnitPaymentPriceCorrectionNoteFacade facadeUPO = new UnitPaymentPriceCorrectionNoteFacade(GetServiceProvider(GetCurrentMethod()).Object, _dbContext(GetCurrentMethod()));
+        //    var modelLocalSupplier = await _dataUtil(facadeUPO, GetCurrentMethod()).GetNewData();
+        //    var ResponseLocalSupplier = await facadeUPO.Create(modelLocalSupplier, false, USERNAME, 7);
+        //    //var exter = await externalPurchaseOrderDataUtil.GetTestData("Unit test");
+        //    var Response = facade.GetReport("", "0", null, null, null, null, null, null, null, null, null, null, null, 1, 25, "{}", 7, null);
+        //    Assert.NotEqual(Response.Item2, -1);
+        //    //Assert.NotNull(Response.Item1);
+        //}
 
         [Fact]
         public async Task Should_Success_Get_Report_Data_Excel()

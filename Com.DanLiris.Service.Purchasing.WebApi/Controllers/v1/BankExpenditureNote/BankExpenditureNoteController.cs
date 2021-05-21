@@ -79,9 +79,9 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.BankExpenditureN
         }
 
         [HttpGet("bank-document-no-date")]
-        public async Task<IActionResult> GetDocumentNoDate([FromQuery] string type, [FromQuery] string bankCode, [FromQuery] string username,[FromQuery]DateTime date)
+        public async Task<IActionResult> GetDocumentNoDate([FromQuery] string type, [FromQuery] string bankCode, [FromQuery] string username, [FromQuery] DateTime date)
         {
-            var result = await _bankDocumentNumberGenerator.GenerateDocumentNumber(type, bankCode, username,date);
+            var result = await _bankDocumentNumberGenerator.GenerateDocumentNumber(type, bankCode, username, date);
 
             return Ok(new
             {
@@ -180,7 +180,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.BankExpenditureN
         }
 
         [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete([FromRoute]int id)
+        public async Task<IActionResult> Delete([FromRoute] int id)
         {
             identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
             identityService.Token = Request.Headers["Authorization"].First().Replace("Bearer ", "");
@@ -209,7 +209,7 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.BankExpenditureN
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Put([FromRoute]int id, [FromBody]BankExpenditureNoteViewModel vm)
+        public async Task<IActionResult> Put([FromRoute] int id, [FromBody] BankExpenditureNoteViewModel vm)
         {
             identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
             identityService.Token = Request.Headers["Authorization"].FirstOrDefault().Replace("Bearer ", "");

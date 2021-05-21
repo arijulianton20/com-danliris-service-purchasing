@@ -27,7 +27,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Interfaces
         MemoryStream GenerateDataExcel(DateTime? dateFrom, DateTime? dateTo, int offset);
         List<UnitPaymentOrder> ReadByEPONo(string no);
 
-
+        Tuple<List<ViewModels.UnitPaymentOrderViewModel.UnitPaymentOrderTaxReportViewModel>, int> GetReportTax(string supplierId, string taxno, DateTime? dateFrom, DateTime? dateTo, DateTime? taxdateFrom, DateTime? taxdateTo, int page, int size, string Order, int offset);
+        MemoryStream GenerateExcelTax(string supplierId, string taxno, DateTime? dateFrom, DateTime? dateTo, DateTime? taxdateFrom, DateTime? taxdateTo, int offset);
 
     }
 }

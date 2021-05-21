@@ -10,43 +10,43 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Models.GarmentExternalPurchaseOrde
     public class GarmentExternalPurchaseOrderItem : BaseModel
     {
 
-        [MaxLength(255)]
+        [MaxLength(20)]
         public string PRNo { get; set; }
         public int PRId { get; set; }
-        
-        [MaxLength(255)]
+
+        [MaxLength(20)]
         public string PONo { get; set; }
         public int POId { get; set; }
-        
-        [MaxLength(255)]
+
+        [MaxLength(20)]
         public string PO_SerialNumber { get; set; }
-        
-        [MaxLength(255)]
+
+        [MaxLength(20)]
         public string RONo { get; set; }
         public int ProductId { get; set; }
-        
-        [MaxLength(255)]
+
+        [MaxLength(20)]
         public string ProductCode { get; set; }
-        
-        [MaxLength(1000)]
+
+        [MaxLength(50)]
         public string ProductName { get; set; }
-        
-        [MaxLength(1000)]
+
+        [MaxLength(255)]
         public string Article { get; set; }
         public double DefaultQuantity { get; set; }
-        
-        [MaxLength(4000)]
+
+        [MaxLength(50)]
         public string DefaultUomUnit { get; set; }
         public int DefaultUomId { get; set; }
         public double DealQuantity { get; set; }
         public int DealUomId { get; set; }
-       
-        [MaxLength(4000)]
+
+        [MaxLength(50)]
         public string DealUomUnit { get; set; }
         public double SmallQuantity { get; set; }
         public int SmallUomId { get; set; }
-        
-        [MaxLength(4000)]
+
+        [MaxLength(50)]
         public string SmallUomUnit { get; set; }
         public double BudgetPrice { get; set; }
         public double Conversion { get; set; }
@@ -54,10 +54,10 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Models.GarmentExternalPurchaseOrde
         public double PricePerDealUnit { get; set; }
         public double DOQuantity { get; set; }
         public double ReceiptQuantity { get; set; }
-       
+
         [MaxLength(4000)]
         public string Remark { get; set; }
-        
+
         [MaxLength(4000)]
         public string OverBudgetRemark { get; set; }
         public bool IsOverBudget { get; set; }

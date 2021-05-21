@@ -28,6 +28,10 @@ namespace Com.DanLiris.Service.Purchasing.Lib.AutoMapperProfiles
                 .ForPath(d => d.currency.Rate, opt => opt.MapFrom(s => s.CurrencyRate))
 
                 .ForMember(d => d.items, opt => opt.MapFrom(s => s.Items))
+
+                ///*Position*/
+                //.ForPath(d => d.position, opt => opt.MapFrom(s => (int)s.Position))
+
                 .ReverseMap();
 
             CreateMap<GarmentInternNoteItem, GarmentInternNoteItemViewModel>()

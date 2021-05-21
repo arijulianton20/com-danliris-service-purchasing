@@ -72,14 +72,14 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.PurchasingDispositionFacad
                     CategoryCode = s.CategoryCode,
                     CategoryId = s.CategoryId,
                     CategoryName = s.CategoryName,
-                    DPP=s.DPP,
-                    IncomeTaxValue=s.IncomeTaxValue,
-                    VatValue=s.VatValue,
-                    IncomeTaxBy=s.IncomeTaxBy,
+                    DPP = s.DPP,
+                    IncomeTaxValue = s.IncomeTaxValue,
+                    VatValue = s.VatValue,
+                    IncomeTaxBy = s.IncomeTaxBy,
                     DivisionCode = s.DivisionCode,
                     DivisionId = s.DivisionId,
                     DivisionName = s.DivisionName,
-                    PaymentCorrection=s.PaymentCorrection,
+                    PaymentCorrection = s.PaymentCorrection,
                     Items = s.Items.Select(x => new PurchasingDispositionItem()
                     {
                         EPOId = x.EPOId,
@@ -91,12 +91,12 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.PurchasingDispositionFacad
                         UseVat = x.UseVat,
                         UseIncomeTax = x.UseIncomeTax,
                         UId = x.UId,
-                        
+
                         Details = x.Details.Select(y => new PurchasingDispositionDetail()
                         {
-                            
+
                             UId = y.UId,
-                            
+
                             DealQuantity = y.DealQuantity,
                             DealUomId = y.DealUomId,
                             DealUomUnit = y.DealUomUnit,
@@ -120,6 +120,101 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.PurchasingDispositionFacad
                 });
             Pageable<PurchasingDisposition> pageable = new Pageable<PurchasingDisposition>(Query, Page - 1, Size);
             List<PurchasingDisposition> Data = pageable.Data.ToList<PurchasingDisposition>();
+            int TotalData = pageable.TotalCount;
+
+            return Tuple.Create(Data, TotalData, OrderDictionary);
+        }
+
+        public Tuple<List<PurchasingDisposition>, int, Dictionary<string, string>> ReadOptimized(int Page = 1, int Size = 25, string Order = "{}", string Keyword = null, string Filter = "{}")
+        {
+            IQueryable<PurchasingDisposition> Query = this.dbSet.AsNoTracking().Select(s => new PurchasingDisposition
+            {
+                DispositionNo = s.DispositionNo,
+                Id = s.Id,
+                SupplierCode = s.SupplierCode,
+                SupplierId = s.SupplierId,
+                SupplierName = s.SupplierName,
+                Bank = s.Bank,
+                CurrencyCode = s.CurrencyCode,
+                CurrencyId = s.CurrencyId,
+                CurrencyRate = s.CurrencyRate,
+                ConfirmationOrderNo = s.ConfirmationOrderNo,
+                //InvoiceNo = s.InvoiceNo,
+                PaymentMethod = s.PaymentMethod,
+                PaymentDueDate = s.PaymentDueDate,
+                CreatedBy = s.CreatedBy,
+                LastModifiedUtc = s.LastModifiedUtc,
+                CreatedUtc = s.CreatedUtc,
+                Amount = s.Amount,
+                Calculation = s.Calculation,
+                //Investation = s.Investation,
+                Position = s.Position,
+                ProformaNo = s.ProformaNo,
+                Remark = s.Remark,
+                UId = s.UId,
+                CategoryCode = s.CategoryCode,
+                CategoryId = s.CategoryId,
+                CategoryName = s.CategoryName,
+                DPP = s.DPP,
+                IncomeTaxValue = s.IncomeTaxValue,
+                VatValue = s.VatValue,
+                IncomeTaxBy = s.IncomeTaxBy,
+                DivisionCode = s.DivisionCode,
+                DivisionId = s.DivisionId,
+                DivisionName = s.DivisionName,
+                PaymentCorrection = s.PaymentCorrection,
+                Items = s.Items.Select(x => new PurchasingDispositionItem()
+                {
+                    EPOId = x.EPOId,
+                    EPONo = x.EPONo,
+                    Id = x.Id,
+                    IncomeTaxId = x.IncomeTaxId,
+                    IncomeTaxName = x.IncomeTaxName,
+                    IncomeTaxRate = x.IncomeTaxRate,
+                    UseVat = x.UseVat,
+                    UseIncomeTax = x.UseIncomeTax,
+                    UId = x.UId,
+                    Details = x.Details.Select(y => new PurchasingDispositionDetail()
+                    {
+
+                        UId = y.UId,
+                        DealQuantity = y.DealQuantity,
+                        DealUomId = y.DealUomId,
+                        DealUomUnit = y.DealUomUnit,
+                        Id = y.Id,
+                        PaidPrice = y.PaidPrice,
+                        PaidQuantity = y.PaidQuantity,
+                        PricePerDealUnit = y.PricePerDealUnit,
+                        PriceTotal = y.PriceTotal,
+                        PRId = y.PRId,
+                        PRNo = y.PRNo,
+                        ProductCode = y.ProductCode,
+                        ProductId = y.ProductId,
+                        ProductName = y.ProductName,
+                        PurchasingDispositionItem = y.PurchasingDispositionItem,
+                        PurchasingDispositionItemId = y.PurchasingDispositionItemId,
+                        UnitCode = y.UnitCode,
+                        UnitId = y.UnitId,
+                        UnitName = y.UnitName
+                    }).ToList()
+                }).ToList()
+            });
+
+            List<string> searchAttributes = new List<string>()
+            {
+                "DispositionNo","SupplierName","Items.EPONo","CurrencyCode","DivisionName","CategoryName"
+            };
+
+            Query = QueryHelper<PurchasingDisposition>.ConfigureSearch(Query, searchAttributes, Keyword);
+
+            Dictionary<string, string> FilterDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Filter);
+            Query = QueryHelper<PurchasingDisposition>.ConfigureFilter(Query, FilterDictionary);
+
+            Dictionary<string, string> OrderDictionary = JsonConvert.DeserializeObject<Dictionary<string, string>>(Order);
+            Query = QueryHelper<PurchasingDisposition>.ConfigureOrder(Query, OrderDictionary);
+
+            Pageable<PurchasingDisposition> pageable = new Pageable<PurchasingDisposition>(Query, Page - 1, Size);
+            List<PurchasingDisposition> Data = pageable.Data.ToList();
             int TotalData = pageable.TotalCount;
 
             return Tuple.Create(Data, TotalData, OrderDictionary);
@@ -173,8 +268,8 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.PurchasingDispositionFacad
         async Task<string> GenerateNo(PurchasingDisposition model, int clientTimeZoneOffset)
         {
             DateTimeOffset Now = DateTime.UtcNow;
-            string Year = Now.ToOffset(new TimeSpan(clientTimeZoneOffset, 0, 0)).ToString("yy"); 
-            string Month = Now.ToOffset(new TimeSpan(clientTimeZoneOffset, 0, 0)).ToString("MM"); 
+            string Year = Now.ToOffset(new TimeSpan(clientTimeZoneOffset, 0, 0)).ToString("yy");
+            string Month = Now.ToOffset(new TimeSpan(clientTimeZoneOffset, 0, 0)).ToString("MM");
 
             string no = model.DivisionName == "GARMENT" ? $"{Year}-{Month}-G" : $"{Year}-{Month}-T";
             int Padding = 3;
@@ -472,13 +567,15 @@ namespace Com.DanLiris.Service.Purchasing.Lib.Facades.PurchasingDispositionFacad
 
         public List<PurchasingDispositionViewModel> GetTotalPaidPrice(List<PurchasingDispositionViewModel> data)
         {
-            foreach(var purchasingDisposition in data)
+            var dbSet = dbContext.PurchasingDispositionDetails.AsNoTracking();
+
+            foreach (var purchasingDisposition in data)
             {
-                foreach(var item in purchasingDisposition.Items)
+                foreach (var item in purchasingDisposition.Items)
                 {
-                    foreach(var detail in item.Details)
+                    foreach (var detail in item.Details)
                     {
-                        detail.TotalPaidPrice = dbContext.PurchasingDispositionDetails.Where(x => x.ProductId == detail.Product._id && x.PRId == detail.PRId).Sum(x => x.PaidPrice);
+                        detail.TotalPaidPrice = dbSet.Where(x => x.ProductId == detail.Product._id && x.PRId == detail.PRId).Sum(x => x.PaidPrice);
                     }
                 }
             }

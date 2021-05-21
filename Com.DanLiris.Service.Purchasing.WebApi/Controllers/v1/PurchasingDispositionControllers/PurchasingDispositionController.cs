@@ -71,42 +71,71 @@ namespace Com.DanLiris.Service.Purchasing.WebApi.Controllers.v1.PurchasingDispos
             {
                 identityService.Username = User.Claims.Single(p => p.Type.Equals("username")).Value;
 
-                var Data = facade.Read(page, size, order, keyword, filter);
+                var Data = facade.ReadOptimized(page, size, order, keyword, filter);
 
                 var viewModel = mapper.Map<List<PurchasingDispositionViewModel>>(Data.Item1);
                 var newData = facade.GetTotalPaidPrice(viewModel);
-                List<object> listData = new List<object>();
-                listData.AddRange(
-                    newData.AsQueryable().Select(s => new
-                    {
-                        s.DispositionNo,
-                        s.Id,
-                        s.Supplier,
-                        s.Bank,
-                        s.ConfirmationOrderNo,
-                        //s.InvoiceNo,
-                        s.PaymentMethod,
-                        s.CreatedBy,
-                        s.Calculation,
-                        //s.Investation,
-                        s.Remark,
-                        s.ProformaNo,
-                        s.Amount,
-                        s.Currency,
-                        s.LastModifiedUtc,
-                        s.CreatedUtc,
-                        s.PaymentDueDate,
-                        s.Position,
-                        s.Items,
-                        s.Category,
-                        s.Division,
-                        s.DPP,
-                        s.IncomeTaxValue,
-                        s.IncomeTaxBy,
-                        s.VatValue,
-                        s.PaymentCorrection
-                    }).ToList()
-                );
+                //List<object> listData = new List<object>();
+                //listData.AddRange(
+                //    newData.AsQueryable().Select(s => new
+                //    {
+                //        s.DispositionNo,
+                //        s.Id,
+                //        s.Supplier,
+                //        s.Bank,
+                //        s.ConfirmationOrderNo,
+                //        //s.InvoiceNo,
+                //        s.PaymentMethod,
+                //        s.CreatedBy,
+                //        s.Calculation,
+                //        //s.Investation,
+                //        s.Remark,
+                //        s.ProformaNo,
+                //        s.Amount,
+                //        s.Currency,
+                //        s.LastModifiedUtc,
+                //        s.CreatedUtc,
+                //        s.PaymentDueDate,
+                //        s.Position,
+                //        s.Items,
+                //        s.Category,
+                //        s.Division,
+                //        s.DPP,
+                //        s.IncomeTaxValue,
+                //        s.IncomeTaxBy,
+                //        s.VatValue,
+                //        s.PaymentCorrection
+                //    }).ToList()
+                //);
+
+                var listData = newData.Select(s => new {
+                    s.DispositionNo,
+                    s.Id,
+                    s.Supplier,
+                    s.Bank,
+                    s.ConfirmationOrderNo,
+                    //s.InvoiceNo,
+                    s.PaymentMethod,
+                    s.CreatedBy,
+                    s.Calculation,
+                    //s.Investation,
+                    s.Remark,
+                    s.ProformaNo,
+                    s.Amount,
+                    s.Currency,
+                    s.LastModifiedUtc,
+                    s.CreatedUtc,
+                    s.PaymentDueDate,
+                    s.Position,
+                    s.Items,
+                    s.Category,
+                    s.Division,
+                    s.DPP,
+                    s.IncomeTaxValue,
+                    s.IncomeTaxBy,
+                    s.VatValue,
+                    s.PaymentCorrection
+                }).ToList();
 
                 var info = new Dictionary<string, object>
                     {

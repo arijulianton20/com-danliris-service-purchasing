@@ -9,6 +9,7 @@ using Com.DanLiris.Service.Purchasing.Lib.Services;
 using Com.DanLiris.Service.Purchasing.Lib.Utilities.CacheManager;
 using Com.DanLiris.Service.Purchasing.Lib.Utilities.CacheManager.CacheData;
 using Com.DanLiris.Service.Purchasing.Lib.Utilities.Currencies;
+using Com.DanLiris.Service.Purchasing.Lib.ViewModels.UnitPaymentOrderViewModel;
 using Com.DanLiris.Service.Purchasing.Test.DataUtils.DeliveryOrderDataUtils;
 using Com.DanLiris.Service.Purchasing.Test.DataUtils.ExternalPurchaseOrderDataUtils;
 using Com.DanLiris.Service.Purchasing.Test.DataUtils.InternalPurchaseOrderDataUtils;
@@ -20,11 +21,13 @@ using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Options;
 using Moq;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
@@ -252,6 +255,13 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.UnitReceiptNoteTests
                 .Setup(x => x.GetService(typeof(ICurrencyProvider)))
                 .Returns(mockCurrencyProvider.Object);
 
+            var opts = Options.Create(new MemoryDistributedCacheOptions());
+            var cache = new MemoryDistributedCache(opts);
+
+            serviceProvider
+                .Setup(x => x.GetService(typeof(IDistributedCache)))
+                .Returns(cache);
+
             return serviceProvider;
         }
 
@@ -359,25 +369,25 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.UnitReceiptNoteTests
             Assert.NotEqual(0, response);
         }
 
-        [Fact]
-        public async Task Should_Success_Update_Data()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            UnitReceiptNoteFacade facade = new UnitReceiptNoteFacade(_ServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var dataUtil = await _dataUtil(facade, dbContext, GetCurrentMethod()).GetTestData(USERNAME);
-            var response = await facade.Update((int)dataUtil.Id, dataUtil, dataUtil.CreatedBy);
-            Assert.NotEqual(0, response);
-        }
+        //[Fact]
+        //public async Task Should_Success_Update_Data()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    UnitReceiptNoteFacade facade = new UnitReceiptNoteFacade(_ServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var dataUtil = await _dataUtil(facade, dbContext, GetCurrentMethod()).GetTestData(USERNAME);
+        //    var response = await facade.Update((int)dataUtil.Id, dataUtil, dataUtil.CreatedBy);
+        //    Assert.NotEqual(0, response);
+        //}
 
-        [Fact]
-        public async Task Should_Success_Delete_Data()
-        {
-            var dbContext = _dbContext(GetCurrentMethod());
-            UnitReceiptNoteFacade facade = new UnitReceiptNoteFacade(_ServiceProvider(GetCurrentMethod()).Object, dbContext);
-            var dataUtil = await _dataUtil(facade, dbContext, GetCurrentMethod()).GetTestData(USERNAME);
-            var response = await facade.Delete((int)dataUtil.Id, dataUtil.CreatedBy);
-            Assert.NotEqual(0, response);
-        }
+        //[Fact]
+        //public async Task Should_Success_Delete_Data()
+        //{
+        //    var dbContext = _dbContext(GetCurrentMethod());
+        //    UnitReceiptNoteFacade facade = new UnitReceiptNoteFacade(_ServiceProvider(GetCurrentMethod()).Object, dbContext);
+        //    var dataUtil = await _dataUtil(facade, dbContext, GetCurrentMethod()).GetTestData(USERNAME);
+        //    var response = await facade.Delete((int)dataUtil.Id, dataUtil.CreatedBy);
+        //    Assert.NotEqual(0, response);
+        //}
 
         [Fact]
         public void Should_Success_Read_DataBySupplier()
@@ -522,37 +532,37 @@ namespace Com.DanLiris.Service.Purchasing.Test.Facades.UnitReceiptNoteTests
         //    Assert.True(Deleted > 0);
         //}
 
-        //[Fact]
-        //public void Should_Success_Validate_Data()
-        //{
-        //    UnitPaymentOrderViewModel nullViewModel = new UnitPaymentOrderViewModel();
-        //    Assert.True(nullViewModel.Validate(null).Count() > 0);
+        [Fact]
+        public void Should_Success_Validate_Data()
+        {
+            UnitPaymentOrderViewModel nullViewModel = new UnitPaymentOrderViewModel();
+            Assert.True(nullViewModel.Validate(null).Count() > 0);
 
-        //    UnitPaymentOrderViewModel viewModel = new UnitPaymentOrderViewModel()
-        //    {
-        //        useIncomeTax = true,
-        //        useVat = true,
-        //        items = new List<UnitPaymentOrderItemViewModel>
-        //        {
-        //            new UnitPaymentOrderItemViewModel(),
-        //            new UnitPaymentOrderItemViewModel()
-        //            {
-        //                unitReceiptNote = new UnitReceiptNote
-        //                {
-        //                    _id = 1
-        //                }
-        //            },
-        //            new UnitPaymentOrderItemViewModel()
-        //            {
-        //                unitReceiptNote = new UnitReceiptNote
-        //                {
-        //                    _id = 1
-        //                }
-        //            }
-        //        }
-        //    };
-        //    Assert.True(viewModel.Validate(null).Count() > 0);
-        //}
+            UnitPaymentOrderViewModel viewModel = new UnitPaymentOrderViewModel()
+            {
+                useIncomeTax = true,
+                useVat = true,
+                items = new List<UnitPaymentOrderItemViewModel>
+                {
+                    new UnitPaymentOrderItemViewModel(),
+                    new UnitPaymentOrderItemViewModel()
+                    {
+                        unitReceiptNote = new UnitReceiptNote
+                        {
+                            _id = 1
+                        }
+                    },
+                    new UnitPaymentOrderItemViewModel()
+                    {
+                        unitReceiptNote = new UnitReceiptNote
+                        {
+                            _id = 1
+                        }
+                    }
+                }
+            };
+            Assert.True(viewModel.Validate(null).Count() > 0);
+        }
 
         //[Fact]
         //public async Task Should_Success_Get_Data_Spb()
